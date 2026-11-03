@@ -19,7 +19,7 @@ Developer and Associate source directories are inherited from upstream history a
 
 diagnostic → targeted material → solve → explain → rationale → transfer → spaced review → timed mock → held-out readiness
 
-In Study mode, selecting an option does not immediately reveal the answer. The learner first writes a short explanation of the governing constraint. Only then is the answer graded and the rationale for every option shown.
+In Study mode, selecting an option does not immediately reveal the answer. The learner first writes a short explanation of the governing constraint and records confidence (low / medium / high). Only then is the answer graded and the rationale for every option shown. Confidence never changes the score; it only changes review priority and spacing.
 
 Progress is based on task-statement mastery rather than pages read.
 

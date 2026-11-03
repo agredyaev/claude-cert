@@ -500,6 +500,11 @@ function checkShell(file) {
   }
   check('the mode hint ships the study-mode text',
     shipped('modeHint') === api.T.mode_hint_study, `shipped "${shipped('modeHint')}"`);
+  check('study mode ships self-explanation before rationale reveal',
+    rawHtml.includes('reason_label') && rawHtml.includes('function commitStudy'));
+  check('study mode ships a pre-feedback confidence judgment',
+    rawHtml.includes('confidence_label') && rawHtml.includes('confidence-picker') &&
+    rawHtml.includes('state.confidence'));
 }
 
 // The summary stops the exam clock. Both ways off the summary screen used to
