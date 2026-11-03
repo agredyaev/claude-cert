@@ -1,0 +1,106 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # The guides are EN/ES/PT only, so the runner's default Latin fonts are
+      # enough for the PDFs. Add `fonts-noto-cjk` back if a JA/ZH/KO guide lands.
+
+      - name: Install build deps
+        run: npm install --no-save marked@13.0.3 minisearch@7.2.0 pdfjs-dist@4.10.38 md-to-pdf html-minifier-terser@7.2.0
+
+      - name: Regenerate guide PDFs from current markdown
+        run: |
+          mkdir -p pdf
+          shopt -s nullglob nocaseglob
+          for file in ccaf/guide_*.md; do
+            echo "Generating PDF for $file"
+            npx md-to-pdf "$file" \
+              --basedir "$(pwd)" \
+              --stylesheet "$(pwd)/.github/workflows/pdf-style.css" \
+              --launch-options '{"args":["--no-sandbox","--disable-setuid-sandbox"]}'
+            mv "${file%.*}.pdf" pdf/
+          done
+
+      - name: Regenerate practice exam HTML from guides + mock bank
+        run: python3 utils/build_exam_html.py
+
+      - name: Validate the Professional question bank against the blueprint
+        run: python3 utils/validate_professional_bank.py
+
+      - name: Regenerate the Professional practice exam
+        run: python3 utils/build_professional_exam.py
+
+      - name: Validate the Associate question bank against the blueprint
+        run: python3 utils/validate_associate_bank.py
+
+      - name: Regenerate the Associate practice exam
+        run: python3 utils/build_associate_exam.py
+
+      - name: Check the quiz engine
+        run: node utils/test_exam_engine.mjs
+
+      # Covers what the engine harness cannot: the summary and question screens
+      # only exist once the engine writes them, and a review pane that silently
+      # drops an item still scores it as incorrect.
+      - name: Check the rendered exam screens
+        run: node utils/test_exam_render.mjs
+
+      # Must stay before build-pages.mjs: the site build copies the exam HTML,
+      # and falls back to a "not generated yet" placeholder if it is missing.
+      - name: Build static site
+        run: node scripts/build-pages.mjs
+
+      # Last build step by construction: it rewrites docs/ in place, so anything
+      # reading the generated markup afterwards would read minified output.
+      - name: Minify the published HTML
+        run: node scripts/minify-docs.mjs
+
+      # Budget: <=60 KB transferred for the exam shell, LCP < 1.2 s, TBT < 150 ms,
+      # CLS < 0.1, on the mobile preset. Today the shell is ~20 KB and TBT is 0;
+      # LCP and CLS still miss, because the question text only exists once the
+      # bank fetch lands.
+      # Warning-only for now: every assertion in .lighthouserc.cjs is at "warn",
+      # so a miss is reported and the deploy continues. Flip them to "error" once
+      # this has passed twice and a slow page blocks the deploy instead.
+      # scripts/serve-docs.mjs gzips and mounts the site under its <base href>,
+      # so the numbers here are the numbers GitHub Pages will serve.
+      - name: Check the performance budget
+        run: npx --yes @lhci/cli@0.14.x autorun
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
