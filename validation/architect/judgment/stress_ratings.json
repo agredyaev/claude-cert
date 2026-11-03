@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "reviewed": "2026-11-03-post-rewrite",
+  "scale": {
+    "unique_best": {
+      "0": "ambiguous/incorrect/outdated key",
+      "1": "borderline; competing plausible option or underdetermined hinge",
+      "2": "key is uniquely best under stated facts"
+    },
+    "distractors": {
+      "0": "poor/heterogeneous",
+      "1": "mixed; at least one weak/easy distractor",
+      "2": "plausible and homogeneous"
+    }
+  },
+  "items": [
+    {
+      "id": "f1-004",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "PostToolUse uniquely matches output normalization; alternatives stay on the same hook/prompt decision axis."
+    },
+    {
+      "id": "f1-042",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "f1-009",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Hard deny plus actionable reason directly satisfies both policy and retry-loop constraints."
+    },
+    {
+      "id": "f2-004",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "f2-053",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Protocol/schema failure vs execution/business failure is a clean discriminating distinction."
+    },
+    {
+      "id": "f2-018",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Narrow verification tool plus escalation best satisfies frequency, scope, and conflict-resolution factors."
+    },
+    {
+      "id": "f3-005",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Observed failures and desired outputs now create a clear iterative-refinement hinge; alternatives address verbosity, extra validation, or token budget instead."
+    },
+    {
+      "id": "f3-083",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Reframed around path-scoped project rules; only the paths selector satisfies shared, conditional loading."
+    },
+    {
+      "id": "f3-057",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "f4-008",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Cross-file integration pass is uniquely the layer that can detect interface mismatch across files."
+    },
+    {
+      "id": "f4-035",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Reframed around adjudicated classification boundaries; diverse labeled few-shot examples directly target the measured inconsistency."
+    },
+    {
+      "id": "f4-072",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Only the misplaced-but-present value is repairable by retry without missing external evidence."
+    },
+    {
+      "id": "f5-001",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Additional identifier is uniquely safe under identity ambiguity; other choices infer identity from weak signals."
+    },
+    {
+      "id": "f5-044",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "f5-077",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p1-003",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p1-031",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p2-001",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Cacheable surfaces form a coherent factual MR item; alternatives are plausible implementation confusions."
+    },
+    {
+      "id": "p2-034",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Three independent needs map cleanly to tool search, programmatic calls, and advisor."
+    },
+    {
+      "id": "p3-002",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Tool search directly solves tool-definition context bloat; other alternatives address adjacent but insufficient levers."
+    },
+    {
+      "id": "p3-028",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Retrieval is uniquely best under cost/latency plus accuracy constraints."
+    },
+    {
+      "id": "p4-004",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Mixed eval methods map correctly to structured extraction and prose quality."
+    },
+    {
+      "id": "p4-055",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p5-001",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Standardize explanation dimensions and retest directly addresses fairness/transparency inconsistency."
+    },
+    {
+      "id": "p5-027",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p6-002",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p6-043",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten to current service-tier behavior: prioritized resources and 99.5% uptime target, with fallback beyond committed capacity; no unconditional guarantee."
+    },
+    {
+      "id": "p7-009",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Rewritten so plausible alternatives share the decision layer but lose on an explicit scenario constraint."
+    },
+    {
+      "id": "p7-025",
+      "unique_best": 2,
+      "distractors": 2,
+      "note": "Three constraints map cleanly to ask rule, audit hook, and isolated log-search subagent."
+    }
+  ]
+}

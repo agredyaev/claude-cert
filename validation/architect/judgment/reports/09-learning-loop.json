@@ -1,0 +1,17 @@
+{
+  "validator": "09-learning-loop",
+  "status": "PASS",
+  "summary": "Checks retrieval, self-explanation, feedback, spacing, varied practice, and skill-based progress.",
+  "findings": [],
+  "metrics": {
+    "self_explanation_before_feedback": true,
+    "all_option_feedback_after_commit": true,
+    "spaced_review": true,
+    "mastery_from_distinct_solutions": true,
+    "mixed_diagnostic": true,
+    "hands_on_foundation": true,
+    "professional_capstone": true,
+    "progress_by_objective": true,
+    "confidence_capture": true
+  }
+}

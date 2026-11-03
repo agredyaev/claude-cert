@@ -1,0 +1,117 @@
+{
+  "reviewed": "2026-11-03",
+  "policy": {
+    "scope": "Official CCAR-F / CCAR-P exam guides define certification scope.",
+    "behavior": "Current Anthropic / Claude documentation defines current product behavior.",
+    "conflict": "If current product behavior differs from the exam snapshot, student-facing material must state the difference instead of silently choosing one."
+  },
+  "foundation": {
+    "scope_source": "ccaf/sources/architect-foundations-exam-guide.pdf",
+    "certification_page": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification",
+    "domains": {
+      "1": {
+        "name": "Agentic Architecture & Orchestration",
+        "sources": [
+          "https://code.claude.com/docs/en/agent-sdk/subagents",
+          "https://code.claude.com/docs/en/agent-sdk/hooks",
+          "https://code.claude.com/docs/en/cli-reference"
+        ]
+      },
+      "2": {
+        "name": "Tool Design & MCP Integration",
+        "sources": [
+          "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+          "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+          "https://code.claude.com/docs/en/mcp",
+          "https://modelcontextprotocol.io/docs/concepts/tools"
+        ]
+      },
+      "3": {
+        "name": "Claude Code Configuration & Workflows",
+        "sources": [
+          "https://code.claude.com/docs/en/skills",
+          "https://code.claude.com/docs/en/cli-reference",
+          "https://code.claude.com/docs/en/hooks",
+          "https://code.claude.com/docs/en/github-actions"
+        ]
+      },
+      "4": {
+        "name": "Prompt Engineering & Structured Output",
+        "sources": [
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+          "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+          "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+        ]
+      },
+      "5": {
+        "name": "Context Management & Reliability",
+        "sources": [
+          "https://platform.claude.com/docs/en/models/overview",
+          "https://code.claude.com/docs/en/agent-sdk/hooks",
+          "https://code.claude.com/docs/en/agent-sdk/subagents",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+        ]
+      }
+    }
+  },
+  "professional": {
+    "scope_source": "ccap/sources/architect-professional-exam-guide.pdf",
+    "prep_course": "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+    "domains": {
+      "1": {
+        "name": "Solution Design & Architecture",
+        "sources": [
+          "https://www.anthropic.com/research/building-effective-agents",
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+        ]
+      },
+      "2": {
+        "name": "Claude Models, Prompting & Context Engineering",
+        "sources": [
+          "https://platform.claude.com/docs/en/models/overview",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+        ]
+      },
+      "3": {
+        "name": "Integration",
+        "sources": [
+          "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+          "https://code.claude.com/docs/en/mcp",
+          "https://modelcontextprotocol.io/docs/concepts/tools",
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+        ]
+      },
+      "4": {
+        "name": "Evaluation, Testing & Optimization",
+        "sources": [
+          "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+        ]
+      },
+      "5": {
+        "name": "Governance, Safety & Risk Management",
+        "sources": [
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+          "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+        ]
+      },
+      "6": {
+        "name": "Stakeholder Communication & Lifecycle Management",
+        "sources": [
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+        ]
+      },
+      "7": {
+        "name": "Developer Productivity & Operational Enablement",
+        "sources": [
+          "https://code.claude.com/docs/en/overview",
+          "https://code.claude.com/docs/en/skills",
+          "https://code.claude.com/docs/en/hooks",
+          "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+        ]
+      }
+    }
+  }
+}

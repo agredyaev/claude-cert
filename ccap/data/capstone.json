@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "id": "problem-frame",
+      "title": "Problem frame & constraints",
+      "task": "Define the user/business outcome, explicit non-goals, prohibited behavior, quality target, latency/availability target, cost envelope, data sensitivity, reversibility, and decisions that remain human-owned.",
+      "rubric": [
+        "Measurable success criteria exist.",
+        "Hard constraints are separated from preferences.",
+        "Irreversible/high-consequence decisions have an owner.",
+        "Non-goals prevent architecture creep."
+      ]
+    },
+    {
+      "id": "adr",
+      "title": "Architecture decision record",
+      "task": "Choose workflow vs agentic vs augmented-LLM architecture, model tier, context strategy, and orchestration pattern. Record at least two rejected alternatives.",
+      "rubric": [
+        "Decision is tied to stated constraints.",
+        "At least two plausible alternatives are rejected for explicit trade-offs.",
+        "Complexity is justified rather than assumed.",
+        "Revisit triggers are defined."
+      ]
+    },
+    {
+      "id": "integration",
+      "title": "Integration & trust-boundary map",
+      "task": "Map APIs, MCP servers, retrieval/data stores, credentials, authorization, tool capabilities, trust boundaries, and failure propagation.",
+      "rubric": [
+        "Every external capability has an auth boundary.",
+        "Least privilege is explicit.",
+        "Failure paths are visible, not only happy paths.",
+        "Sensitive data movement is traceable."
+      ]
+    },
+    {
+      "id": "evaluation",
+      "title": "Evaluation & release gates",
+      "task": "Define representative evaluation data, metrics, deterministic checks, model/human graders where needed, slice-level regressions, and release-blocking thresholds.",
+      "rubric": [
+        "Metrics correspond to user/business risk.",
+        "Critical slices cannot be hidden by aggregate scores.",
+        "Release gates are defined before the test result is known.",
+        "Regression runs are repeatable."
+      ]
+    },
+    {
+      "id": "governance",
+      "title": "Safety & governance matrix",
+      "task": "For each material risk, define preventive control, detective control, corrective action, owner, evidence artifact, and residual risk.",
+      "rubric": [
+        "Controls are placed before irreversible actions when possible.",
+        "Human review follows a risk rule, not blanket review.",
+        "Each risk has an accountable owner.",
+        "Evidence can be audited later."
+      ]
+    },
+    {
+      "id": "cost-latency",
+      "title": "Cost & latency budget",
+      "task": "Model call/token assumptions, cacheable prefixes, routing, batching, throughput, tail latency, and the thresholds that trigger architecture changes.",
+      "rubric": [
+        "Budget assumptions are explicit.",
+        "Optimization preserves the evaluated quality/safety floor.",
+        "Tail latency is considered, not only averages.",
+        "Caching/routing choices have invalidation or fallback rules."
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "Observability & operations",
+      "task": "Define traces, metrics, alerts, slow-drift reviews, incident ownership, and first diagnostic actions for retrieval, prompt, model, tool, and permission failures.",
+      "rubric": [
+        "Signals map to specific failure layers.",
+        "First diagnostic action is stated for each major failure class.",
+        "Ownership and escalation are explicit.",
+        "Slow quality drift is covered in addition to outages."
+      ]
+    },
+    {
+      "id": "stakeholder",
+      "title": "Stakeholder brief",
+      "task": "Explain the same architecture for executive/security/legal stakeholders in terms of value, trade-offs, residual risk, reversibility, ownership, and evidence.",
+      "rubric": [
+        "Technical details are translated into business consequence.",
+        "Residual risks are not hidden.",
+        "Trade-offs are presented with alternatives.",
+        "Decision/approval owners are clear."
+      ]
+    },
+    {
+      "id": "handoff",
+      "title": "Handoff package",
+      "task": "Create the runbook, architecture rationale, open assumptions, owner map, change criteria, known failure modes, and enough evidence that another architect can safely modify the system.",
+      "rubric": [
+        "Another team can operate and change the system.",
+        "Assumptions and unknowns are explicit.",
+        "Decision rationale survives team handoff.",
+        "Change/revalidation triggers are documented."
+      ]
+    }
+  ],
+  "stress_tests": [
+    {
+      "id": "stale-retrieval",
+      "title": "Stale retrieval after refresh",
+      "task": "A content refresh completes, but answers still cite old facts. State where you investigate first, what evidence confirms the failure layer, and the structural fix."
+    },
+    {
+      "id": "overprivileged-tool",
+      "title": "Over-privileged tool",
+      "task": "A tool can mutate resources outside the task scope. Redesign the control boundary without relying on prompt instructions."
+    },
+    {
+      "id": "slice-regression",
+      "title": "Hidden evaluation regression",
+      "task": "Aggregate quality improves after a model/prompt change while one regulated user slice degrades. Decide the release outcome and diagnostic path."
+    },
+    {
+      "id": "cost-latency-drift",
+      "title": "Cost / latency drift",
+      "task": "Tail latency and cost rise after context/caching behavior changes. Identify evidence needed before changing the model or architecture."
+    },
+    {
+      "id": "irreversible-request",
+      "title": "Irreversible stakeholder request",
+      "task": "A stakeholder requests an action the agent can execute autonomously but that cannot be safely reversed. Place the approval/control boundary and justify it."
+    }
+  ]
+}

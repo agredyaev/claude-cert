@@ -55,7 +55,11 @@ def professional_ui(lang: str, exam: dict) -> dict:
 
 def main():
     blueprint = json.load(open(os.path.join(DATA_DIR, "objectives.json"), encoding="utf-8"))
-    questions = json.load(open(os.path.join(DATA_DIR, "questions.json"), encoding="utf-8"))
+    all_questions = json.load(open(os.path.join(DATA_DIR, "questions.json"), encoding="utf-8"))
+    readiness_meta = json.load(open(os.path.join(DATA_DIR, "readiness_ids.json"), encoding="utf-8"))
+    readiness_ids = set(readiness_meta["ids"])
+    readiness_forms = readiness_meta["forms"]
+    questions = [q for q in all_questions if q["id"] not in readiness_ids]
     check_draw(blueprint)
     exam = blueprint["_exam"]
 
@@ -71,7 +75,7 @@ def main():
 
     pass_score = exam["pass_score"]
     scale_top = exam["scale"][1]
-    report_map = {str(q["task_id"]): str(q["task_id"]) for q in questions}
+    report_map = {str(q["task_id"]): str(q["task_id"]) for q in all_questions}
 
     for lang in ("en", "ru"):
         ui = professional_ui(lang, exam)
@@ -115,6 +119,53 @@ def main():
             },
             **common,
         )
+
+        for form_name, readiness_form in sorted(readiness_forms.items()):
+            readiness_form_ids = set(readiness_form["ids"])
+            readiness = [q for q in all_questions if q["id"] in readiness_form_ids]
+            readiness_ui = dict(ui)
+            readiness_ui["draw_note_full"] = (
+                f"Held-out readiness {form_name.upper()}: {{n}} unseen questions. "
+                "Answers reveal only after completion."
+                if lang == "en" else
+                f"Независимая проверка {form_name.upper()}: {{n}} ранее не показанных вопросов. "
+                "Ответы откроются только после завершения."
+            )
+            readiness_ui["threshold_note"] = (
+                "Held-out readiness signal. This set is excluded from normal study and bank browsing; "
+                "use the official 720 cut score only as a training reference, not a score prediction."
+                if lang == "en" else
+                "Независимый сигнал готовности. Этот набор исключён из обычной тренировки и банка; "
+                "порог 720 используется только как учебный ориентир, а не прогноз официального результата."
+            )
+            engine.render_page(
+                questions=readiness,
+                domains_js=domains_js,
+                ui=readiness_ui,
+                per_domain={k: int(v) for k, v in readiness_form["per_domain"].items()},
+                pass_score=pass_score,
+                pass_pct=round(pass_score / scale_top * 100),
+                store_key=f"ccarp-readiness-{form_name}-en",
+                lang_attr=lang,
+                exam_code="CCAR-P",
+                report_map=report_map,
+                title=(
+                    f"CCAR-P · Readiness {form_name.upper()}"
+                    if lang == "en"
+                    else f"CCAR-P · Проверка готовности {form_name.upper()}"
+                ),
+                page_title=(
+                    f"CCAR-P · Held-out readiness {form_name.upper()}"
+                    if lang == "en"
+                    else f"CCAR-P · Независимая проверка {form_name.upper()}"
+                ),
+                out_path=os.path.join(ROOT_DIR, "ccap", "dist", f"readiness_{form_name}_{lang}.html"),
+                language_links={
+                    "en": f"readiness-{form_name}-professional-en.html",
+                    "ru": f"readiness-{form_name}-professional-ru.html",
+                },
+                fixed_exam=True,
+            )
 
     print(
         f"Draw per attempt: {sum(DRAW.values())} questions across "

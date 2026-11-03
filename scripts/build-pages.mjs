@@ -10,8 +10,8 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const DOCS = path.join(ROOT, 'docs');
 
 const LANGS = [
-  { code: 'en', label: 'English', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_en.html', bank: 'ccaf/dist/bank_en.html' },
-  { code: 'ru', label: 'Русский', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_ru.html', bank: 'ccaf/dist/bank_ru.html' },
+  { code: 'en', label: 'English', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_en.html', bank: 'ccaf/dist/bank_en.html', readinessA: 'ccaf/dist/readiness_a_en.html', readinessB: 'ccaf/dist/readiness_b_en.html', readinessC: 'ccaf/dist/readiness_c_en.html' },
+  { code: 'ru', label: 'Русский', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_ru.html', bank: 'ccaf/dist/bank_ru.html', readinessA: 'ccaf/dist/readiness_a_ru.html', readinessB: 'ccaf/dist/readiness_b_ru.html', readinessC: 'ccaf/dist/readiness_c_ru.html' },
 ];
 
 const PROFESSIONAL_GUIDES = [
@@ -24,6 +24,8 @@ const PROFESSIONAL_GUIDES = [
     output: 'professional-en',
     test: 'ccap/dist/exam_en.html',
     bank: 'ccap/dist/bank_en.html',
+    readinessA: 'ccap/dist/readiness_a_en.html',
+    readinessB: 'ccap/dist/readiness_b_en.html',
   },
   {
     code: 'ru',
@@ -34,6 +36,8 @@ const PROFESSIONAL_GUIDES = [
     output: 'professional-ru',
     test: 'ccap/dist/exam_ru.html',
     bank: 'ccap/dist/bank_ru.html',
+    readinessA: 'ccap/dist/readiness_a_ru.html',
+    readinessB: 'ccap/dist/readiness_b_ru.html',
   },
 ];
 
@@ -288,12 +292,281 @@ async function buildFoundationLabs() {
   }));
 }
 
+
+function foundationCasesPage(data, lang = 'en') {
+  const ru = lang === 'ru';
+  const cards = data.scenarios.map((scenario, scenarioIndex) => {
+    const prompts = scenario.prompts.map((prompt, promptIndex) => {
+      const id = `${scenario.id}-p${promptIndex + 1}`;
+      return `
+        <section class="case-prompt" data-case-prompt="${id}">
+          <h3>${promptIndex + 1}. ${prompt.title}</h3>
+          <p>${prompt.task}</p>
+          <label for="answer-${id}">${ru ? 'Ваше решение' : 'Your reasoning'}</label>
+          <textarea id="answer-${id}" data-case-answer="${id}" rows="5"
+            placeholder="${ru ? 'Constraint → decision → rejected alternatives → consequence' : 'Constraint → decision → rejected alternatives → consequence'}"></textarea>
+          <details data-case-rubric="${id}">
+            <summary>${ru ? 'Открыть rubric после ответа' : 'Reveal rubric after answering'}</summary>
+            <ul>${prompt.rubric.map(x => `<li>${x}</li>`).join('')}</ul>
+          </details>
+        </section>`;
+    }).join('');
+    return `
+      <article class="scenario-card" data-scenario-id="${scenario.id}">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S${scenarioIndex + 1}</span>
+            <h2>${scenario.name}</h2>
+          </div>
+          <span class="training-domain-id">D${scenario.primary_domains.join(' · D')}</span>
+        </header>
+        <p class="scenario-brief">${scenario.brief}</p>
+        <div class="scenario-prompts">${prompts}</div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="${scenario.id}" disabled>
+          <span>${ru
+            ? 'Все решения сформулированы и сверены с rubric'
+            : 'All responses written and checked against the rubric'}</span>
+        </label>
+      </article>`;
+  }).join('');
+
+  return `<main class="training-dashboard cases-page" data-cases data-training-lang="${lang}">
+    <section class="labs-head">
+      <div>
+        <p class="training-panel-label">CCAR-F · Scenario transfer</p>
+        <h1>${ru ? '6 официальных scenario families' : '6 official scenario families'}</h1>
+      </div>
+      <div class="labs-progress">
+        <span>${ru ? 'Завершено' : 'Completed'}</span>
+        <strong id="cases-progress">0 / 6</strong>
+      </div>
+    </section>
+    <p class="labs-note">${ru
+      ? 'Сначала письменно решите задачу. Rubric открывайте только после собственного решения. Совпадение формулировок не требуется; проверяйте constraint, boundary, trade-off и rejected alternatives.'
+      : 'Write your decision before opening the rubric. Exact wording is irrelevant; check the constraint, owning boundary, trade-off, and rejected alternatives.'}</p>
+    <div class="scenario-list">${cards}</div>
+  </main>`;
+}
+
+async function buildFoundationCases() {
+  const data = JSON.parse(await fs.readFile(path.join(ROOT, 'ccaf', 'data', 'scenario_cases.json'), 'utf8'));
+  const out = path.join(DOCS, 'cases');
+  await ensureDir(out);
+  for (const lang of ['en', 'ru']) {
+    await fs.writeFile(path.join(out, `foundation-${lang}.html`), pageShell({
+      title: lang === 'ru' ? 'CCAR-F · Scenario cases · RU' : 'CCAR-F · Scenario cases',
+      lang,
+      baseHref: SITE_BASE_HREF,
+      body: `${header(lang, lang === 'ru' ? 'cases/foundation-en.html' : 'cases/foundation-ru.html')}${foundationCasesPage(data, lang)}`,
+    }));
+  }
+}
+
+
+function professionalCapstonePage(data, lang = 'en') {
+  const ru = lang === 'ru';
+  const artifacts = data.artifacts.map((artifact, index) => `
+    <article class="scenario-card capstone-item" data-capstone-item="${artifact.id}" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">${String(index + 1).padStart(2, '0')}</span><h2>${artifact.title}</h2></div>
+      </header>
+      <p class="scenario-brief">${artifact.task}</p>
+      <label for="capstone-${artifact.id}">${ru ? 'Evidence / решение' : 'Evidence / decision'}</label>
+      <textarea id="capstone-${artifact.id}" data-capstone-answer="${artifact.id}" rows="6"
+        placeholder="${ru ? 'Decision → evidence → rejected alternatives → operational consequence' : 'Decision → evidence → rejected alternatives → operational consequence'}"></textarea>
+      <details data-capstone-rubric="${artifact.id}">
+        <summary>${ru ? 'Проверить acceptance criteria' : 'Check acceptance criteria'}</summary>
+        <ul>${artifact.rubric.map(x => `<li>${x}</li>`).join('')}</ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="${artifact.id}">${ru ? 'не подтверждено' : 'not evidenced'}</span>
+    </article>`).join('');
+
+  const tests = data.stress_tests.map((test, index) => `
+    <article class="case-prompt capstone-stress" data-capstone-item="${test.id}" data-capstone-kind="stress">
+      <h3>${index + 1}. ${test.title}</h3>
+      <p>${test.task}</p>
+      <label for="capstone-${test.id}">${ru ? 'Диагностический ответ' : 'Diagnostic response'}</label>
+      <textarea id="capstone-${test.id}" data-capstone-answer="${test.id}" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="${test.id}">${ru ? 'не подтверждено' : 'not evidenced'}</span>
+    </article>`).join('');
+
+  return `<main class="training-dashboard cases-page capstone-page" data-capstone data-training-lang="${lang}">
+    <section class="labs-head">
+      <div>
+        <p class="training-panel-label">CCAR-P · Capstone</p>
+        <h1>${ru ? 'End-to-end архитектурная работа' : 'End-to-end architecture evidence'}</h1>
+      </div>
+      <div class="labs-progress">
+        <span>${ru ? 'Подтверждено' : 'Evidenced'}</span>
+        <strong id="capstone-progress">0 / 14</strong>
+      </div>
+    </section>
+    <p class="labs-note">${ru
+      ? 'Не пишите учебный проект ради формы. Используйте одну реалистичную систему и последовательно докажите design, integration, evaluation, governance, operations и handoff.'
+      : 'Use one realistic system. The point is not a toy implementation; it is evidence that one architecture survives design, integration, evaluation, governance, operations, and handoff.'}</p>
+    <section class="training-section">
+      <div class="training-section-head"><div><span class="training-panel-label">Artifacts</span><h2>9 architecture artifacts</h2></div></div>
+      <div class="scenario-list">${artifacts}</div>
+    </section>
+    <section class="training-section">
+      <div class="training-section-head"><div><span class="training-panel-label">Failure injection</span><h2>5 stress tests</h2></div></div>
+      <div class="scenario-list">${tests}</div>
+    </section>
+  </main>`;
+}
+
+async function buildProfessionalCapstone() {
+  const data = JSON.parse(await fs.readFile(path.join(ROOT, 'ccap', 'data', 'capstone.json'), 'utf8'));
+  const out = path.join(DOCS, 'professional');
+  await ensureDir(out);
+  for (const lang of ['en', 'ru']) {
+    await fs.writeFile(path.join(out, `capstone-${lang}.html`), pageShell({
+      title: lang === 'ru' ? 'CCAR-P · Capstone · RU' : 'CCAR-P · Capstone',
+      lang,
+      baseHref: SITE_BASE_HREF,
+      body: `${header(lang, lang === 'ru' ? 'professional/capstone-en.html' : 'professional/capstone-ru.html')}${professionalCapstonePage(data, lang)}`,
+    }));
+  }
+}
+
+function professionalDashboard(blueprint, lang = 'en') {
+  const ru = lang === 'ru';
+  const practice = ru ? 'practical/professional-ru.html' : 'practical/professional-en.html';
+  const bank = ru ? 'practical/bank-professional-ru.html' : 'practical/bank-professional-en.html';
+  const guide = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
+  const capstone = ru ? 'professional/capstone-ru.html' : 'professional/capstone-en.html';
+  const readinessA = ru ? 'practical/readiness-a-professional-ru.html' : 'practical/readiness-a-professional-en.html';
+  const readinessB = ru ? 'practical/readiness-b-professional-ru.html' : 'practical/readiness-b-professional-en.html';
+  const preflight = 'preflight/architect-professional.html';
+  const domains = Object.entries(blueprint.domains);
+
+  const objectiveMap = domains.map(([id, domain]) => {
+    const rows = domain.objectives.map((objective, index) => {
+      const key = `${id}|${objective}`;
+      return `
+        <li class="objective-row" data-prof-objective-key="${key}">
+          <span class="objective-id">${id}.${index + 1}</span>
+          <span class="objective-text">${objective}</span>
+          <span class="objective-status" aria-live="polite">${ru ? 'не начато' : 'not started'}</span>
+        </li>`;
+    }).join('');
+    return `
+      <section class="objective-domain" data-prof-objective-domain="${id}">
+        <header class="objective-domain-head">
+          <div>
+            <span class="training-domain-id">D${id} · ${domain.weight}%</span>
+            <h3>${domain.name}</h3>
+            <span id="professional-domain-mastered-${id}" class="objective-domain-progress">0 / ${domain.objectives.length} ${ru ? 'освоено' : 'mastered'}</span>
+          </div>
+          <div class="objective-domain-actions">
+            <a href="${guide}#domain-${id}-material">${ru ? 'Материал' : 'Material'}</a>
+            <a href="${practice}?mode=study&focus=${id}">${ru ? 'Практика' : 'Drill'}</a>
+          </div>
+        </header>
+        <ol class="objective-list">${rows}</ol>
+      </section>`;
+  }).join('');
+
+  const methodRows = [
+    ['01', 'Diagnostic', ru ? 'Короткая смешанная попытка без подсказок.' : 'Short mixed attempt with no answer reveal.', `${practice}?mode=exam&length=quick`, ru ? 'Начать' : 'Start'],
+    ['02', ru ? 'Материал' : 'Study', ru ? 'Закрывать только обнаруженные пробелы по objective.' : 'Close only the diagnosed objective gaps.', guide, ru ? 'Открыть' : 'Open'],
+    ['03', 'Retrieval', ru ? 'Сценарные задачи с self-explanation перед rationale.' : 'Scenario tasks with self-explanation before rationale.', `${practice}?mode=study&length=quick`, ru ? 'Практика' : 'Practice'],
+    ['04', 'Capstone', ru ? '9 архитектурных artifacts + 5 failure injections.' : '9 architecture artifacts + 5 failure injections.', capstone, ru ? 'Работа' : 'Work', 'professional-capstone-link'],
+    ['05', ru ? 'Интервальное повторение' : 'Spaced review', ru ? 'Возвращаться к ошибкам по расписанию.' : 'Return to misses on schedule.', `${practice}?mode=study&focus=misses`, ru ? 'Повторить' : 'Review', 'professional-misses-link'],
+    ['06', 'Full mock', '63 / 120', `${practice}?mode=exam&length=full`, ru ? 'Запустить' : 'Run'],
+    ['07', 'Held-out readiness', ru ? 'Forms A/B: две непересекающиеся проверки по 63 ранее не показанных вопроса.' : 'Forms A/B: two non-overlapping 63-question unseen checks.', readinessA, ru ? 'Проверить' : 'Check', 'professional-readiness-link'],
+    ['08', ru ? 'Подтверждение' : 'Evidence', ru ? 'Mastery 38/38 + capstone 14/14 + held-out pass + readiness evidence.' : 'Mastery 38/38 + capstone 14/14 + held-out pass + readiness evidence.', preflight, ru ? 'Завершить' : 'Complete', 'professional-evidence-link'],
+  ].map(([n,title,copy,href,action,id]) => `
+    <li class="study-method-row">
+      <span class="training-path-number">${n}</span>
+      <strong>${title}</strong>
+      <span>${copy}</span>
+      <a${id ? ` id="${id}"` : ''} href="${href}">${action}</a>
+      ${id === 'professional-capstone-link' ? '<small id="professional-capstone-copy">0 / 14</small>' : ''}
+      ${id === 'professional-misses-link' ? '<small id="professional-misses-copy">none due</small>' : ''}
+      ${id === 'professional-readiness-link' ? '<small id="professional-readiness-copy">not taken</small>' : ''}
+      ${id === 'professional-evidence-link' ? '<small id="professional-evidence-copy">0 / 10</small>' : ''}
+    </li>`).join('');
+
+  return `<main class="training-dashboard" data-prof-training-dashboard data-training-lang="${lang}">
+    <section class="study-status">
+      <div class="study-status-head">
+        <div>
+          <strong>CCAR-P · Professional</strong>
+          <span>63 ${ru ? 'вопроса' : 'questions'} · 120 min · 720 / 1000 · 38 objectives</span>
+        </div>
+        <div class="study-status-metrics">
+          <span><b id="professional-mastered">0 / 38</b> ${ru ? 'освоено' : 'mastered'}</span>
+          <span><b id="professional-misses">0</b> ${ru ? 'повторить' : 'due'}</span>
+          <span><b id="professional-capstone-stat">0 / 14</b> capstone</span>
+        </div>
+      </div>
+
+      <div class="study-next">
+        <span class="training-panel-label">${ru ? 'Следующее действие' : 'Next action'}</span>
+        <strong id="professional-next-title">Diagnostic</strong>
+        <p id="professional-next-copy">${ru ? 'Начните с короткой попытки без подсказок, чтобы определить реальные пробелы.' : 'Start with a short no-reveal attempt to identify actual gaps.'}</p>
+        <a class="training-btn training-btn-primary" id="professional-primary" href="${practice}?mode=exam&length=quick">${ru ? 'Начать' : 'Start'}</a>
+      </div>
+
+      <div class="training-progress-track" aria-hidden="true"><span id="professional-progress-fill"></span></div>
+      <p class="study-attempt" id="professional-progress-detail">${ru ? 'Активной попытки нет.' : 'No active attempt.'}</p>
+    </section>
+
+    <section class="training-section objective-map" aria-labelledby="professional-objective-map-title">
+      <div class="training-section-head">
+        <div>
+          <span class="training-panel-label">${ru ? 'Прогресс' : 'Progress'}</span>
+          <h2 id="professional-objective-map-title">38 objectives</h2>
+        </div>
+      </div>
+      <div class="objective-domains">${objectiveMap}</div>
+    </section>
+
+    <section class="training-section" aria-labelledby="professional-materials-title">
+      <div class="training-section-head">
+        <div>
+          <span class="training-panel-label">${ru ? 'Материалы' : 'Materials'}</span>
+          <h2 id="professional-materials-title">${ru ? 'Учить и доказывать' : 'Study and prove'}</h2>
+        </div>
+      </div>
+      <div class="material-list">
+        <a href="${guide}"><strong>Professional guide</strong><span>${ru ? '7 доменов, 38 objectives, decision rules и architecture patterns.' : '7 domains, 38 objectives, decision rules, and architecture patterns.'}</span></a>
+        <a href="${capstone}"><strong>Professional capstone</strong><span>${ru ? '9 artifacts + 5 stress tests на одной end-to-end системе.' : '9 artifacts + 5 stress tests on one end-to-end system.'}</span></a>
+        <a href="${bank}"><strong>${ru ? 'Банк вопросов' : 'Question bank'}</strong><span>${ru ? 'Сценарные задачи, варианты и rationale.' : 'Scenario tasks, choices, and rationale.'}</span></a>
+        <a href="${readinessA}"><strong>Held-out readiness A</strong><span>${ru ? 'Первая независимая форма: 63 unseen questions.' : 'First independent 63-question unseen form.'}</span></a>
+        <a href="${readinessB}"><strong>Held-out readiness B</strong><span>${ru ? 'Вторая непересекающаяся форма после remediation.' : 'Second non-overlapping form after remediation.'}</span></a>
+        <a href="score-report.html"><strong>Score report</strong><span>${ru ? 'Привязать официальный результат к слабым objectives.' : 'Map an official result to weak objectives.'}</span></a>
+      </div>
+    </section>
+
+    <details class="training-section study-method">
+      <summary>${ru ? 'Метод обучения' : 'Training method'}</summary>
+      <ol class="study-method-list">${methodRows}</ol>
+    </details>
+
+    <section class="professional-row">
+      <div>
+        <span class="training-panel-label">${ru ? 'Готовность' : 'Readiness'}</span>
+        <strong id="professional-ready-status">${ru ? 'Не подтверждена' : 'Not demonstrated'}</strong>
+        <span id="professional-ready-detail">${ru ? 'Нужно mastery, capstone, held-out и evidence.' : 'Requires mastery, capstone, held-out, and evidence.'}</span>
+      </div>
+    </section>
+  </main>`;
+}
+
 function trainingDashboard(blueprint, lang = 'en') {
   const ru = lang === 'ru';
   const practice = ru ? 'practical/ru.html' : 'practical/en.html';
   const bank = ru ? 'practical/bank-ru.html' : 'practical/bank-en.html';
   const guide = ru ? 'guides/ru.html' : 'guides/en.html';
+  const casesHref = ru ? 'cases/foundation-ru.html' : 'cases/foundation-en.html';
   const labsHref = ru ? 'labs/foundation-ru.html' : 'labs/foundation-en.html';
+  const readinessA = ru ? 'practical/readiness-a-ru.html' : 'practical/readiness-a-en.html';
+  const readinessB = ru ? 'practical/readiness-b-ru.html' : 'practical/readiness-b-en.html';
+  const readinessC = ru ? 'practical/readiness-c-ru.html' : 'practical/readiness-c-en.html';
   const professionalGuide = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
   const professionalPractice = ru ? 'practical/professional-ru.html' : 'practical/professional-en.html';
   const domains = Object.entries(blueprint.domains);
@@ -329,10 +602,12 @@ function trainingDashboard(blueprint, lang = 'en') {
     ['01', 'Diagnostic', ru ? '20 смешанных вопросов без подсказок.' : '20 mixed questions with no answer reveal.', `${practice}?mode=exam&length=quick`, ru ? 'Начать' : 'Start'],
     ['02', ru ? 'Материал' : 'Study', ru ? 'Читать только то, что закрывает выявленный пробел.' : 'Read only what closes a diagnosed gap.', guide, ru ? 'Открыть' : 'Open'],
     ['03', ru ? 'Извлечение из памяти' : 'Retrieval', ru ? 'Короткие weighted drills с rationale каждого варианта.' : 'Short weighted drills with rationale for every option.', `${practice}?mode=study&length=quick`, ru ? 'Практика' : 'Practice'],
-    ['04', 'Hands-on', ru ? '4 задания с deliverable и acceptance criteria.' : 'Four builds with deliverables and acceptance criteria.', labsHref, ru ? 'Лабораторные' : 'Labs', 'training-labs-link'],
-    ['05', ru ? 'Интервальное повторение' : 'Spaced review', ru ? 'Возвращаться к ошибкам по расписанию, а не сразу подряд.' : 'Return to misses on schedule instead of massed repetition.', `${practice}?mode=study&focus=misses`, ru ? 'Повторить' : 'Review', 'training-misses-link'],
-    ['06', 'Full mock', '60 / 120', `${practice}?mode=exam&length=full`, ru ? 'Запустить' : 'Run'],
-    ['07', 'Readiness', ru ? '30 task statements + 4 labs + объяснённые ошибки.' : '30 task statements + 4 labs + explained misses.', 'preflight/architect-foundations.html', ru ? 'Проверить' : 'Check', 'training-readiness-link'],
+    ['04', 'Scenario transfer', ru ? '6 официальных scenario families · 18 открытых архитектурных задач.' : '6 official scenario families · 18 open architecture decisions.', casesHref, ru ? 'Кейсы' : 'Cases', 'training-cases-link'],
+    ['05', 'Hands-on', ru ? '4 задания с deliverable и acceptance criteria.' : 'Four builds with deliverables and acceptance criteria.', labsHref, ru ? 'Лабораторные' : 'Labs', 'training-labs-link'],
+    ['06', ru ? 'Интервальное повторение' : 'Spaced review', ru ? 'Возвращаться к ошибкам по расписанию, а не сразу подряд.' : 'Return to misses on schedule instead of massed repetition.', `${practice}?mode=study&focus=misses`, ru ? 'Повторить' : 'Review', 'training-misses-link'],
+    ['07', 'Full mock', '60 / 120', `${practice}?mode=exam&length=full`, ru ? 'Запустить' : 'Run'],
+    ['08', 'Held-out readiness', ru ? '60 ранее не показанных вопросов. Forms A/B/C расходуются только после remediation.' : '60 unseen questions. Forms A/B/C are consumed only after remediation.', readinessA, ru ? 'Проверить' : 'Check', 'training-readiness-link'],
+    ['09', ru ? 'Подтверждение' : 'Evidence', ru ? 'Mastery 30/30 + cases 6/6 + labs 4/4 + held-out pass + объяснённые ошибки.' : 'Mastery 30/30 + cases 6/6 + labs 4/4 + held-out pass + explained misses.', 'preflight/architect-foundations.html', ru ? 'Завершить' : 'Complete', 'training-evidence-link'],
   ];
 
   const methodRows = pathSteps.map(([n, title, copy, href, action, id]) => `
@@ -341,9 +616,11 @@ function trainingDashboard(blueprint, lang = 'en') {
       <strong>${title}</strong>
       <span>${copy}</span>
       <a${id ? ` id="${id}"` : ''} href="${href}">${action}</a>
+      ${id === 'training-cases-link' ? '<small id="training-cases-copy">0 / 6</small>' : ''}
       ${id === 'training-labs-link' ? '<small id="training-labs-copy">0 / 4</small>' : ''}
       ${id === 'training-misses-link' ? `<small id="training-misses-copy">${ru ? 'нет повторений' : 'none due'}</small>` : ''}
-      ${id === 'training-readiness-link' ? '<small id="training-readiness-copy">0 / 10</small>' : ''}
+      ${id === 'training-readiness-link' ? '<small id="training-readiness-copy">not taken</small>' : ''}
+      ${id === 'training-evidence-link' ? '<small id="training-evidence-copy">0 / 10</small>' : ''}
     </li>`).join('');
 
   return `<main class="training-dashboard" data-training-dashboard data-training-lang="${lang}">
@@ -356,6 +633,7 @@ function trainingDashboard(blueprint, lang = 'en') {
         <div class="study-status-metrics">
           <span><b id="training-mastered">0 / 30</b> ${ru ? 'освоено' : 'mastered'}</span>
           <span><b id="training-misses">0</b> ${ru ? 'повторить' : 'due'}</span>
+          <span><b id="training-cases-stat">0 / 6</b> cases</span>
           <span><b id="training-labs-stat">0 / 4</b> labs</span>
         </div>
       </div>
@@ -390,6 +668,7 @@ function trainingDashboard(blueprint, lang = 'en') {
       </div>
       <div class="material-list">
         <a href="${guide}"><strong>${ru ? 'Foundation guide' : 'Foundation guide'}</strong><span>${ru ? 'Теория, decision rules, worked examples, domain notes.' : 'Theory, decision rules, worked examples, domain notes.'}</span></a>
+        <a href="${casesHref}"><strong>Scenario cases</strong><span>${ru ? '6 official scenario families · письменное reasoning + rubric.' : '6 official scenario families · written reasoning + rubric.'}</span></a>
         <a href="${labsHref}"><strong>Hands-on labs</strong><span>${ru ? '4 практических задания с acceptance criteria.' : 'Four practical builds with acceptance criteria.'}</span></a>
         <a href="${bank}"><strong>${ru ? 'Банк вопросов' : 'Question bank'}</strong><span>${ru ? 'Поиск по task statement, варианты и rationale.' : 'Browse task statements, options, and rationale.'}</span></a>
         <a href="cheatsheet/${lang}.html"><strong>Cheatsheet</strong><span>${ru ? 'Краткое повторение decision rules.' : 'Compact review of decision rules.'}</span></a>
@@ -409,8 +688,7 @@ function trainingDashboard(blueprint, lang = 'en') {
         <span id="professional-stage-status">${ru ? 'Откроется после Foundation mastery.' : 'Unlocks after Foundation mastery.'}</span>
       </div>
       <div class="training-stage-actions">
-        <a class="training-btn disabled" id="professional-guide-link" aria-disabled="true" href="${professionalGuide}">Guide</a>
-        <a class="training-btn disabled" id="professional-practice-link" aria-disabled="true" href="${professionalPractice}?mode=study&length=quick">Practice</a>
+        <a class="training-btn disabled" id="professional-workspace-link" aria-disabled="true" href="${ru ? 'professional-ru.html' : 'professional.html'}">${ru ? 'Открыть workspace' : 'Open workspace'}</a>
       </div>
     </section>
   </main>`;
@@ -760,13 +1038,13 @@ const PREFLIGHT_TRACKS = [
       },
       {
         n: '08',
-        label: 'Hands-on labs completed',
-        detail: 'Complete all four practical labs and check each deliverable against its acceptance criteria: Multi-Tool Agent, Claude Code Team Workflow, Structured Data Extraction, and Multi-Agent Research.',
+        label: 'Scenario transfer and hands-on completed',
+        detail: 'Complete all six official scenario-family case packs plus the four practical labs. A case counts only after written reasoning and rubric review; a lab counts only after checking the deliverable against every acceptance criterion.',
       },
       {
         n: '09',
-        label: 'Full mock completed under time',
-        detail: 'Complete 60 questions in 120 minutes in exam mode. Treat the scaled practice score as a training signal, not a prediction of the official score.',
+        label: 'Timed mock and held-out readiness completed',
+        detail: 'Complete a 60-question / 120-minute normal mock, then pass a separate held-out 60-question form at 720+ without prior exposure to those items.',
       },
       {
         n: '10',
@@ -780,6 +1058,9 @@ const PREFLIGHT_TRACKS = [
         items: [
           { name: 'Study guide', href: 'guides/en.html', note: 'Task statements, decision rules, and worked reasoning.', internal: true },
           { name: 'Practice', href: 'practical/en.html', note: 'Weighted study drills and full timed attempts.', internal: true },
+          { name: 'Scenario cases', href: 'cases/foundation-en.html', note: 'Six official scenario families with written reasoning and rubrics.', internal: true },
+          { name: 'Hands-on labs', href: 'labs/foundation-en.html', note: 'Four builds with explicit deliverables and acceptance criteria.', internal: true },
+          { name: 'Held-out readiness', href: 'practical/readiness-a-en.html', note: 'Unseen exam-only readiness form; excluded from the ordinary training bank.', internal: true },
           { name: 'Question bank', href: 'practical/bank-en.html', note: 'Browse by domain and inspect explanations.', internal: true },
           { name: 'Cheatsheet', href: 'cheatsheet/en.html', note: 'Compact recall reference.', internal: true },
         ],
@@ -864,13 +1145,13 @@ const PREFLIGHT_TRACKS = [
       },
       {
         n: '09',
-        label: 'Full mock completed under time',
-        detail: 'Complete 63 questions in 120 minutes in exam mode, including multiple-response items. Use the result as a training signal, not an official score prediction.',
+        label: 'Timed mock and held-out readiness completed',
+        detail: 'Complete a 63-question / 120-minute normal mock, then pass the separate held-out 63-question form at 720+ without prior exposure to those items.',
       },
       {
         n: '10',
-        label: 'Architecture trade-offs can be defended',
-        detail: 'For repeated misses, state the governing constraint, the rejected alternatives, and the operational consequence of the chosen design.',
+        label: 'Capstone and architecture trade-offs can be defended',
+        detail: 'Complete the end-to-end Professional capstone. For each major choice, state the governing constraint, rejected alternatives, operational consequence, evaluation gate, risk owner, and handoff evidence.',
       },
     ],
     resources: [
@@ -879,6 +1160,9 @@ const PREFLIGHT_TRACKS = [
         items: [
           { name: 'Study guide', href: 'guides/professional-en.html', note: 'Seven-domain task statements and decision rules.', internal: true },
           { name: 'Practice', href: 'practical/professional-en.html', note: 'Weighted study drills and full timed attempts.', internal: true },
+          { name: 'Professional capstone', href: 'professional/capstone-en.html', note: 'Nine architecture artifacts plus five injected failure cases on one end-to-end system.', internal: true },
+          { name: 'Held-out readiness A', href: 'practical/readiness-a-professional-en.html', note: 'First unseen 63-question readiness form; excluded from normal study and browsing.', internal: true },
+          { name: 'Held-out readiness B', href: 'practical/readiness-b-professional-en.html', note: 'Second non-overlapping form for use only after remediation if A does not pass.', internal: true },
           { name: 'Question bank', href: 'practical/bank-professional-en.html', note: 'Browse by domain and inspect explanations.', internal: true },
         ],
       },
@@ -1330,6 +1614,15 @@ async function copyPracticalTests() {
     if (l.bank && await exists(path.join(ROOT, l.bank))) {
       await fs.copyFile(path.join(ROOT, l.bank), path.join(out, `bank-${l.code}.html`));
     }
+    if (l.readinessA && await exists(path.join(ROOT, l.readinessA))) {
+      await fs.copyFile(path.join(ROOT, l.readinessA), path.join(out, `readiness-a-${l.code}.html`));
+    }
+    if (l.readinessB && await exists(path.join(ROOT, l.readinessB))) {
+      await fs.copyFile(path.join(ROOT, l.readinessB), path.join(out, `readiness-b-${l.code}.html`));
+    }
+    if (l.readinessC && await exists(path.join(ROOT, l.readinessC))) {
+      await fs.copyFile(path.join(ROOT, l.readinessC), path.join(out, `readiness-c-${l.code}.html`));
+    }
     const dest = path.join(out, `${l.code}.html`);
     if (await exists(src)) {
       await fs.copyFile(src, dest);
@@ -1360,6 +1653,12 @@ async function copyProfessionalExams() {
     const src = path.join(ROOT, l.test);
     if (l.bank && await exists(path.join(ROOT, l.bank))) {
       await fs.copyFile(path.join(ROOT, l.bank), path.join(out, `bank-${l.output}.html`));
+    }
+    if (l.readinessA && await exists(path.join(ROOT, l.readinessA))) {
+      await fs.copyFile(path.join(ROOT, l.readinessA), path.join(out, `readiness-a-${l.output}.html`));
+    }
+    if (l.readinessB && await exists(path.join(ROOT, l.readinessB))) {
+      await fs.copyFile(path.join(ROOT, l.readinessB), path.join(out, `readiness-b-${l.output}.html`));
     }
     const dest = path.join(out, `${l.output}.html`);
     if (await exists(src)) {
@@ -1432,6 +1731,7 @@ async function removeRetiredPublicLocales() {
 
 async function writeIndex() {
   const blueprint = JSON.parse(await fs.readFile(path.join(ROOT, 'ccaf', 'data', 'blueprint.json'), 'utf8'));
+  const professionalBlueprint = JSON.parse(await fs.readFile(path.join(ROOT, 'ccap', 'data', 'objectives.json'), 'utf8'));
   await fs.writeFile(path.join(DOCS, 'index.html'), pageShell({
     title: 'CCAR-F · Training',
     lang: 'en',
@@ -1443,6 +1743,18 @@ async function writeIndex() {
     lang: 'ru',
     baseHref: SITE_BASE_HREF,
     body: `${header('ru', 'index.html')}${trainingDashboard(blueprint, 'ru')}`,
+  }));
+  await fs.writeFile(path.join(DOCS, 'professional.html'), pageShell({
+    title: 'CCAR-P · Training',
+    lang: 'en',
+    baseHref: SITE_BASE_HREF,
+    body: `${header('en', 'professional-ru.html')}${professionalDashboard(professionalBlueprint, 'en')}`,
+  }));
+  await fs.writeFile(path.join(DOCS, 'professional-ru.html'), pageShell({
+    title: 'CCAR-P · Training · RU',
+    lang: 'ru',
+    baseHref: SITE_BASE_HREF,
+    body: `${header('ru', 'professional.html')}${professionalDashboard(professionalBlueprint, 'ru')}`,
   }));
   await fs.writeFile(path.join(DOCS, '.nojekyll'), '');
 }
@@ -1456,7 +1768,9 @@ async function main() {
   await copyBrowserDependencies();
   await writeIndex();
   await buildGuides();
+  await buildFoundationCases();
   await buildFoundationLabs();
+  await buildProfessionalCapstone();
   await copyScoreReport();
   await copyPracticalTests();
   await copyProfessionalExams();

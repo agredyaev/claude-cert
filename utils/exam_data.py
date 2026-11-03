@@ -147,23 +147,14 @@ def _multi_questions(lang):
     return _read_json(os.path.join(DATA_DIR, f"multi_{lang}.json"), [])
 
 
-def load(lang):
-    """Return the scored question bank for `lang`.
+def _heldout_ids():
+    return set(_read_json(os.path.join(DATA_DIR, "readiness_ids.json"), {}).get("ids", []))
 
-    English certification training uses only fully explained, task-statement
-    tagged items: the balanced imported corpus plus the curated MR set.
-    Guide-embedded and legacy mock questions remain study/source material but
-    are intentionally excluded from scored readiness signals.
-    """
+
+def _annotate(questions):
+    """Apply the reviewed Foundation domain/task-statement metadata."""
     domain_map = _read_json(os.path.join(DATA_DIR, "domains.json"), {})
     dupes = set(_read_json(os.path.join(DATA_DIR, "duplicates.json"), []))
-
-    # Score-report objectives (objectives.json) and the hand-made item → objective
-    # map. An item without a mapping simply carries no task_id.
-    # Every item displays an official task statement (blueprint.json) under a
-    # score-report theme (objectives.json), whether it was hand-tagged to a
-    # score-report objective or imported with a subdomain label: one heading
-    # scheme, so the bank gives no hint of where an item came from.
     meta = _read_json(os.path.join(DATA_DIR, "objectives.json"), {})
     objective_subdomains = meta.get("objective_subdomains", {})
     subdomain_themes = meta.get("subdomain_themes", {})
@@ -173,14 +164,9 @@ def load(lang):
             statements[f"{d}.{i}"] = text
     objective_map = _read_json(os.path.join(DATA_DIR, "objective_map.json"), {})
 
-    if lang == "en":
-        questions = _imported_questions(lang) + _multi_questions(lang)
-    else:
-        # Legacy non-public translations are retained as source material only.
-        questions = _guide_questions(lang) + _mock_questions(lang)
-
     merged = []
-    for q in questions:
+    for source in questions:
+        q = dict(source)
         if q["id"] in dupes:
             continue
         q["domain"] = domain_map.get(q["id"]) or q.get("domain") or _infer_domain(q)
@@ -190,10 +176,38 @@ def load(lang):
             q["objective"] = statements[tid]
             q["group"] = subdomain_themes.get(tid, "")
         merged.append(q)
-
-    # Group by domain (1..5), preserving discovery order within each domain.
     merged.sort(key=lambda q: q["domain"])
     return merged
+
+
+def _all_scored(lang):
+    if lang == "en":
+        return _annotate(_imported_questions(lang) + _multi_questions(lang))
+    # Legacy non-public translations are retained as source material only.
+    return _annotate(_guide_questions(lang) + _mock_questions(lang))
+
+
+def load(lang):
+    """Return the ordinary scored training bank.
+
+    The held-out readiness set is physically excluded so normal study, domain
+    drills, weak-spot review, and bank browsing cannot leak final-check items.
+    """
+    questions = _all_scored(lang)
+    if lang != "en":
+        return questions
+    heldout = _heldout_ids()
+    return [q for q in questions if q["id"] not in heldout]
+
+
+def load_readiness(lang="en", form="a"):
+    """Return one deterministic held-out readiness form."""
+    content_lang = "en" if lang == "ru" else lang
+    questions = _all_scored(content_lang)
+    meta = _read_json(os.path.join(DATA_DIR, "readiness_ids.json"), {})
+    forms = meta.get("forms", {})
+    ids = set(forms.get(form, {}).get("ids", meta.get("ids", [])))
+    return [q for q in questions if q["id"] in ids]
 
 
 if __name__ == "__main__":

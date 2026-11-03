@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "source": "CCAR-F Exam Guide v1.0, Exam Scenarios",
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "Customer Support Resolution Agent",
+      "primary_domains": [
+        "1",
+        "2",
+        "5"
+      ],
+      "brief": "A support agent resolves ambiguous returns, billing disputes, and account issues through backend tools. It must maximize first-contact resolution without taking unsafe or irreversible actions when escalation is required.",
+      "prompts": [
+        {
+          "title": "Refund boundary",
+          "task": "A refund tool can issue money immediately. Define the tool and orchestration boundary so routine refunds remain efficient but high-value or ambiguous refunds cannot be executed solely because the model says they look reasonable.",
+          "rubric": [
+            "Separate eligibility/lookup from the irreversible refund action.",
+            "Use deterministic preconditions or approval policy for the high-consequence boundary.",
+            "Keep the model responsible for reasoning and routing, not for overriding the control.",
+            "Return typed failure/escalation information instead of silently retrying."
+          ]
+        },
+        {
+          "title": "Escalation decision",
+          "task": "The customer’s account history conflicts with the current order record. Decide what the agent should preserve in context, what it should verify, and when it should escalate.",
+          "rubric": [
+            "Preserve the conflicting facts and provenance rather than summarizing away the disagreement.",
+            "Verify the authoritative source before acting.",
+            "Escalate when the ambiguity affects an irreversible or policy-sensitive action.",
+            "Do not convert uncertainty into a confident final answer."
+          ]
+        },
+        {
+          "title": "Tool surface",
+          "task": "The agent currently receives twelve customer-service tools, but most requests need only lookup_order, get_customer, process_refund, and escalate_to_human. Redesign the capability surface.",
+          "rubric": [
+            "Prefer the smallest tool set needed for the task.",
+            "Use narrow descriptions and non-overlapping responsibilities.",
+            "Do not treat logging/monitoring as a substitute for removing unnecessary capability.",
+            "Keep least privilege at the tool/permission boundary."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "name": "Code Generation with Claude Code",
+      "primary_domains": [
+        "3",
+        "5"
+      ],
+      "brief": "A software team uses Claude Code for generation, refactoring, debugging, and documentation and needs repeatable project instructions plus a safe choice between planning and direct execution.",
+      "prompts": [
+        {
+          "title": "Plan or execute",
+          "task": "A developer asks for a cross-module refactor that changes a public API used by several teams. Decide whether to use plan mode or direct execution and state what evidence must exist before code changes begin.",
+          "rubric": [
+            "Choose planning/review before implementation because scope and reversibility are uncertain.",
+            "Identify affected interfaces, tests, owners, and migration constraints first.",
+            "Do not equate a large prompt with an approved plan.",
+            "Move to execution only after the decision boundaries are clear."
+          ]
+        },
+        {
+          "title": "Instruction scope",
+          "task": "The repository has organization-wide security rules, project conventions, and one directory with a special build command. Decide where each instruction belongs.",
+          "rubric": [
+            "Keep stable broad rules at the broadest appropriate scope.",
+            "Keep project-specific conventions in project instructions.",
+            "Keep directory/local behavior close to the code it governs.",
+            "Avoid one giant instruction file with unrelated or contradictory rules."
+          ]
+        },
+        {
+          "title": "Context reset",
+          "task": "A long debugging session has accumulated failed hypotheses and stale file details. Decide what to preserve and what to discard before continuing.",
+          "rubric": [
+            "Preserve confirmed facts, decisions, unresolved hypotheses, and exact error evidence.",
+            "Discard recoverable bulk and invalidated exploration.",
+            "Do not compress away identifiers, versions, or constraints needed for the next decision.",
+            "Treat context management as reliability work, not just token reduction."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "name": "Multi-Agent Research System",
+      "primary_domains": [
+        "1",
+        "2",
+        "5"
+      ],
+      "brief": "A coordinator delegates web search, document analysis, synthesis, and reporting to specialized subagents and must produce a complete, cited result.",
+      "prompts": [
+        {
+          "title": "Decomposition contract",
+          "task": "Design the handoff contract between search, document-analysis, synthesis, and report agents so missing evidence cannot silently disappear.",
+          "rubric": [
+            "Give each subagent a bounded responsibility and explicit output contract.",
+            "Carry provenance and uncertainty with the result.",
+            "Have the coordinator check coverage/completeness before synthesis.",
+            "Propagate failures or missing evidence instead of treating them as empty success."
+          ]
+        },
+        {
+          "title": "Parallelism",
+          "task": "Some research questions are independent, while synthesis depends on all evidence. Decide which work should run in parallel and which must wait.",
+          "rubric": [
+            "Parallelize independent evidence-gathering tasks.",
+            "Keep dependent synthesis after required inputs are available.",
+            "Do not add agents where sequential deterministic processing is sufficient.",
+            "Account for duplicate work and reconciliation cost."
+          ]
+        },
+        {
+          "title": "Conflicting sources",
+          "task": "Two authoritative sources disagree on a key number. Decide what the system should send to the report agent.",
+          "rubric": [
+            "Preserve both values and their sources.",
+            "Represent disagreement explicitly instead of averaging or picking one silently.",
+            "Allow the report layer to communicate uncertainty or request adjudication.",
+            "Maintain traceability from claim to evidence."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "name": "Developer Productivity with Claude",
+      "primary_domains": [
+        "2",
+        "3",
+        "1"
+      ],
+      "brief": "An engineering assistant explores unfamiliar codebases, explains legacy systems, generates boilerplate, and automates repetitive work using built-in tools and MCP integrations.",
+      "prompts": [
+        {
+          "title": "Built-in tool or MCP",
+          "task": "The assistant needs to search local source files and also query an internal ownership service. Choose the boundary between built-in tools and MCP.",
+          "rubric": [
+            "Use local file/search capabilities for local codebase work.",
+            "Use an integration boundary for the external/internal service.",
+            "Do not wrap every local operation in a custom MCP tool.",
+            "Keep external credentials and authorization at the integration boundary."
+          ]
+        },
+        {
+          "title": "Exploration before modification",
+          "task": "The user asks for a change in a legacy subsystem with poor documentation. Define the first sequence of actions.",
+          "rubric": [
+            "Map relevant files, callers, tests, and conventions before editing.",
+            "Use evidence from the repository rather than assumptions from naming alone.",
+            "Keep the initial exploration reversible/read-only.",
+            "Only broaden the search when the current evidence is insufficient."
+          ]
+        },
+        {
+          "title": "Automation boundary",
+          "task": "A repetitive migration can be automated, but one step deletes old configuration after validation. Decide how autonomy should change at that step.",
+          "rubric": [
+            "Automate reversible/repeatable steps freely when validated.",
+            "Place an approval or deterministic gate before destructive cleanup.",
+            "Make validation evidence explicit before deletion.",
+            "Do not rely on a model-generated confidence statement as the safety control."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "name": "Claude Code for Continuous Integration",
+      "primary_domains": [
+        "3",
+        "4"
+      ],
+      "brief": "Claude Code runs automated review and test-generation work in CI/CD and must produce actionable feedback while controlling false positives and permissions.",
+      "prompts": [
+        {
+          "title": "Actionable review output",
+          "task": "The CI reviewer produces long prose with many speculative warnings. Redesign the prompt/output contract to reduce false positives and make findings machine-consumable.",
+          "rubric": [
+            "Define explicit review criteria and severity thresholds.",
+            "Require evidence/location for each finding.",
+            "Use structured output when downstream CI logic consumes the result.",
+            "Prefer abstention/no-finding over unsupported speculation."
+          ]
+        },
+        {
+          "title": "CI permissions",
+          "task": "The review job only needs repository read access but currently runs with credentials that can modify pull requests and deployment settings. Redesign the permissions.",
+          "rubric": [
+            "Reduce credentials to the minimum capabilities required.",
+            "Separate review from mutating/deployment actions.",
+            "Do not justify broad credentials because the prompt says not to use them.",
+            "Make the permission boundary deterministic."
+          ]
+        },
+        {
+          "title": "Regression gate",
+          "task": "A prompt change improves average review usefulness but doubles false positives on generated files. Decide whether to release it and what evaluation should control the decision.",
+          "rubric": [
+            "Do not accept aggregate improvement when a critical slice regresses beyond its threshold.",
+            "Keep representative slice-level evaluation.",
+            "Define the release gate before interpreting the result.",
+            "Diagnose whether prompt criteria, file filtering, or context selection caused the regression."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "name": "Structured Data Extraction",
+      "primary_domains": [
+        "4",
+        "5"
+      ],
+      "brief": "A document pipeline extracts structured records, validates them against schemas, handles edge cases, and feeds downstream systems that require reliable shape and provenance.",
+      "prompts": [
+        {
+          "title": "Schema enforcement",
+          "task": "Downstream code fails when the model returns syntactically valid JSON with missing required fields. Redesign the extraction boundary.",
+          "rubric": [
+            "Use schema/tool-based structure rather than parsing free-form prose.",
+            "Validate required fields and semantic constraints after generation.",
+            "Retry or escalate based on typed validation failure.",
+            "Do not treat JSON syntax alone as correctness."
+          ]
+        },
+        {
+          "title": "Ambiguous document",
+          "task": "A document contains two possible invoice dates and no clear label. Decide how extraction should represent the ambiguity.",
+          "rubric": [
+            "Do not invent a single confident value.",
+            "Preserve the evidence/provenance needed to resolve the ambiguity.",
+            "Use an explicit uncertainty/error representation supported by the downstream contract.",
+            "Escalate when downstream consequences require a single authoritative value."
+          ]
+        },
+        {
+          "title": "Batch throughput",
+          "task": "Thousands of independent documents need extraction overnight. Decide when batching is appropriate and what must remain outside the batch boundary.",
+          "rubric": [
+            "Batch independent requests when latency is not interactive and throughput/cost benefit matters.",
+            "Keep validation, failure accounting, and downstream reconciliation explicit.",
+            "Do not assume batch processing itself performs an interactive external tool loop.",
+            "Preserve a stable request-to-result correlation."
+          ]
+        }
+      ]
+    }
+  ]
+}

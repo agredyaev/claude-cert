@@ -101,35 +101,35 @@
     "domain": 1,
     "task_id": "1.4",
     "objective": "Design multi-agent systems and orchestration strategies",
-    "situation": "You ask your main agent to delegate a task to a subagent, expecting it to already know which file had the bug and what error message appeared earlier in the conversation. The subagent responds asking for that information again.",
-    "question": "Why did this happen, and what should you do?",
+    "situation": "A main agent delegates a bug-fix investigation to a new subagent. The main conversation already contains the exact file path, failing test name, and error message, but none of those details are stored in a shared artifact or passed in the delegation prompt.",
+    "question": "What should the architect change so the subagent can start from the known evidence without giving it unnecessary parent context?",
     "options": [
       {
         "letter": "A",
-        "text": "The subagent inherited the parent's tools but not its system prompt, so providing context requires a tools configuration that includes the file path and error message as tool inputs.",
+        "text": "Put the entire parent conversation transcript into every subagent prompt so no potentially relevant detail is ever omitted.",
         "correct": false,
-        "explanation": "The subagent's lack of context stems from not having the parent's conversation history, not from missing system prompt or tool configuration. Tools cannot convey conversation-specific details like file paths and error messages, so this suggested fix would not solve the problem."
+        "explanation": "Passing the whole transcript would provide the missing evidence, but it defeats context isolation and transfers far more state than the bounded investigation needs."
       },
       {
         "letter": "B",
-        "text": "The subagent ran in background mode, which strips file paths and error messages from any prompt passed to it, so switching to interactive mode preserves the file and error message.",
-        "correct": false,
-        "explanation": "Background mode governs synchronous versus asynchronous execution, not prompt content filtering. It does not remove file paths or error messages from the prompt; the real issue is the subagent's lack of parent conversational context."
+        "text": "Pass the file path, failing test, and error message explicitly in the delegation prompt, along with the bounded question the subagent should answer.",
+        "correct": true,
+        "explanation": "A new subagent has isolated context. Supplying the minimal known evidence plus a bounded objective gives it what it needs while preserving the context-isolation benefit of delegation."
       },
       {
         "letter": "C",
-        "text": "The subagent's session was not resumed correctly, so the fix is to pass the parent's session ID into the subagent's resume call to restore the conversational state.",
+        "text": "Pass only the parent session ID and expect the subagent to reconstruct the parent conversation from that identifier before it begins.",
         "correct": false,
-        "explanation": "Resuming a session restores a subagent's own previous state, not the parent agent's conversation history. A new subagent invocation does not have access to the parent's context even if a session ID is provided."
+        "explanation": "A session identifier is not a substitute for explicitly delegated context. A new subagent does not automatically inherit the parent's conversation history from an ID."
       },
       {
         "letter": "D",
-        "text": "The subagent context starts fresh, lacking parent conversation history. You must include the file path and error message directly in the delegation prompt.",
-        "correct": true,
-        "explanation": "A subagent starts with a fresh context that does not inherit the parent agent's conversation history, so it has no way to know about prior file paths or errors. You must explicitly include those details in the delegation prompt when invoking the subagent."
+        "text": "Add the transient file path and error message to CLAUDE.md so every future subagent and session loads them automatically until the bug is fixed.",
+        "correct": false,
+        "explanation": "CLAUDE.md is for durable project guidance, not ephemeral debugging state. Persisting one incident there pollutes future sessions and still does not model a clean delegation contract."
       }
     ],
-    "correct": "D",
+    "correct": "B",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "0bdfe2df43d58860ab2a5df5abec84725cacfdaa23b8f121fa27f136931111b2"
@@ -280,7 +280,7 @@
       },
       {
         "letter": "B",
-        "text": "Increase the effort parameter to its maximum setting so Claude processes the PDF content faster on each request",
+        "text": "Use maximum reasoning effort on every request so Claude spends more computation processing the PDF each time.",
         "correct": false,
         "explanation": "The effort parameter trades off intelligence for latency and cost within a single response; it does not cache or reuse prior context across follow-up requests."
       },
@@ -1275,32 +1275,32 @@
     "domain": 1,
     "task_id": "1.6",
     "objective": "Align solutions to business value pillars (efficiency, transformation, productivity, cost, performance SLAs)",
-    "situation": "A customer-support chatbot must answer high volumes of routine account questions in under a second per response, and the product team's success metric is purely response latency at a sustainable per-ticket cost.",
-    "question": "Which model choice best aligns the architecture with this performance SLA and cost pillar?",
+    "situation": "A routine support workflow has a measured quality floor of 97% on a representative eval set. In benchmarking, a smaller fast model clears that floor at p95 latency 540 ms and €0.003 per request; a larger model scores 98.2% but takes 1.1 s and costs €0.010. The product SLA is p95 below 800 ms and the business priority is sustainable per-ticket cost.",
+    "question": "Which production choice best aligns with the stated value pillars?",
     "options": [
       {
         "letter": "A",
-        "text": "Start with Claude Haiku 4.5, the fastest current model with near-frontier intelligence at the lowest per-token price",
+        "text": "Use the smaller model for routine requests because it already clears the quality floor and meets both latency and cost constraints; route separately only when a case requires capabilities the benchmark did not cover.",
         "correct": true,
-        "explanation": "Claude Haiku 4.5 is described as the fastest model with near-frontier intelligence at the most economical price point, making it the recommended starting point for latency-sensitive, high-volume, cost-sensitive deployments like a routine-question support bot."
+        "explanation": "The decision should be driven by the explicit quality floor and SLA, not by maximizing model capability. The smaller model satisfies the required quality while materially outperforming the larger one on the two stated business priorities."
       },
       {
         "letter": "B",
-        "text": "Start with Claude Opus 4.8 in fast mode, since fast mode delivers up to 2.5x higher output speed at premium pricing",
+        "text": "Use the larger model for every request because its 1.2-point quality advantage should dominate latency and cost once any measurable quality improvement exists.",
         "correct": false,
-        "explanation": "Fast mode on Opus 4.8 does increase output speed, but it does so at premium pricing on an already more expensive model, working against the sustainable per-ticket cost requirement in the scenario."
+        "explanation": "The scenario defines a quality floor rather than a maximize-at-all-costs objective. The larger model violates the latency SLA and more than triples request cost for a gain the business did not identify as worth those trade-offs."
       },
       {
         "letter": "C",
-        "text": "Start with Claude Sonnet 5 and disable adaptive thinking entirely to remove all reasoning latency from every response",
+        "text": "Run both models on every request and accept the larger model's answer whenever the two disagree, using the smaller model only as a consistency check.",
         "correct": false,
-        "explanation": "Adaptive thinking on Sonnet 5 cannot simply be turned off to remove latency; the scenario needs a model chosen for inherent speed and cost efficiency, not a configuration change on a moderately priced model."
+        "explanation": "An ensemble increases both latency and cost and would make the workflow even less likely to meet the stated SLA. The scenario provides no evidence that dual inference is needed to satisfy the quality floor."
       },
       {
         "letter": "D",
-        "text": "Start with Claude Fable 5, since its 1M token context window allows the entire support knowledge base to load per request",
+        "text": "Use the smaller model only for the first draft, then send every draft to the larger model for confirmation before responding so quality can never fall below the larger model's benchmark.",
         "correct": false,
-        "explanation": "Claude Fable 5 targets long-running agentic intelligence with slower comparative latency and higher pricing, which is misaligned with a sub-second response requirement and a low per-ticket cost target."
+        "explanation": "Universal second-pass confirmation inherits the larger model's latency and cost on every request, defeating the reason the smaller model satisfied the business constraints in the first place."
       }
     ],
     "correct": "A",
@@ -2643,7 +2643,7 @@
       },
       {
         "letter": "C",
-        "text": "Increase the effort parameter to xhigh on every inspection request so Claude reasons more thoroughly each time",
+        "text": "Run every inspection request at xhigh effort so each call uses deeper reasoning.",
         "correct": false,
         "explanation": "Raising the effort parameter increases reasoning depth and token usage per request, which adds cost rather than reducing the redundant token spend the client wants to cut."
       },
@@ -9794,7 +9794,7 @@
       },
       {
         "letter": "B",
-        "text": "Increase the effort parameter to max so Claude reasons more carefully about which of the 40 tools to call",
+        "text": "Use max effort to spend more reasoning on choosing among the 40 tools.",
         "correct": false,
         "explanation": "Raising effort increases token spend on reasoning and tool-call generation; it does not reduce the fixed token cost of transmitting tool definitions themselves, and works against the cost-reduction goal."
       },
@@ -10323,7 +10323,7 @@
     "options": [
       {
         "letter": "A",
-        "text": "Increase the effort parameter to max on every request so each ticket is scored in one pass with no follow-up calls",
+        "text": "Run every ticket at max effort in an attempt to finish each score in a single request.",
         "correct": false,
         "explanation": "Raising effort to max increases token spend per request for maximum capability; it does not provide the roughly 50% cost reduction that comes specifically from asynchronous batch processing."
       },
@@ -10685,7 +10685,7 @@
       },
       {
         "letter": "F",
-        "text": "Increase the effort parameter to max so Claude reasons more thoroughly and needs fewer total turns to finish the task",
+        "text": "Use max effort on each turn in an attempt to reduce how many turns the task needs.",
         "correct": false,
         "explanation": "Raising effort to max increases token spend per turn for maximum capability; it does not reduce the number of turns needed and does not itself address a growing context window, since higher-effort turns can consume context faster."
       }
@@ -10803,7 +10803,7 @@
     "options": [
       {
         "letter": "A",
-        "text": "Increase the effort parameter to the maximum for every request to minimize costly follow-up clarifying turns and reduce the total number of requests per conversation.",
+        "text": "Use maximum reasoning effort on every turn, aiming to avoid clarification requests and reduce conversation length.",
         "correct": false,
         "explanation": "Raising the effort parameter to maximum increases token consumption per turn, as the model exerts more reasoning effort. While it might reduce the number of turns, the increased per-turn cost generally outweighs any savings from fewer turns, contradicting the goal of lowering average cost per conversation."
       },
@@ -11015,32 +11015,32 @@
     "domain": 4,
     "task_id": "4.1",
     "objective": "Define evaluation metrics (accuracy, latency, cost, safety, security)",
-    "situation": "An analytics team runs a nightly job that classifies hundreds of thousands of customer reviews using the Batch API, which is not latency-sensitive but must stay within a fixed monthly compute budget. They want a cost metric that reflects the actual production spend, not just per-call list pricing.",
-    "question": "Which approach best defines an appropriate cost metric for this workload?",
+    "situation": "A nightly Batch API classifier processes hundreds of thousands of reviews. The workload is not latency-sensitive, but finance has set a fixed monthly API-spend ceiling. The team wants the metric used for budget control to match actual production charges rather than a proxy.",
+    "question": "Which metric is the best primary budget-control measure?",
     "options": [
       {
         "letter": "A",
-        "text": "Track the 95th-percentile response time per request to ensure the batch completes before the next business day",
+        "text": "Estimate spend from raw input/output token counts using standard on-demand list prices, even though the workload is billed with the batch-processing discount.",
         "correct": false,
-        "explanation": "Response-time percentiles are a latency metric; the scenario explicitly states latency is not the concern for this offline batch job."
+        "explanation": "Token counts are useful drivers, but applying the wrong pricing basis makes the result a projection rather than the actual spend the budget ceiling is defined against."
       },
       {
         "letter": "B",
-        "text": "Track the cosine similarity between outputs for paraphrased versions of the same review",
+        "text": "Track average API cost per thousand reviews and alert only when that unit cost rises, regardless of how many reviews are processed during the month.",
         "correct": false,
-        "explanation": "Cosine similarity measures output consistency, which is unrelated to tracking compute spend against a budget."
+        "explanation": "Unit cost can reveal efficiency drift, but monthly volume can increase total spend while the unit metric stays flat. It is not sufficient as the primary control for a fixed total budget."
       },
       {
         "letter": "C",
-        "text": "Track total spend per batch run, factoring in the batch-processing discount, against a defined monthly budget ceiling",
+        "text": "Track actual batch charges, including the applicable batch discount, accumulated against the monthly spend ceiling; keep unit cost as a secondary diagnostic.",
         "correct": true,
-        "explanation": "Since this workload runs through the Batch API, the actual spend reflects the batch discount, and tracking that spend against a monthly ceiling gives a cost metric grounded in real production economics."
+        "explanation": "The business constraint is a fixed monthly API-spend ceiling. Actual discounted charges accumulated over the month directly measure that constraint, while unit economics can remain a supporting metric."
       },
       {
         "letter": "D",
-        "text": "Track the F1 score of the classifier against a held-out labeled sample of reviews",
+        "text": "Track cost per correctly classified review by dividing batch spend by the number of correct labels on the evaluation sample.",
         "correct": false,
-        "explanation": "F1 score measures task accuracy, not the dollar cost of running the workload."
+        "explanation": "Cost per correct result is a useful cost-effectiveness metric, but it mixes quality and spend and can remain stable while total monthly charges exceed the finance ceiling."
       }
     ],
     "correct": "C",
@@ -12713,32 +12713,32 @@
     "domain": 5,
     "task_id": "5.3",
     "objective": "Apply human-in-the-loop validation strategies",
-    "situation": "A safety team reviewing Anthropic's approach to human oversight in agentic systems notes that requiring a human to approve every single tool call quickly becomes unsustainable at scale, and at hundreds of actions per session reviewers begin rubber-stamping without real scrutiny.",
-    "question": "Which strategy reflects Anthropic's documented approach to keeping human review meaningful without triggering this kind of consent fatigue?",
+    "situation": "An agent performs hundreds of tool actions per session. Routine read-only actions are common, but some actions modify customer data or cross a policy boundary. Requiring human approval for every action has caused reviewers to rubber-stamp prompts.",
+    "question": "Which oversight policy best preserves meaningful human judgment without removing controls from high-consequence actions?",
     "options": [
       {
         "letter": "A",
-        "text": "Keep prompting for every tool call regardless of risk level, and address reviewer fatigue by shortening each prompt's text to a single-sentence summary of the proposed action, allowing reviewers to approve actions faster without reading the full context of the request.",
+        "text": "Send a random 5% sample of all actions to human reviewers and allow the rest automatically, so reviewer volume stays predictable regardless of action risk.",
         "correct": false,
-        "explanation": "Shortening prompts to single-sentence summaries still routes every tool call through a human, which is the very pattern that leads to rubber-stamping rather than meaningful review, as the sheer volume of approvals remains unchanged."
+        "explanation": "Random sampling can support auditing, but it does not guarantee review at the high-consequence boundary. A rare destructive action could bypass humans simply because it was not sampled."
       },
       {
         "letter": "B",
-        "text": "Remove human approval from the workflow entirely once the agent has completed a fixed number of sessions without an incident, such as 50 consecutive error-free sessions, and instead rely on an automated audit log that flags only statistically anomalous tool calls based on accumulated session history.",
+        "text": "Require human review only when the model reports low confidence, allowing high-confidence mutations to proceed automatically even when they are irreversible.",
         "correct": false,
-        "explanation": "Removing human approval entirely after a fixed number of incident-free sessions and relying solely on automated audit logs removes oversight just when future high-stakes or ambiguous actions may arise, rather than targeting escalation where human judgment is genuinely needed."
+        "explanation": "Model confidence is not a sufficient risk boundary. A confidently wrong irreversible action still carries high consequence, so confidence alone cannot decide whether human approval is required."
       },
       {
         "letter": "C",
-        "text": "Combine automated defense-in-depth safeguards, such as classifiers and permission rules that auto-resolve low-risk routine actions, with escalation to human reviewers reserved for ambiguous, high-stakes, or edge-case decisions that genuinely need judgment.",
+        "text": "Use deterministic safeguards for routine low-risk actions and escalate ambiguous, high-impact, or irreversible decisions to human reviewers based on explicit risk rules.",
         "correct": true,
-        "explanation": "This matches Anthropic's defense-in-depth strategy where automated classifiers and permission rules handle low-risk, routine actions automatically, so human reviewers are only escalated for ambiguous, high-stakes, or edge-case decisions that truly require judgment, thus avoiding consent fatigue from constant prompts."
+        "explanation": "This keeps review concentrated where human judgment changes risk while automated controls handle routine actions. It reduces consent fatigue without weakening the boundary around high-consequence decisions."
       },
       {
         "letter": "D",
-        "text": "Rotate the reviewer assigned to approve each tool call throughout the session, using a round-robin schedule among reviewers, on the assumption that fresh reviewers approve more carefully than one reviewer who has already approved many prior calls, such as swapping reviewers after every few actions.",
+        "text": "Pre-approve whole tool categories at the beginning of the session and require human review only when the agent calls a tool category it has never used before.",
         "correct": false,
-        "explanation": "Rotating reviewers via a round-robin schedule does not reduce the total number of low-value prompts that cause fatigue; it simply distributes the same rubber-stamping problem across more individuals without addressing the underlying issue of excessive, unnecessary approvals."
+        "explanation": "Tool category is only a coarse proxy for consequence. The same tool can be harmless in one context and high-risk in another, so novelty-based approval does not reliably capture the decision boundary."
       }
     ],
     "correct": "C",
@@ -12958,7 +12958,7 @@
       },
       {
         "letter": "C",
-        "text": "Increase the effort parameter to its maximum value, causing Claude to allocate more reasoning tokens that improve its retrieval of earlier instructions from the full conversation.",
+        "text": "Allocate maximum reasoning effort in the hope that additional reasoning tokens will recover earlier instructions from the conversation history.",
         "correct": false,
         "explanation": "The effort parameter controls how much compute the model allocates to its reasoning for each response, not how much conversation history it can effectively retain or retrieve. Increasing effort does not prevent the context window from being saturated or resolve the contradiction issue when earlier instructions are pushed out."
       },
@@ -13986,32 +13986,32 @@
     "domain": 6,
     "task_id": "6.5",
     "objective": "Support lifecycle phases (discovery, design, handoff, monitoring, iteration)",
-    "situation": "Before any prompts are written, a consulting team meets with a client to scope a document-classification assistant.",
-    "question": "Which activity most correctly belongs in the discovery phase of the engagement?",
+    "situation": "A client asks for a document-classification assistant, but stakeholders still disagree on the label taxonomy and have not defined an acceptable error rate. Representative documents are available, and the consulting team has not selected a model or written prompts yet.",
+    "question": "What should the architect do first in the discovery phase?",
     "options": [
       {
         "letter": "A",
-        "text": "Configuring prompt caching and batch processing to minimize the client's token costs",
+        "text": "Benchmark several Claude models on an improvised label set so the team can choose the fastest model before the stakeholders finalize success criteria.",
         "correct": false,
-        "explanation": "Cost optimization through caching and batching is a monitoring/iteration concern that comes after the solution exists."
+        "explanation": "Model benchmarking before the target taxonomy and acceptable errors are defined produces numbers against a moving target. Discovery should first establish what success means."
       },
       {
         "letter": "B",
-        "text": "Defining the use case, measurable success criteria, and an evaluation set for later validation",
+        "text": "Facilitate agreement on the use case, label definitions, measurable success criteria, and a representative evaluation set before committing to the solution design.",
         "correct": true,
-        "explanation": "- discovery establishes what problem is being solved and how success will be measured before any design work starts."
+        "explanation": "Discovery turns an ambiguous business request into a testable problem. Aligning taxonomy, success criteria, and evaluation evidence creates the basis for later model, prompt, and architecture choices."
       },
       {
         "letter": "C",
-        "text": "Writing the production deployment runbook the client's support team will follow at launch",
+        "text": "Draft the production runbook and escalation process first so operations can review deployment responsibilities while requirements are still being negotiated.",
         "correct": false,
-        "explanation": "A deployment runbook is a handoff-phase artifact, produced only after the solution has been designed and tested."
+        "explanation": "Operational ownership matters, but a production runbook depends on a solution that has not yet been defined. It cannot resolve the disputed classification target."
       },
       {
         "letter": "D",
-        "text": "Selecting the final production model and locking the system prompt before requirements exist",
+        "text": "Build a quick production-style prototype with a default prompt, then use whatever behavior it produces as the baseline for defining the taxonomy and error tolerance.",
         "correct": false,
-        "explanation": "Locking a model and prompt is a design-phase activity, and doing it before requirements are defined skips discovery entirely."
+        "explanation": "A prototype can inform discovery, but letting an arbitrary first implementation define the requirements reverses the dependency. The team already knows the unresolved issue is stakeholder agreement on labels and acceptable error."
       }
     ],
     "correct": "B",
@@ -15704,35 +15704,35 @@
     "domain": 6,
     "task_id": "6.3",
     "objective": "Manage stakeholder feedback loops and expectation alignment (including SLAs)",
-    "situation": "A customer stakeholder in a real-time, latency-sensitive product wants a contractual guarantee that their requests will maintain low latency and available throughput even during periods of high overall platform demand, before they will sign off on the SLA.",
-    "question": "Which Anthropic mechanism is most directly relevant to raise as part of meeting this expectation?",
+    "situation": "An enterprise customer with an existing Priority Tier commitment wants the SLA to promise low latency and full prioritized throughput for every request even when demand exceeds the committed Priority Tier capacity. The architect must correct the expectation using current Anthropic service-tier behavior.",
+    "question": "Which statement should the architect put into the SLA discussion?",
     "options": [
       {
         "letter": "A",
-        "text": "The retry-after response header, which specifies the retry delay and serves as Anthropic's documented mechanism for guaranteeing low latency during peak demand, should be referenced in the contractual SLA.",
-        "correct": false,
-        "explanation": "The retry-after response header is a reactive signal that tells a client how long to wait after being rate limited; it is not a documented mechanism for guaranteeing low latency during peak demand. It provides no preemptive capacity assurance and cannot be used to contractually guarantee latency or throughput."
+        "text": "Priority Tier provides prioritized resources and targets 99.5% uptime within the service, but requests beyond committed capacity can fall back to standard tier; it should not be presented as an unconditional latency or throughput guarantee.",
+        "correct": true,
+        "explanation": "Current Anthropic service-tier documentation describes prioritized computational resources and a 99.5% uptime target for existing Priority Tier commitments. It also states that requests beyond committed capacity automatically fall back to standard tier, so an unconditional guarantee would overstate the service."
       },
       {
         "letter": "B",
-        "text": "Priority Tier provides dedicated rate limit headers for priority input/output tokens, separate from standard limits, guaranteeing low latency and throughput during high demand when included in the SLA.",
-        "correct": true,
-        "explanation": "Priority Tier provides dedicated rate limit headers for priority input/output tokens that are separate from standard usage limits, directly ensuring low latency and available throughput even during high platform demand. Including it in the SLA contractually guarantees this prioritized capacity."
+        "text": "The presence of Priority Tier rate-limit headers means every eligible request is contractually guaranteed the same low latency and throughput even after the committed token capacity is exhausted.",
+        "correct": false,
+        "explanation": "The headers expose Priority Tier capacity information; they do not convert excess traffic into guaranteed priority capacity. Documentation states that traffic beyond committed capacity falls back to standard tier."
       },
       {
         "letter": "C",
-        "text": "The Message Batches API, which processes requests in batches to reduce overhead and guarantees the lowest possible latency for any workload during peak platform demand, should be adopted for the SLA.",
+        "text": "Message Batches should be added to the SLA because batch processing reserves priority compute and therefore guarantees the lowest latency during periods of high interactive demand.",
         "correct": false,
-        "explanation": "The Message Batches API is designed for asynchronous, large-volume processing, not for guaranteeing the lowest possible latency for real-time, latency-sensitive workloads. It processes requests in batches, which actually increases individual request latency and is unsuitable for a contractual latency guarantee."
+        "explanation": "Message Batches is an asynchronous throughput/cost mechanism, not a service-tier latency guarantee for interactive traffic. It addresses a different workload shape."
       },
       {
         "letter": "D",
-        "text": "Extended thinking, which exposes step-by-step reasoning and determines whether requests are deprioritized during high demand, should be included in the contractual SLA to guarantee low latency and throughput.",
+        "text": "The retry-after header is the capacity guarantee: as long as the client obeys the returned delay, subsequent requests are guaranteed Priority Tier latency and throughput.",
         "correct": false,
-        "explanation": "Extended thinking controls the depth of reasoning and step-by-step transparency in a response, but it does not determine request prioritization or capacity during high demand. It is not a mechanism for guaranteeing low latency and throughput in an SLA."
+        "explanation": "Retry-after is a reactive rate-limit signal, not a contractual reservation of prioritized capacity. Waiting does not create an unconditional Priority Tier guarantee beyond the customer's committed capacity."
       }
     ],
-    "correct": "B",
+    "correct": "A",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "b5ea817619c2bdd3620d523cf9252a64313dd181dc43df43e014be0904c36fd4"
@@ -16540,32 +16540,32 @@
     "domain": 7,
     "task_id": "7.3",
     "objective": "Support debugging and operational issue resolution",
-    "situation": "A custom subagent that runs a full integration test suite stops midway and Claude Code reports \"Agent terminated early due to an API error: You've hit your session limit · resets 3:45pm\". The main conversation is otherwise healthy.",
-    "question": "What is the correct way to handle this?",
+    "situation": "A subagent running an integration suite stops with 'You've hit your session limit · resets 3:45pm'. The parent conversation remains healthy, there is no indication of a code or test failure, and the team wants the least disruptive recovery that preserves completed work.",
+    "question": "What should the operator do next?",
     "options": [
       {
         "letter": "A",
-        "text": "Restart Claude Code entirely, since a subagent failure of this kind corrupts the parent session's conversation state.",
+        "text": "Retry the subagent immediately with exponential backoff, because usage-limit errors should clear after several progressively delayed API retries even before the displayed reset time.",
         "correct": false,
-        "explanation": "A subagent's API error does not corrupt the parent session's conversation state; the main conversation remains usable while the underlying limit is addressed."
+        "explanation": "Backoff is useful for transient service/rate-limit errors, but the message identifies a session usage limit with an explicit reset time. Repeated retries before that boundary consume effort without addressing the cause."
       },
       {
         "letter": "B",
-        "text": "Wait until the session limit resets at the time shown, then ask Claude to retry the task or resume the subagent from where it stopped.",
+        "text": "Wait for the displayed reset, then retry or resume the interrupted task while keeping the healthy parent session and already completed work.",
         "correct": true,
-        "explanation": "The error detail after the colon should be matched to its own section, in this case Usage limits, and handled per that section's guidance: wait for the reset time shown, then retry the task or resume the subagent."
+        "explanation": "The failure is the stated usage limit, not corrupted conversation state or failed tests. Waiting for the reset and resuming is the least disruptive action consistent with the evidence."
       },
       {
         "letter": "C",
-        "text": "Switch the subagent's model to a smaller one with /model, since session limits apply per model with a separate allowance.",
+        "text": "Start a new top-level Claude Code session immediately, because usage limits are scoped to the individual subagent session and a fresh parent session receives a new allowance.",
         "correct": false,
-        "explanation": "The session limit shown is a plan-wide rolling allowance, not a separate allocation per model, so switching to a smaller model does not bypass it."
+        "explanation": "A new conversation does not inherently create a new account/plan usage allowance. Restarting would discard useful session continuity without resolving the stated limit."
       },
       {
         "letter": "D",
-        "text": "Run /rewind on the main conversation to undo the subagent invocation, since resetting the session limit requires clearing recent turns.",
+        "text": "Switch to a smaller model and resume immediately, because each model has an independent session-usage allowance that can be used when another model reaches its limit.",
         "correct": false,
-        "explanation": "/rewind steps back to an earlier checkpoint in the conversation; it has no effect on the account's session usage limit or its reset time."
+        "explanation": "The error does not establish a model-specific allowance. Changing models based on that assumption is an unsupported workaround and can alter task behavior without fixing the reported limit."
       }
     ],
     "correct": "B",

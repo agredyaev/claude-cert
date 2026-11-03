@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "tracks": {
+    "Foundation": {
+      "findings": [],
+      "metrics": {
+        "questions": 481,
+        "repeated_option_openings": [],
+        "repeated_rationale_openings": [],
+        "lexical_giveaway_items": 0,
+        "absolute_word_wrong": 364,
+        "absolute_word_correct": 91,
+        "correct_wrong_mean_length_ratio": 1.028
+      }
+    },
+    "Professional": {
+      "findings": [],
+      "metrics": {
+        "questions": 421,
+        "repeated_option_openings": [],
+        "repeated_rationale_openings": [],
+        "lexical_giveaway_items": 0,
+        "absolute_word_wrong": 259,
+        "absolute_word_correct": 78,
+        "correct_wrong_mean_length_ratio": 0.942
+      }
+    }
+  }
+}

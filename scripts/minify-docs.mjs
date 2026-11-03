@@ -39,7 +39,10 @@ let after = 0;
 let count = 0;
 for await (const file of htmlFiles(DOCS)) {
   const src = await fs.readFile(file, 'utf8');
-  const out = await minify(src, OPTIONS);
+  const minified = await minify(src, OPTIONS);
+  // html-minifier-terser can preserve indentation-only lines inside raw-text
+  // blocks. Strip line-end whitespace so generated artifacts stay diff-clean.
+  const out = minified.replace(/[ \t]+$/gm, '');
   before += Buffer.byteLength(src);
   after += Buffer.byteLength(out);
   count++;

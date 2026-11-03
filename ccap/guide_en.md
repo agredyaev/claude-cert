@@ -44,6 +44,8 @@ Integration carries the largest individual weight, but the exam is deliberately 
 
 ## Domain Guidance
 
+<a id="domain-1-material"></a>
+
 ### 1. Solution Design & Architecture - 17%
 
 **Official objectives.** Exam items are written against these six task statements:
@@ -110,6 +112,8 @@ Be able to:
 
 **Practice artifact:** draw one production architecture and annotate every boundary with its trust level, failure mode, fallback, owner, and observable signal.
 
+<a id="domain-2-material"></a>
+
 ### 2. Claude Models, Prompting & Context Engineering - 13%
 
 **Official objectives.** Exam items are written against these five task statements:
@@ -159,6 +163,8 @@ Be able to:
 - Control context growth through retrieval, summarization, compaction, and selective history
 
 **Practice artifact:** create a model-routing table that states the task class, chosen model, fallback, quality threshold, latency budget, and cost ceiling.
+
+<a id="domain-3-material"></a>
 
 ### 3. Integration - 19%
 
@@ -243,6 +249,8 @@ Be able to:
 
 **Practice artifact:** threat-model a tool-enabled RAG system, then explain how you would detect stale retrieval, excessive tool scope, cross-tenant access, and downstream timeouts.
 
+<a id="domain-4-material"></a>
+
 ### 4. Evaluation, Testing & Optimization - 16%
 
 **Official objectives.** Exam items are written against these six task statements:
@@ -311,6 +319,8 @@ Be able to:
 
 **Practice artifact:** build an evaluation matrix with representative, edge, adversarial, and regression cases. For every metric, name the decision it informs.
 
+<a id="domain-5-material"></a>
+
 ### 5. Governance, Safety & Risk Management - 14%
 
 **Official objectives.** Exam items are written against these five task statements:
@@ -369,6 +379,8 @@ Be able to:
 - Explain residual risk and who accepts it
 
 **Practice artifact:** create a risk register with likelihood, impact, control, evidence, owner, residual risk, and review cadence.
+
+<a id="domain-6-material"></a>
 
 ### 6. Stakeholder Communication & Lifecycle Management - 14%
 
@@ -433,6 +445,8 @@ Be able to:
 - Define feedback loops, handoff criteria, service levels, monitoring, and iteration plans
 
 **Practice artifact:** present the same architecture twice: a five-minute executive version centered on value and risk, and a technical version centered on interfaces, controls, and operations.
+
+<a id="domain-7-material"></a>
 
 ### 7. Developer Productivity & Operational Enablement - 7%
 
@@ -500,6 +514,51 @@ A mitigation absorbs the failure after it appears. A structural fix changes the 
 - **A state-changing tool fires repeatedly inside an open-ended agent loop.** Mitigation: a tracker that counts tool calls and warns when a budget is exceeded. Structural fix: a turn limit plus a human review gate on state-changing tools, so the loop cannot run the tool unchecked at all. The warning arrives after the calls; the gate prevents them.
 
 The rule is general. When two options both look like improvements, ask which one merely lowers the frequency of a failure the design still permits, and which one removes the condition that produces it. Prefer the second.
+
+## Professional capstone — one end-to-end system
+
+Do one architecture deeply instead of several disconnected toy designs. The capstone is complete only when every artifact below is internally consistent and you can defend the rejected alternatives.
+
+Choose a realistic business problem with ambiguous requirements, at least one external integration, sensitive or high-consequence data, and a measurable quality target.
+
+Produce these artifacts:
+
+1. **Problem frame and constraints** — users, business outcome, prohibited behavior, quality target, latency/availability target, cost envelope, data sensitivity, and what must remain human-owned.
+2. **Architecture decision record** — workflow vs agentic vs augmented-LLM pattern, model choice, context strategy, and at least two rejected alternatives with the trade-off that ruled each out.
+3. **Integration map** — APIs/MCP/RAG/data stores, authentication and authorization boundaries, least-privilege tool capabilities, trust boundaries, and failure propagation.
+4. **Evaluation plan** — representative dataset, success metrics, deterministic checks, model/human graders where needed, regression gates, and the condition that blocks release.
+5. **Safety and governance matrix** — risk, preventive control, detective control, corrective action, owner, evidence artifact, and residual risk.
+6. **Cost and latency budget** — token/call assumptions, cacheable prefixes, model routing, expected throughput, tail-latency risk, and the trigger for revisiting the design.
+7. **Observability and operations plan** — traces, metrics, alerts, slow-drift reviews, incident ownership, and first diagnostic actions for retrieval/prompt/model/tool failures.
+8. **Stakeholder brief** — the same architecture explained for an executive/security/legal audience in terms of value, trade-offs, residual risk, and reversibility.
+9. **Handoff package** — runbook, open assumptions, decision owners, change criteria, and enough rationale that another architect can modify the system safely.
+
+### Capstone stress tests
+
+Do not stop at the happy path. Inject at least five failures:
+
+- retrieval/index becomes stale after a content refresh;
+- a tool has broader permissions than the task requires;
+- a model or prompt change degrades one evaluation slice while aggregate quality looks stable;
+- latency or cost rises because context/caching behavior changed;
+- a stakeholder requests an irreversible action that the current workflow can execute autonomously.
+
+For each failure, state **where you would look first, what evidence would confirm the diagnosis, and what structural fix prevents recurrence**.
+
+## Wording and decision traps
+
+| Stem signal | Architectural reading |
+|---|---|
+| **FIRST / NEXT / before moving to…** | Identify the lifecycle or diagnostic phase; reject valid actions that belong later. |
+| **BEST / MOST appropriate** | Several options may work. Rank them against the named business, risk, cost, or reliability constraint. |
+| **ROOT CAUSE / underlying issue** | Diagnose the failing layer before adding retries, monitoring, or human review. |
+| **Least privilege / minimize blast radius** | Remove capability or narrow scope; logging a dangerous capability is not least privilege. |
+| **After a document/index refresh** | Check retrieval/indexing and freshness before blaming the model. |
+| **Reduce cost without reducing quality** | Look for caching, routing, batching, or context reduction that preserves the evaluated quality bar. |
+| **Regulated / high consequence / irreversible** | Put preventive controls and accountable human approval before the action. |
+| **Stakeholder / executive / legal** | Translate the design into business consequence, residual risk, ownership, and evidence. |
+| **Simplest architecture that meets requirements** | Reject multi-agent/RAG/agentic complexity unless a stated constraint requires it. |
+| **Production readiness** | Include evaluation gates, auth, observability, failure handling, ownership, and handoff—not only model behavior. |
 
 ## Practice engine
 

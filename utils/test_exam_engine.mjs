@@ -276,11 +276,14 @@ function checkMisses(e, file) {
 
   const [a, b] = e.QUESTIONS;
   e.state.graded = {};
+  e.state.confidence = { [a.id]: 'high', [b.id]: 'medium' };
   e.noteResult(a, wrongFor(a));
   e.noteResult(b, b.correct);
   let miss = e.loadMisses()[a.id];
   check('a wrong answer is recorded as an immediately due weak spot',
     miss && miss.n === 1 && miss.streak === 0 && !miss.mastered && miss.due <= Date.now());
+  check('high-confidence wrong answers retain misconception priority metadata',
+    miss && miss.confidence === 'high');
   check('a first correct answer leaves no weak-spot record', e.loadMisses()[b.id] === undefined);
   check('only due weak spots reach the review draw',
     e.missedIds().length === 1 && e.missedIds()[0] === a.id);
@@ -293,11 +296,16 @@ function checkMisses(e, file) {
     e.loadMisses()[a.id].n === 2);
 
   e.state.graded = {};
+  e.state.confidence[a.id] = 'low';
+  const beforeLowConfidenceSuccess = Date.now();
   e.noteResult(a, a.correct);
   miss = e.loadMisses()[a.id];
   check('a corrective success schedules the next review instead of showing it immediately',
     miss.streak === 1 && !miss.mastered && miss.due > Date.now() &&
     e.missedIds().indexOf(a.id) < 0);
+  check('a low-confidence correct answer returns sooner than the normal one-day interval',
+    miss.confidence === 'low' &&
+    miss.due - beforeLowConfidenceSuccess <= (12 * 60 * 60 * 1000) + 1000);
 
   e.localStorage.setItem(e.MISS_KEY, JSON.stringify({
     v: 1, items: { [a.id]: { n: 2, t: 123 } }
@@ -331,6 +339,13 @@ function checkMisses(e, file) {
     const tie = drill.filter(id => seeded[id].n === seeded[drill[0]].n);
     return tie.every((id, i) => i === 0 || seeded[tie[i - 1]].t <= seeded[id].t);
   })());
+
+  e.saveMisses({
+    [a.id]: { n: 2, streak: 0, t: 1, due: 0, confidence: 'low', mastered: false },
+    [b.id]: { n: 2, streak: 0, t: 1, due: 0, confidence: 'high', mastered: false },
+  });
+  check('high-confidence misconceptions outrank equally due low-confidence misses',
+    e.missedIds()[0] === b.id);
 
   const future = e.QUESTIONS[cap + 1] || e.QUESTIONS[e.QUESTIONS.length - 1];
   const mastered = e.QUESTIONS[cap + 2] || e.QUESTIONS[e.QUESTIONS.length - 2];
@@ -494,6 +509,12 @@ console.log('Foundations engine (ccaf/dist/exam_en.html)');
       Object.values(q).every(c => c === 4);
   })());
   check('store key is Foundations-scoped', e.STORE_KEY === 'ccaf-exam-en', e.STORE_KEY);
+  check('Foundation training page excludes every held-out readiness item', (() => {
+    const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'ccaf/data/readiness_ids.json'), 'utf8'));
+    const held = new Set(meta.ids);
+    return e.QUESTIONS.every(q => !held.has(q.id)) &&
+      meta.forms && Object.keys(meta.forms).length === 3;
+  })(), `page holds ${e.QUESTIONS.length} training items`);
 
   const q = e.QUESTIONS[0];
   check('single-answer item is not multi', !e.isMulti(q));
@@ -519,10 +540,14 @@ console.log('Professional engine (ccap/dist/exam_en.html)');
 {
   const e = loadEngine('ccap/dist/exam_en.html');
   check('7 domains in the bank', new Set(e.QUESTIONS.map(q => q.domain)).size === 7);
-  check('the page embeds the whole bank', (() => {
+  check('Professional training page excludes the held-out readiness form', (() => {
     const bank = JSON.parse(fs.readFileSync(path.join(ROOT, 'ccap/data/questions.json'), 'utf8'));
-    return e.QUESTIONS.length === bank.length;
-  })(), `page holds ${e.QUESTIONS.length}`);
+    const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'ccap/data/readiness_ids.json'), 'utf8'));
+    const held = new Set(meta.ids);
+    return meta.forms && Object.keys(meta.forms).length === 2 &&
+      e.QUESTIONS.length === bank.length - held.size &&
+      e.QUESTIONS.every(q => !held.has(q.id));
+  })(), `page holds ${e.QUESTIONS.length} training items`);
   check('weighted draw map', typeof e.PER_DOMAIN === 'object' && e.PER_DOMAIN['3'] === 12);
   check('attempt size is 63', e.examSize() === 63, `got ${e.examSize()}`);
   check('quick drill draws 21 weighted (4/3/4/3/3/3/1)', (() => {

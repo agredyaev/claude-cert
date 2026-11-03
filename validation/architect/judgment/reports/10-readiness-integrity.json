@@ -1,0 +1,21 @@
+{
+  "validator": "10-readiness-integrity",
+  "status": "PASS",
+  "summary": "Checks held-out isolation, repeatability, and resistance to readiness-by-familiarity.",
+  "findings": [],
+  "metrics": {
+    "foundation_forms": [
+      "a",
+      "b",
+      "c"
+    ],
+    "foundation_training_items": 301,
+    "foundation_heldout_union": 180,
+    "professional_forms": [
+      "a",
+      "b"
+    ],
+    "professional_training_items": 295,
+    "professional_heldout_union": 126
+  }
+}

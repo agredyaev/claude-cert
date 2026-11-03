@@ -1,6 +1,12 @@
 {
-  "bank_en.html": "data/ccaf-exam-en-9b188960f7a6.json",
-  "bank_ru.html": "data/ccaf-exam-en-9b188960f7a6.json",
-  "exam_en.html": "data/ccaf-exam-en-9b188960f7a6.json",
-  "exam_ru.html": "data/ccaf-exam-en-9b188960f7a6.json"
+  "bank_en.html": "data/ccaf-exam-en-7029b45e2ba1.json",
+  "bank_ru.html": "data/ccaf-exam-en-7029b45e2ba1.json",
+  "exam_en.html": "data/ccaf-exam-en-7029b45e2ba1.json",
+  "exam_ru.html": "data/ccaf-exam-en-7029b45e2ba1.json",
+  "readiness_a_en.html": "data/ccaf-readiness-a-en-20f7dbd156a7.json",
+  "readiness_a_ru.html": "data/ccaf-readiness-a-en-20f7dbd156a7.json",
+  "readiness_b_en.html": "data/ccaf-readiness-b-en-a2f812a3fdd0.json",
+  "readiness_b_ru.html": "data/ccaf-readiness-b-en-a2f812a3fdd0.json",
+  "readiness_c_en.html": "data/ccaf-readiness-c-en-9a93d2ce79d4.json",
+  "readiness_c_ru.html": "data/ccaf-readiness-c-en-9a93d2ce79d4.json"
 }

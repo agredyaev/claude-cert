@@ -33,7 +33,10 @@ def foundation_bank():
 
 
 def professional_bank():
-    return load_json(ROOT / "ccap" / "data" / "questions.json")
+    questions = load_json(ROOT / "ccap" / "data" / "questions.json")
+    readiness = load_json(ROOT / "ccap" / "data" / "readiness_ids.json")
+    heldout = set(readiness.get("ids", []))
+    return [q for q in questions if q["id"] not in heldout]
 
 
 def result(name, status, summary, findings=None, metrics=None):
@@ -209,11 +212,44 @@ def validator_04_objective_coverage():
             findings.append(f"{track}: some objectives have fewer than 5 practice items (min={min(vals)}).")
             status = "FAIL"
 
+    ontology_path = ROOT / "validation" / "architect" / "knowledge_ontology.json"
+    ontology_metrics = {}
+    if not ontology_path.exists():
+        findings.append("Generated Architect knowledge ontology is missing.")
+        status = "FAIL"
+    else:
+        ontology = load_json(ontology_path).get("tracks", {})
+        for code, expected_count in (("CCAR-F", 30), ("CCAR-P", 38)):
+            track = ontology.get(code, {})
+            tasks = [task for domain in track.get("domains", {}).values() for task in domain.get("tasks", [])]
+            if len(tasks) != expected_count:
+                findings.append(f"{code}: ontology has {len(tasks)} official tasks; expected {expected_count}.")
+                status = "FAIL"
+            no_sources = [task.get("id") for task in tasks if not task.get("sources")]
+            no_training = [task.get("id") for task in tasks if task.get("questions", {}).get("training", 0) < 5]
+            no_held = [task.get("id") for task in tasks if task.get("questions", {}).get("held_out", 0) < 1]
+            if no_sources:
+                findings.append(f"{code}: ontology tasks without official/current sources: {no_sources}.")
+                status = "FAIL"
+            if no_training:
+                findings.append(f"{code}: ontology tasks with fewer than five training items: {no_training}.")
+                status = "FAIL"
+            if no_held:
+                findings.append(f"{code}: ontology tasks missing held-out evidence: {no_held}.")
+                status = "FAIL"
+            ontology_metrics[code] = {
+                "tasks": len(tasks),
+                "min_training_per_task": min((task["questions"]["training"] for task in tasks), default=0),
+                "min_held_out_per_task": min((task["questions"]["held_out"] for task in tasks), default=0),
+                "tasks_without_sources": len(no_sources),
+            }
+
     return result("04-objective-coverage", status,
-                  "Every official task statement/objective has guide coverage and repeated practice coverage.",
+                  "Every official task statement/objective has material, repeated practice, held-out evidence, and source coverage.",
                   findings, {
                       "foundation_mapped": sum(bool(q.get("objective")) for q in f),
                       "professional_mapped": sum(bool(q.get("objective")) for q in p),
+                      "ontology": ontology_metrics,
                   })
 
 
@@ -276,6 +312,40 @@ def validator_05_key_integrity_and_defensibility():
         findings.append("Current-product documentation review is missing or incomplete.")
         status = "FAIL"
 
+    source_matrix_path = ROOT / "validation" / "architect" / "source_matrix.json"
+    source_matrix_ok = source_matrix_path.exists()
+    source_matrix_missing = []
+    non_official_sources = []
+    if source_matrix_ok:
+        matrix = load_json(source_matrix_path)
+        allowed_hosts = (
+            "https://anthropic-partners.skilljar.com/",
+            "https://platform.claude.com/",
+            "https://code.claude.com/",
+            "https://www.anthropic.com/",
+            "https://modelcontextprotocol.io/",
+        )
+        for track, blueprint_path in (
+            ("foundation", ROOT / "ccaf" / "data" / "blueprint.json"),
+            ("professional", ROOT / "ccap" / "data" / "objectives.json"),
+        ):
+            blueprint_domains = load_json(blueprint_path)["domains"]
+            mapped = matrix.get(track, {}).get("domains", {})
+            for did in blueprint_domains:
+                entry = mapped.get(str(did))
+                if not entry or not entry.get("sources"):
+                    source_matrix_missing.append(f"{track}:D{did}")
+                    continue
+                for url in entry["sources"]:
+                    if not url.startswith(allowed_hosts):
+                        non_official_sources.append(url)
+    else:
+        source_matrix_missing.append("source_matrix.json")
+
+    if source_matrix_missing or non_official_sources:
+        findings.append("Official-source coverage matrix is missing, incomplete, or contains non-official sources.")
+        status = "FAIL"
+
     stale_patterns = {
         "legacy Task tool": r"subagent invocation tool, Task|Task tool spawns subagents|allowedTools[^\n]{0,80}\"Task\"",
         "false bare-mode claim": r"No --bare flag exists",
@@ -297,6 +367,9 @@ def validator_05_key_integrity_and_defensibility():
                       "sensitive_term_occurrences": sensitive,
                       "current_docs_review": review_ok and not missing_markers,
                       "missing_review_markers": missing_markers,
+                      "source_matrix": source_matrix_ok and not source_matrix_missing and not non_official_sources,
+                      "source_matrix_missing": source_matrix_missing,
+                      "non_official_sources": non_official_sources,
                       "stale_hits": stale_hits,
                   })
 
@@ -407,8 +480,54 @@ def validator_08_scenario_and_skill_transfer():
         findings.append("Foundation path does not expose all four official hands-on exercise families: " + ", ".join(missing))
         status = "FAIL"
     metrics["hands_on_lab_markers_present"] = len(lab_markers) - len(missing)
+
+    scenario_path = ROOT / "ccaf" / "data" / "scenario_cases.json"
+    official_scenarios = [
+        "Customer Support Resolution Agent",
+        "Code Generation with Claude Code",
+        "Multi-Agent Research System",
+        "Developer Productivity with Claude",
+        "Claude Code for Continuous Integration",
+        "Structured Data Extraction",
+    ]
+    scenario_count = prompt_count = 0
+    if not scenario_path.exists():
+        findings.append("Foundation scenario-transfer corpus is missing.")
+        status = "FAIL"
+    else:
+        scenario_data = load_json(scenario_path)
+        scenarios = scenario_data.get("scenarios", [])
+        scenario_count = len(scenarios)
+        prompt_count = sum(len(s.get("prompts", [])) for s in scenarios)
+        names = [s.get("name") for s in scenarios]
+        if names != official_scenarios:
+            findings.append("Foundation scenario-transfer corpus does not match the six published scenario families.")
+            status = "FAIL"
+        if prompt_count < 18:
+            findings.append(f"Foundation scenario-transfer corpus has only {prompt_count} open tasks; expected at least 18.")
+            status = "FAIL"
+
+    capstone_path = ROOT / "ccap" / "data" / "capstone.json"
+    artifact_count = stress_count = 0
+    if not capstone_path.exists():
+        findings.append("Professional end-to-end capstone is missing.")
+        status = "FAIL"
+    else:
+        capstone = load_json(capstone_path)
+        artifact_count = len(capstone.get("artifacts", []))
+        stress_count = len(capstone.get("stress_tests", []))
+        if artifact_count < 9 or stress_count < 5:
+            findings.append(
+                f"Professional capstone is too shallow: {artifact_count} artifacts / {stress_count} stress tests."
+            )
+            status = "FAIL"
+
+    metrics["foundation_scenario_families"] = scenario_count
+    metrics["foundation_open_case_tasks"] = prompt_count
+    metrics["professional_capstone_artifacts"] = artifact_count
+    metrics["professional_capstone_stress_tests"] = stress_count
     return result("08-skill-transfer", status,
-                  "Scenario-based judgment plus hands-on practice aligned to official preparation exercises.",
+                  "Scenario judgment, official Foundation case transfer, hands-on labs, and Professional end-to-end architecture transfer.",
                   findings, metrics)
 
 
@@ -478,37 +597,140 @@ def validator_09_duplication_and_balance():
 def validator_10_learning_methodology():
     src = (ROOT / "scripts" / "build-pages.mjs").read_text(encoding="utf-8")
     app = (ROOT / "docs" / "app.js").read_text(encoding="utf-8")
+    engine = (ROOT / "utils" / "build_exam_html.py").read_text(encoding="utf-8")
     findings = []
     status = "PASS"
 
+    # Foundation method must remain practice-first and ordered.
     dashboard_start = src.index("function trainingDashboard")
-    dashboard_end = src.index("function guideHeadingSlug", dashboard_start)
+    dashboard_end = src.index("const REPORT_THEME_READINGS", dashboard_start)
     dashboard = src[dashboard_start:dashboard_end]
-    ordered_markers = ["Diagnostic", "Study", "Retrieval", "Hands-on", "Spaced review", "Full mock", "Readiness"]
+    ordered_markers = [
+        "Diagnostic", "Study", "Retrieval", "Scenario transfer", "Hands-on",
+        "Spaced review", "Full mock", "Held-out readiness", "Evidence",
+    ]
     positions = [dashboard.find(x) for x in ordered_markers]
     if any(x < 0 for x in positions) or positions != sorted(positions):
-        findings.append("Foundation sequence is missing or out of order: diagnostic -> study -> retrieval -> hands-on -> spaced review -> full mock -> readiness.")
+        findings.append(
+            "Foundation sequence is missing or out of order: diagnostic -> study -> retrieval -> "
+            "scenario transfer -> hands-on -> spaced review -> full mock -> held-out readiness -> evidence."
+        )
         status = "FAIL"
-    if "professionalReady = checked === 10 && labDone === 4 && masteredCount === 30" not in app:
-        findings.append("Professional stage is not gated by task-statement mastery, completed labs, and Foundation readiness.")
+
+    # Professional must have its own workspace instead of a loose guide/exam link.
+    prof_start = src.index("function professionalDashboard")
+    prof_end = src.index("function trainingDashboard", prof_start)
+    prof_dashboard = src[prof_start:prof_end]
+    prof_markers = ["Diagnostic", "Retrieval", "Capstone", "Spaced review", "Full mock", "Held-out readiness", "Evidence"]
+    prof_positions = [prof_dashboard.find(x) for x in prof_markers]
+    if any(x < 0 for x in prof_positions) or prof_positions != sorted(prof_positions):
+        findings.append("Professional task-first sequence is missing or out of order.")
         status = "FAIL"
-    if "ccaf-exam-en:mastery" not in app or "training-mastered" not in src:
-        findings.append("Task-statement mastery is not persisted and surfaced on the learner dashboard.")
+    if "38 objectives" not in prof_dashboard or "data-prof-objective-key" not in prof_dashboard:
+        findings.append("Professional workspace does not surface mastery across all 38 objectives.")
         status = "FAIL"
-    if "Multiple-response format practiced" not in src:
-        findings.append("Readiness does not require multiple-response practice.")
-        status = "FAIL"
-    engine = (ROOT / "utils" / "build_exam_html.py").read_text(encoding="utf-8")
+
+    # Study-mode generation effect and full rationale review.
     for marker, message in [
         ("reason_label", "Study mode has no self-explanation step before feedback."),
         ("function commitStudy", "Study mode does not explicitly commit reasoning before grading."),
         ("const showExpl = reveal && Boolean(opt.explanation)", "Study feedback does not expose rationale for every option after commitment."),
         ("noteMastery(q, correct)", "Graded task solutions do not update task-statement mastery."),
+        ("FIXED_EXAM", "Held-out readiness cannot enforce exam-only behavior."),
     ]:
         if marker not in engine:
             findings.append(message)
             status = "FAIL"
 
+    if "ccaf-exam-en:mastery" not in app or "ccarp-exam-en:mastery" not in app:
+        findings.append("Foundation and Professional mastery are not both persisted/surfaced.")
+        status = "FAIL"
+    if "ccaf-cases:state" not in app or "ccarp-capstone:state" not in app:
+        findings.append("Scenario/capstone transfer evidence is not persisted.")
+        status = "FAIL"
+    if "professionalReady = checked === 10 && caseDone === 6 && labDone === 4 && masteredCount === 30 && readinessPassed" not in app:
+        findings.append("Foundation -> Professional training gate is missing one or more evidence signals.")
+        status = "FAIL"
+
+    # Held-out sets: no overlap with training, official-sized forms, objective coverage.
+    fmeta_path = ROOT / "ccaf" / "data" / "readiness_ids.json"
+    pmeta_path = ROOT / "ccap" / "data" / "readiness_ids.json"
+    readiness_metrics = {}
+    if not fmeta_path.exists() or not pmeta_path.exists():
+        findings.append("Held-out readiness metadata is missing.")
+        status = "FAIL"
+    else:
+        fmeta = load_json(fmeta_path)
+        pmeta = load_json(pmeta_path)
+        fforms = fmeta.get("forms", {})
+        pforms = pmeta.get("forms", {})
+        if list(fforms) != ["a", "b", "c"]:
+            findings.append("Foundation must keep three independent held-out forms A/B/C.")
+            status = "FAIL"
+        if list(pforms) != ["a", "b"]:
+            findings.append("Professional must keep two independent held-out forms A/B.")
+            status = "FAIL"
+
+        fsets = [set(fforms[k].get("ids", [])) for k in fforms]
+        if any(len(s) != 60 for s in fsets):
+            findings.append("Every Foundation held-out form must contain exactly 60 items.")
+            status = "FAIL"
+        for i in range(len(fsets)):
+            for j in range(i + 1, len(fsets)):
+                if fsets[i] & fsets[j]:
+                    findings.append("Foundation held-out forms overlap.")
+                    status = "FAIL"
+        if any(len(fforms[k].get("per_objective", {})) != 30 for k in fforms):
+            findings.append("Each Foundation held-out form must cover all 30 task statements.")
+            status = "FAIL"
+        if any(int(fforms[k].get("multiple_response", 0)) < 1 for k in fforms):
+            findings.append("Each Foundation held-out form must include multiple-response.")
+            status = "FAIL"
+
+        psets = [set(pforms[k].get("ids", [])) for k in pforms]
+        if any(len(s) != 63 for s in psets):
+            findings.append("Every Professional held-out form must contain exactly 63 items.")
+            status = "FAIL"
+        if len(psets) == 2 and psets[0] & psets[1]:
+            findings.append("Professional held-out forms overlap.")
+            status = "FAIL"
+        if any(len(pforms[k].get("per_objective", {})) != 38 for k in pforms):
+            findings.append("Each Professional held-out form must cover all 38 objectives.")
+            status = "FAIL"
+        if any(int(pforms[k].get("multiple_response", 0)) < 1 for k in pforms):
+            findings.append("Each Professional held-out form must include multiple-response.")
+            status = "FAIL"
+        if int(pmeta.get("training_min_per_objective", 0)) < 5:
+            findings.append("Professional held-out split leaves fewer than five training items for an objective.")
+            status = "FAIL"
+        f_training_ids = {q["id"] for q in foundation_bank()}
+        p_training_ids = {q["id"] for q in professional_bank()}
+        if f_training_ids & set(fmeta.get("ids", [])):
+            findings.append("Foundation held-out items leak into the ordinary training bank.")
+            status = "FAIL"
+        if p_training_ids & set(pmeta.get("ids", [])):
+            findings.append("Professional held-out items leak into the ordinary training bank.")
+            status = "FAIL"
+
+        readiness_metrics = {
+            "foundation_forms": {k: {
+                "items": v.get("items"),
+                "multiple_response": v.get("multiple_response"),
+                "objectives": len(v.get("per_objective", {})),
+            } for k, v in fforms.items()},
+            "foundation_training_remaining": len(f_training_ids),
+            "professional_forms": {
+                k: {
+                    "items": v.get("items"),
+                    "multiple_response": v.get("multiple_response"),
+                    "objectives": len(v.get("per_objective", {})),
+                } for k, v in pforms.items()
+            },
+            "professional_training_remaining": len(p_training_ids),
+            "professional_training_min_per_objective": pmeta.get("training_min_per_objective"),
+        }
+
+    # Core public UI stays training-focused.
     marketing_terms = [
         "book the slot", "Partner Academy", "tier discount", "OnVUE system test",
         "Workspace ready", "Independent study interface", "not affiliated",
@@ -517,13 +739,19 @@ def validator_10_learning_methodology():
     if hits:
         findings.append("Training UX still contains non-training copy: " + ", ".join(hits))
         status = "FAIL"
-    if "hands-on" not in src.lower() and "lab" not in src.lower():
-        findings.append("Core Foundation sequence has no explicit hands-on lab step.")
-        status = "FAIL"
 
-    return result("10-learning-methodology", status,
-                  "Checks staged skill acquisition, readiness gating, and removal of non-training UI content.",
-                  findings, {"sequence_markers": ordered_markers, "non_training_hits": hits})
+    return result(
+        "10-learning-methodology",
+        status,
+        "Checks task-first sequencing, mastery, transfer evidence, independent held-out readiness, and removal of non-training UI content.",
+        findings,
+        {
+            "foundation_sequence": ordered_markers,
+            "professional_sequence": prof_markers,
+            "readiness": readiness_metrics,
+            "non_training_hits": hits,
+        },
+    )
 
 
 VALIDATORS = [

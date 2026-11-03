@@ -56,6 +56,11 @@ UI = {
         "reason_label": "Why is this the best answer?",
         "reason_placeholder": "State the governing constraint and why the alternatives fail.",
         "reason_required": "Write a short explanation before revealing the rationale.",
+        "confidence_label": "How confident are you?",
+        "confidence_low": "Low",
+        "confidence_medium": "Medium",
+        "confidence_high": "High",
+        "confidence_required": "Choose a confidence level before revealing the rationale.",
         "reveal_rationale": "Commit answer & reveal rationale",
         "question": "Question", "your_answer": "Your answer", "correct": "Correct",
         "why": "Why", "complete": "Exam Complete", "answered_of":
@@ -146,6 +151,11 @@ UI["ru"] = {
         "reason_label": "Почему это лучший ответ?",
         "reason_placeholder": "Сформулируйте ключевое ограничение и почему альтернативы хуже.",
         "reason_required": "Кратко объясните выбор перед открытием разбора.",
+        "confidence_label": "Насколько вы уверены?",
+        "confidence_low": "Низкая",
+        "confidence_medium": "Средняя",
+        "confidence_high": "Высокая",
+        "confidence_required": "Выберите уровень уверенности перед открытием разбора.",
         "reveal_rationale": "Зафиксировать ответ и открыть разбор",
     "question": "Вопрос", "your_answer": "Ваш ответ", "correct": "Правильно",
     "why": "Почему", "complete": "Попытка завершена",
@@ -458,6 +468,11 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
   padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-sm);
   background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; line-height: 1.5; }
 .study-reflection textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.confidence-picker { margin: 12px 0 0; padding: 0; border: 0; }
+.confidence-picker legend { margin-bottom: 6px; color: var(--fg); font-size: 12px; font-weight: 650; }
+.confidence-picker label { display: inline-flex; align-items: center; gap: 5px; margin: 0 14px 0 0;
+  color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; }
+.study-confidence-result { margin-top: 8px; color: var(--muted); font-size: 12px; }
 .study-reflection-actions { display: flex; justify-content: space-between; gap: 12px;
   align-items: center; margin-top: 10px; }
 .study-reflection-error { color: var(--bad); font-size: 12px; }
@@ -820,6 +835,7 @@ const REPORT_SUBDOMAINS = __REPORT_SUBDOMAINS__;
 // Foundations report can never drive a Professional targeted draw.
 const OWN_EXAM_CODE = "__EXAM_CODE__";
 const BANK_ONLY = __BANK_ONLY__;
+const FIXED_EXAM = __FIXED_EXAM__;
 const T = __UI__;
 const PASS_PCT = __PASS__;          // per-domain bar coloring threshold (%)
 const PASS_SCORE = __PASS_SCORE__;  // overall cut score on the 100–1000 scale
@@ -1117,6 +1133,10 @@ function weightedSample(items, count) {
 // Weak-spot work is scheduled retrieval, not an endless list of every past
 // mistake. A miss is due immediately. A corrective success schedules a 1-day
 // review, then 3-day and 7-day reviews. The next success marks it mastered.
+function confidencePriority(value) {
+  return value === "high" ? 2 : value === "medium" ? 1 : 0;
+}
+
 function missedIds() {
   const m = loadMisses();
   const now = Date.now();
@@ -1125,6 +1145,7 @@ function missedIds() {
     return item && item.n > 0 && !item.mastered && (Number(item.due) || 0) <= now && qById(id);
   });
   ids.sort((a, b) => ((m[a].due || 0) - (m[b].due || 0)) ||
+                     (confidencePriority(m[b].confidence) - confidencePriority(m[a].confidence)) ||
                      (m[b].n - m[a].n) ||
                      ((m[a].t || 0) - (m[b].t || 0)) ||
                      (a < b ? -1 : a > b ? 1 : 0));
@@ -1145,6 +1166,7 @@ function noteResult(q, ans) {
   const m = loadMisses();
   const cur = m[q.id];
   const now = Date.now();
+  const confidence = (state.confidence && state.confidence[q.id]) || "medium";
 
   if (!correct) {
     m[q.id] = {
@@ -1152,15 +1174,19 @@ function noteResult(q, ans) {
       streak: 0,
       t: now,
       due: now,
+      confidence,
       mastered: false,
     };
   } else if (cur) {
     const streak = Math.min(4, (Number(cur.streak) || 0) + 1);
+    const baseInterval = REVIEW_INTERVALS[streak] || 0;
+    const calibratedInterval = confidence === "low" ? Math.round(baseInterval / 2) : baseInterval;
     m[q.id] = {
       n: Number(cur.n) || 1,
       streak,
       t: now,
-      due: streak >= 4 ? 0 : now + REVIEW_INTERVALS[streak],
+      due: streak >= 4 ? 0 : now + calibratedInterval,
+      confidence,
       mastered: streak >= 4,
     };
   } else {
@@ -1286,7 +1312,7 @@ function tallyAttempt(active, answers) {
 // `graded` holds the ids already folded into the miss counts for this attempt,
 // so answering in study mode and then finishing cannot count one item twice.
 // `browse` is the bank-browser filter; it is view state, so it is not saved.
-const state = { current: 0, answers: {}, reasons: {}, order: [], mode: "study", length: "full",
+const state = { current: 0, answers: {}, reasons: {}, confidence: {}, order: [], mode: FIXED_EXAM ? "exam" : "study", length: "full",
                 focus: "all", reportSignature: null, graded: {}, elapsed: 0,
                 browse: { domain: "all", q: "", sub: null } };
 // The header controls are live in the markup before the bank arrives. Until
@@ -1301,7 +1327,7 @@ function save() {
   // open. Refusing this stale write prevents it from recreating old study data.
   if (state.focus === "report" && state.reportSignature !== currentSignature) return false;
   const raw = JSON.stringify(
-    { v: STORE_VERSION, answers: state.answers, reasons: state.reasons, order: state.order,
+    { v: STORE_VERSION, answers: state.answers, reasons: state.reasons, confidence: state.confidence, order: state.order,
       mode: state.mode, length: state.length, focus: state.focus,
       graded: state.graded, current: state.current, elapsed: state.elapsed,
       reportSignature: state.focus === "report" ? state.reportSignature : null });
@@ -1387,6 +1413,7 @@ function resetAfterReportStorageChange() {
   state.reportSignature = signature;
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.graded = {};
   state.current = 0;
   state.order = shuffleOrder();
@@ -1578,13 +1605,23 @@ function renderQuestion(idx) {
   }).join("");
 
   const reason = (state.reasons && state.reasons[q.id]) || "";
+  const confidence = (state.confidence && state.confidence[q.id]) || "";
+  const confidenceText = confidence === "high" ? T.confidence_high
+    : confidence === "medium" ? T.confidence_medium
+    : confidence === "low" ? T.confidence_low : "";
   const reflectionHtml = state.mode === "study" && hasAnswer(q, chosen)
     ? (reveal
         ? "<div class='study-reflection committed'><strong>" + esc(T.reason_label) + "</strong><p>" +
-            esc(reason) + "</p></div>"
+            esc(reason) + "</p><div class='study-confidence-result'>" + esc(T.confidence_label) +
+            ": <b>" + esc(confidenceText) + "</b></div></div>"
         : "<div class='study-reflection'><label for='reason-" + q.id + "'>" + esc(T.reason_label) +
             "</label><textarea id='reason-" + q.id + "' rows='3' placeholder='" +
-            esc(T.reason_placeholder) + "'></textarea><div class='study-reflection-actions'>" +
+            esc(T.reason_placeholder) + "'></textarea>" +
+            "<fieldset class='confidence-picker'><legend>" + esc(T.confidence_label) + "</legend>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='low'> " + esc(T.confidence_low) + "</label>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='medium'> " + esc(T.confidence_medium) + "</label>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='high'> " + esc(T.confidence_high) + "</label>" +
+            "</fieldset><div class='study-reflection-actions'>" +
             "<span class='study-reflection-error' id='reason-error-" + q.id + "'></span>" +
             "<button type='button' class='nav-btn primary' onclick=\"commitStudy('" + q.id + "')\">" +
             esc(T.reveal_rationale) + "</button></div></div>")
@@ -1612,12 +1649,18 @@ function commitStudy(id) {
   const field = document.getElementById("reason-" + id);
   const error = document.getElementById("reason-error-" + id);
   const reason = field ? field.value.trim() : "";
+  const confidenceField = document.querySelector("input[name='confidence-" + id + "']:checked");
   if (reason.length < 12) {
     if (error) error.textContent = T.reason_required;
     if (field) field.focus();
     return;
   }
+  if (!confidenceField) {
+    if (error) error.textContent = T.confidence_required;
+    return;
+  }
   state.reasons[id] = reason;
+  state.confidence[id] = confidenceField.value;
   noteResult(q, state.answers[id]);
   updateMissesUI();
   save();
@@ -1715,6 +1758,7 @@ function scrollQuestionIntoView() {
 
 function setMode(mode, restoring) {
   if (!booted) return;
+  if (FIXED_EXAM) mode = "exam";
   if (!restoring && mode === "study" && state.mode !== "study" &&
       Object.keys(state.answers).length > 0 &&
       typeof confirm === "function" && !confirm(T.study_switch_confirm)) {
@@ -1725,6 +1769,8 @@ function setMode(mode, restoring) {
   document.getElementById("modeExam").classList.toggle("active", mode === "exam");
   document.getElementById("modeStudy").setAttribute("aria-pressed", String(mode === "study"));
   document.getElementById("modeExam").setAttribute("aria-pressed", String(mode === "exam"));
+  document.getElementById("modeStudy").disabled = FIXED_EXAM;
+  document.getElementById("modeExam").disabled = FIXED_EXAM;
   updateModeHint();
   save();
   renderQuestion(state.current);
@@ -1761,7 +1807,7 @@ function newDraw() {
 // Length is meaningless while a domain is focused (the drill holds the whole
 // domain bank), so the toggle is disabled there and this is unreachable.
 function setLength(length) {
-  if (!booted) return;
+  if (!booted || FIXED_EXAM) return;
   if (state.focus !== "all") return;
   if (length === state.length) return;
   if (!confirmDiscard()) return;
@@ -1777,7 +1823,7 @@ function updateLengthUI() {
       btn.textContent = label.replace("{n}", examSize(len, "all"));
       btn.classList.toggle("active", state.length === len);
       btn.setAttribute("aria-pressed", String(state.length === len));
-      btn.disabled = state.focus !== "all";
+      btn.disabled = FIXED_EXAM || state.focus !== "all";
     });
   // The weak-spot drill reads its size off the order in play, not off a
   // recomputed draw: answering during the drill adds misses, and the strip
@@ -1852,6 +1898,7 @@ function clearProgress() {
   }
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.graded = {};
   state.current = 0;
   state.focus = "all";
@@ -2210,6 +2257,16 @@ function showSummary(skipConfirm) {
   const pct = total ? Math.round(correct / total * 100) : 0;
   const score = total ? Math.round(correct / total * 1000) : 0; // scaled to 1000
   const passed = score >= PASS_SCORE;
+  if (FIXED_EXAM) {
+    writeStored("local", STORE_KEY + ":result", JSON.stringify({
+      v: 1, score, pct, correct, total, passed,
+      domains: Object.fromEntries(Object.entries(domStat).map(([d, s]) => [
+        d, { correct: s.correct, total: s.total,
+             pct: s.total ? Math.round(s.correct / s.total * 100) : 0 },
+      ])),
+      completedAt: new Date().toISOString(), elapsed: state.elapsed,
+    }));
+  }
   // A domain drill covers one domain only, so the 100–1000 scaled score and
   // its pass/fail verdict would mislead: the summary reports the raw domain
   // result instead, with the same review pane below.
@@ -2416,6 +2473,7 @@ function backToAnswers() {
 function restart() {
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.elapsed = 0;
   // A fresh attempt has graded nothing yet, so every item in it can record a
   // miss again — that is what makes a repeated mistake count twice.
@@ -2583,8 +2641,9 @@ function init() {
   if (saved) {
     state.answers = saved.answers || {};
     state.reasons = saved.reasons || {};
+    state.confidence = saved.confidence || {};
     state.order = saved.order;
-    state.mode = saved.mode || "study";
+    state.mode = FIXED_EXAM ? "exam" : (saved.mode || "study");
     // load() normalized the length, so a pre-quick payload restores as "full".
     state.length = saved.length;
     // Same for the focus: a pre-drill payload restores as the full draw.
@@ -2672,7 +2731,8 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
                 exam_minutes=120,
                 store_key, lang_attr, title, page_title, out_path,
                 view="exam", bank_href=None, exam_href=None, groups_js=None,
-                report_map=None, exam_code="CCAR-F", language_links=None):
+                report_map=None, exam_code="CCAR-F", language_links=None,
+                fixed_exam=False):
     """Render one quiz page plus the JSON bank it fetches at boot.
 
     Returns the emitted paths; scripts/build-pages.mjs and
@@ -2723,6 +2783,7 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
             .replace("__EXAM_MINUTES__", str(exam_minutes))
             .replace("__EXAM_CODE__", exam_code)
             .replace("__BANK_ONLY__", "true" if view == "bank" else "false")
+            .replace("__FIXED_EXAM__", "true" if fixed_exam else "false")
             .replace("__BANK_URL__", f"data/{bank_name}"))
 
     favicon_tag = (f'<link rel="icon" type="image/png" href="{_FAVICON_DATA_URI}">'
@@ -2967,6 +3028,43 @@ def build(lang):
         groups_js=themes,
         **common,
     )
+
+    readiness_meta = json.load(open(os.path.join(DATA_DIR, "readiness_ids.json"), encoding="utf-8"))
+    for form in ("a", "b", "c"):
+        readiness = exam_data.load_readiness(content_lang, form)
+        form_meta = readiness_meta["forms"][form]
+        readiness_ui = dict(UI[lang])
+        readiness_ui["draw_note_full"] = (
+            f"Held-out readiness form {form.upper()}: {{n}} unseen questions. Answers reveal only after completion."
+            if lang == "en" else
+            f"Независимая форма {form.upper()}: {{n}} ранее не показанных вопросов. Ответы откроются только после завершения."
+        )
+        readiness_ui["threshold_note"] = (
+            "Held-out readiness signal. This form is excluded from normal study and bank browsing; "
+            "use the official 720 cut score only as a training reference, not a score prediction."
+            if lang == "en" else
+            "Независимый сигнал готовности. Эта форма исключена из обычной тренировки и банка; "
+            "порог 720 используется только как учебный ориентир, а не прогноз официального результата."
+        )
+        render_page(
+            questions=readiness,
+            domains_js=domains_js,
+            ui=readiness_ui,
+            per_domain={k: int(v) for k, v in form_meta["per_domain"].items()},
+            pass_score=PASS_SCORE,
+            pass_pct=PASS_PCT,
+            store_key=f"ccaf-readiness-{form}-{content_lang}",
+            lang_attr=lang,
+            title=f"CCAR-F · Readiness {form.upper()}" if lang == "en" else f"CCAR-F · Проверка {form.upper()}",
+            page_title=f"CCAR-F · Held-out readiness {form.upper()}" if lang == "en" else f"CCAR-F · Независимая проверка {form.upper()}",
+            out_path=os.path.join(ROOT_DIR, "ccaf", "dist", f"readiness_{form}_{lang}.html"),
+            language_links={
+                "en": f"readiness-{form}-en.html",
+                "ru": f"readiness-{form}-ru.html",
+            },
+            report_map=json.load(open(os.path.join(DATA_DIR, "objectives.json"), encoding="utf-8")).get("objective_subdomains", {}),
+            fixed_exam=True,
+        )
 
 
 def main():

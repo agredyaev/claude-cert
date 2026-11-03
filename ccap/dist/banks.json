@@ -1,6 +1,10 @@
 {
-  "bank_en.html": "data/ccarp-exam-en-25e28be1a7fd.json",
-  "bank_ru.html": "data/ccarp-exam-en-25e28be1a7fd.json",
-  "exam_en.html": "data/ccarp-exam-en-25e28be1a7fd.json",
-  "exam_ru.html": "data/ccarp-exam-en-25e28be1a7fd.json"
+  "bank_en.html": "data/ccarp-exam-en-505f5c6f5d7f.json",
+  "bank_ru.html": "data/ccarp-exam-en-505f5c6f5d7f.json",
+  "exam_en.html": "data/ccarp-exam-en-505f5c6f5d7f.json",
+  "exam_ru.html": "data/ccarp-exam-en-505f5c6f5d7f.json",
+  "readiness_a_en.html": "data/ccarp-readiness-a-en-60286d91d7de.json",
+  "readiness_a_ru.html": "data/ccarp-readiness-a-en-60286d91d7de.json",
+  "readiness_b_en.html": "data/ccarp-readiness-b-en-ff00a88a5d8b.json",
+  "readiness_b_ru.html": "data/ccarp-readiness-b-en-ff00a88a5d8b.json"
 }

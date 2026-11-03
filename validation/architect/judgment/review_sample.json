@@ -1,0 +1,2582 @@
+{
+  "foundation": [
+    {
+      "id": "f1-056",
+      "domain": 1,
+      "task_id": "1.1",
+      "objective": "Design and implement agentic loops for autonomous task execution",
+      "situation": "A team is implementing termination logic for an autonomous refactoring agent. Loop A exits when response.stop_reason == \"end_turn\". Loop B exits when the assistant's final text block is non-empty, on the assumption that any explanatory text means Claude is finished.",
+      "question": "Which loop correctly implements the standard termination pattern?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Loop A, because stop_reason directly reports whether Claude finished its turn without requesting a tool, which is the documented signal",
+          "correct": true,
+          "explanation": "Claude can emit explanatory text alongside a tool_use block in the same turn, so checking for text presence stops the loop too early; stop_reason is the structured, authoritative field."
+        },
+        {
+          "letter": "B",
+          "text": "Loop B, because a populated final text block is treated as the only reliable indicator that Claude has stopped requesting further tool calls",
+          "correct": false,
+          "explanation": "A response can include commentary text while still requesting another tool, so non-empty text does not reliably mean the turn is finished."
+        },
+        {
+          "letter": "C",
+          "text": "Neither loop works, because the API only signals completion through the total count of content blocks returned in the response",
+          "correct": false,
+          "explanation": "Content block counts vary with output style and are not a documented completion signal in the Messages API."
+        },
+        {
+          "letter": "D",
+          "text": "Both loops behave identically in practice, since stop_reason and trailing text emptiness always change together on every response",
+          "correct": false,
+          "explanation": "Text presence and stop_reason are not guaranteed to move together; a turn can carry both a tool_use block and accompanying text."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f1-003",
+      "domain": 1,
+      "task_id": "1.2",
+      "objective": "Orchestrate multi-agent systems with coordinator-subagent patterns",
+      "situation": "A coordinator delegates a task to a 'documentation-reviewer' subagent that should only read and comment on files, never modify them. During testing, the subagent unexpectedly edits a file it was reviewing.",
+      "question": "What configuration change prevents this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Move the file-editing logic into the coordinator so the subagent never needs to call any tools at all",
+          "correct": false,
+          "explanation": "The subagent still needs Read access to review files, so removing all tools would prevent it from doing its job rather than just preventing edits."
+        },
+        {
+          "letter": "B",
+          "text": "Add a system prompt instruction telling the subagent not to modify files, without changing its tool access",
+          "correct": false,
+          "explanation": "A prompt instruction alone is a soft constraint; if Edit and Write remain in the subagent's tool set, it can still invoke them despite the instruction."
+        },
+        {
+          "letter": "C",
+          "text": "Lower the subagent's model tier so it is less capable of generating file-modification tool calls",
+          "correct": false,
+          "explanation": "A lower-tier model can still call Edit or Write if those tools remain available; capability level doesn't enforce a hard restriction on which tools can be invoked."
+        },
+        {
+          "letter": "D",
+          "text": "Restrict the subagent's tools field to read-only tools like Read and Grep, omitting Edit and Write",
+          "correct": true,
+          "explanation": "Restricting the tools field to read-only tools such as Read and Grep, and omitting Edit and Write, enforces at the configuration level that the subagent cannot modify files."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f1-082",
+      "domain": 1,
+      "task_id": "1.3",
+      "objective": "Configure subagent invocation, context passing, and spawning",
+      "situation": "A coordinator runs a \"web-search\" subagent and a \"document-analysis\" subagent, both of which return findings that must later be cited with their original sources when a \"synthesis\" subagent writes the final report. Reviewers keep finding that the final report attributes a claim to the wrong source URL or page number.",
+      "question": "What is the best way to pass the prior agents' findings into the synthesis subagent's prompt to prevent this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Pass only a short summary of each prior agent's findings and let synthesis re-fetch every original source itself to confirm the exact URL and page number for each claim",
+          "correct": false,
+          "explanation": "Re-fetching sources is redundant, slower, and does not guarantee the re-fetched content maps back to the same claims already gathered, and it discards the point of reusing completed research."
+        },
+        {
+          "letter": "B",
+          "text": "Pass the findings exactly as free-form conversational text copied from the subagents' chat-style replies, since exact wording matters more than structure for citation accuracy",
+          "correct": false,
+          "explanation": "Free-form conversational text without explicit metadata fields still forces synthesis to guess at attribution rather than reading it directly from structured fields."
+        },
+        {
+          "letter": "C",
+          "text": "Pass the findings as one continuous block of prose combining every source's text together, trusting synthesis to keep the origin of each sentence straight from context",
+          "correct": false,
+          "explanation": "Merging everything into undifferentiated prose is exactly what causes mis-attribution, since there is no reliable boundary between where one source's content ends and another's begins."
+        },
+        {
+          "letter": "D",
+          "text": "Pass the findings as structured entries that separate content from metadata, such as source URL, document name, and page number, so synthesis preserves correct attribution",
+          "correct": true,
+          "explanation": "Using structured data that keeps each finding's content distinct from its source metadata lets the synthesis subagent map claims back to the correct URL, document, or page number reliably, rather than relying on the model to infer attribution from unstructured prose."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f1-066",
+      "domain": 1,
+      "task_id": "1.4",
+      "objective": "Implement multi-step workflows with enforcement and handoff patterns",
+      "situation": "A team registers three independent PreToolUse hooks for process_refund: one checks identity verification, one checks fraud score, and one logs the attempt for audit. On one ticket, the verification hook returns \"deny\" while the fraud-score hook returns \"allow\" and the logging hook returns an empty object.",
+      "question": "What happens to the tool call?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The call proceeds, because a majority of the registered hooks either allowed the call or expressed no objection to it",
+          "correct": false,
+          "explanation": "Decisions are not resolved by majority vote; a single deny is sufficient to block the call regardless of how many other hooks allowed it."
+        },
+        {
+          "letter": "B",
+          "text": "The call is paused and escalated to the user for manual approval, because the hooks produced a mixed set of decisions",
+          "correct": false,
+          "explanation": "Deny outranks ask in the priority order, so a mixed result does not fall back to a manual-approval prompt when one hook already denied it."
+        },
+        {
+          "letter": "C",
+          "text": "The call proceeds using only the fraud-score hook's decision, because it returned an explicit \"allow\" rather than an empty object",
+          "correct": false,
+          "explanation": "All matching hooks' outputs are considered together; an empty object from one hook does not remove it from the resolution, and deny still overrides allow."
+        },
+        {
+          "letter": "D",
+          "text": "The call is blocked, because when multiple hooks disagree, a \"deny\" from any hook overrides \"allow\" results from the others",
+          "correct": true,
+          "explanation": "When several hooks fire for the same event, the most restrictive decision wins: deny takes priority over defer, which takes priority over ask, which takes priority over allow."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f1-031",
+      "domain": 1,
+      "task_id": "1.5",
+      "objective": "Apply Agent SDK hooks for tool call interception and data normalization",
+      "situation": "An architect registers three independent PreToolUse hooks for the same charge_card tool: one checks fraud signals, one checks the daily spending cap, and one checks account status. During a live call, the fraud-signal hook returns permissionDecision \"deny\" while the other two both return \"allow\".",
+      "question": "What happens to the tool call?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The call proceeds, because a majority of the registered hooks returned \"allow\" and the SDK resolves conflicting decisions by simple vote",
+          "correct": false,
+          "explanation": "There is no majority-vote resolution; the SDK does not count \"allow\" versus \"deny\" responses, it always applies the most restrictive decision present."
+        },
+        {
+          "letter": "B",
+          "text": "The SDK raises a configuration error and halts the session, because hooks matched to the same tool are not permitted to return conflicting decisions",
+          "correct": false,
+          "explanation": "Conflicting decisions across hooks are an expected and supported pattern, not an error condition; the SDK resolves them by priority rather than failing the session."
+        },
+        {
+          "letter": "C",
+          "text": "The call proceeds, because only the first hook registered in the PreToolUse array is evaluated and the remaining two hooks are skipped entirely",
+          "correct": false,
+          "explanation": "All matching hooks for an event run, typically in parallel, rather than short-circuiting after the first one; the fraud, spending-cap, and account-status checks are all evaluated."
+        },
+        {
+          "letter": "D",
+          "text": "The call is blocked, because when multiple hooks disagree the most restrictive result applies and any single \"deny\" overrides the other hooks' \"allow\" decisions",
+          "correct": true,
+          "explanation": "When multiple hooks apply to the same event, the most restrictive outcome wins: deny takes priority over defer, which takes priority over ask, which takes priority over allow. A single deny blocks the operation no matter how many other hooks allowed it."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f1-099",
+      "domain": 1,
+      "task_id": "1.6",
+      "objective": "Design task decomposition strategies for complex workflows",
+      "situation": "An architect is reviewing a design where a large code review agent analyzes every file in a pull request in one combined prompt, then a second prompt asks it to summarize cross-file issues. Stakeholders report that the cross-file summary frequently misses real integration bugs that are visible when files are compared directly.",
+      "question": "What is the most likely cause, and what change would fix it?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The two passes should run in reverse order, producing the cross-file summary before any individual file has actually been analyzed",
+          "correct": false,
+          "explanation": "Running the cross-file summary before any individual file has been analyzed leaves it with no per-file findings to compare, making it even less likely to catch integration bugs."
+        },
+        {
+          "letter": "B",
+          "text": "The first pass already dilutes attention across all files at once, so splitting it into per-file analyses gives the cross-file pass richer findings",
+          "correct": true,
+          "explanation": "Combining all files into one first pass causes attention dilution, producing shallow per-file analysis; separating that into individual per-file passes before the cross-file pass gives the integration step higher-quality inputs to work from, which is the documented fix for this exact pattern."
+        },
+        {
+          "letter": "C",
+          "text": "The cross-file pass should be dropped and replaced with one combined pass that covers every file and every possible relationship in a single prompt",
+          "correct": false,
+          "explanation": "Removing the cross-file pass eliminates the only step designed to catch integration issues, which is the opposite of what the stakeholders need."
+        },
+        {
+          "letter": "D",
+          "text": "The two-prompt structure is fine as is, but the model needs a longer system prompt that more precisely defines what an integration bug is",
+          "correct": false,
+          "explanation": "A longer definition of integration bugs does not solve the underlying problem that the first pass never produced precise per-file findings to begin with, since all files competed for attention in one prompt."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f1-083",
+      "domain": 1,
+      "task_id": "1.7",
+      "objective": "Manage session state, resumption, and forking",
+      "situation": "A prior session spent many turns reading and cross-referencing a large data-pipeline codebase, and most of its tool results are now stale because the pipeline was heavily refactored afterward. The architect has already captured the session's final conclusions in a structured summary (such as progress notes or a summary document) and only needs those conclusions—not the intermediate tool calls—to continue the next phase of work.",
+      "question": "Which continuation strategy is more reliable here?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Fork the prior session and continue exploration straight from its unmodified stale history",
+          "correct": false,
+          "explanation": "Forking creates a continuation from the same stale history, so the agent would still rely on outdated tool outputs and intermediate context. A fresh context initialized with the already-prepared structured summary is more reliable and avoids the stale intermediate calls."
+        },
+        {
+          "letter": "B",
+          "text": "Resume the prior session and issue /clear right after resuming to reset its context window",
+          "correct": false,
+          "explanation": "Issuing /clear immediately after resuming would erase the session context, including the final conclusions, unless those conclusions were first saved externally. The stated approach does not inject the prepared summary, so it does not reliably preserve the required continuation context."
+        },
+        {
+          "letter": "C",
+          "text": "Resume the prior session so the agent inherits every cached tool result automatically as-is",
+          "correct": false,
+          "explanation": "Resuming the prior session loads stale cached tool results from before the refactor, which no longer reflect the current pipeline. The architect only needs the final conclusions, not the intermediate tool calls, so inheriting them as-is is unreliable and may mislead the next phase."
+        },
+        {
+          "letter": "D",
+          "text": "Start a fresh session and inject the already-prepared structured summary of the prior conclusions as the opening prompt",
+          "correct": true,
+          "explanation": "Anthropic recommends compaction: take a conversation nearing the context window limit, summarize its contents, and reinitiate a new context window with that summary to improve long-term coherence. For multi-session work, leaving clear artifacts (like a structured summary or progress notes) lets the next session read only the needed context. Because the stem states the summary of final conclusions already exists, starting fresh with that summary avoids inheriting stale tool results while preserving the needed conclusions."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f2-006",
+      "domain": 2,
+      "task_id": "2.1",
+      "objective": "Design effective tool interfaces with clear descriptions and boundaries",
+      "situation": "A single tool, analyze_document, extracts data points, produces summaries, and verifies claims against a source. Users report it inconsistently performs only one of these behaviors for ambiguous requests.",
+      "question": "Which redesign best addresses this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Split the tool into extract_data_points, summarize_content, and verify_claim_against_source, each with a narrow contract.",
+          "correct": true,
+          "explanation": "Splitting a generic multi-purpose tool into purpose-specific tools with defined input/output contracts removes the ambiguity about which behavior a call should trigger."
+        },
+        {
+          "letter": "B",
+          "text": "Merge the tool with unrelated tools into one larger tool so the model faces fewer total choices overall.",
+          "correct": false,
+          "explanation": "Merging with unrelated tools increases the surface area of a single tool's responsibilities, worsening overlapping-purpose confusion rather than resolving it."
+        },
+        {
+          "letter": "C",
+          "text": "Keep the single tool but instruct the model, in the system prompt, to always call it three separate times per request.",
+          "correct": false,
+          "explanation": "Forcing three calls per request wastes invocations on tasks that need only one behavior and does not resolve the ambiguity about which behavior was intended."
+        },
+        {
+          "letter": "D",
+          "text": "Add a required mode enum parameter to the existing tool, but leave its single overarching description unchanged.",
+          "correct": false,
+          "explanation": "Adding a mode parameter without updating the description still leaves the model guessing at the tool's overall purpose and when each mode applies."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f2-050",
+      "domain": 2,
+      "task_id": "2.2",
+      "objective": "Implement structured error responses for MCP tools",
+      "situation": "A subagent handling document translation calls a translate_text tool that fails with a connection timeout on the first attempt. The subagent's local retry policy allows up to 2 automatic retries for transient errors before escalating. The second retry also times out.",
+      "question": "What should the subagent do next?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Stop retrying and propagate the failure to the coordinator, noting the errorCategory, that timeouts persisted across the allowed local attempts, and what text remained untranslated.",
+          "correct": true,
+          "explanation": "After exhausting the local retry budget for a transient timeout error, the subagent should stop retrying and escalate the failure to the coordinator. It must include the errorCategory, note that timeouts persisted across the allowed local attempts, and specify what text remained untranslated. This structured context enables the coordinator to make an informed higher-level decision."
+        },
+        {
+          "letter": "B",
+          "text": "Immediately reclassify the error as a permission failure and propagate it to the coordinator, including the permission flag and that repeated timeouts indicate an access-control issue, while aborting further retries.",
+          "correct": false,
+          "explanation": "Repeated connection timeouts strongly suggest a transient network or service issue, not an access-control failure. Reclassifying the error as a permission problem without any supporting evidence would mislead the coordinator, likely triggering irrelevant permission checks while ignoring the actual transient unavailability."
+        },
+        {
+          "letter": "C",
+          "text": "Silently return a fabricated translation to the coordinator, using a cached fallback response from a prior successful call to avoid workflow interruption, despite the translate_text tool timeouts.",
+          "correct": false,
+          "explanation": "Silently returning a fabricated or cached translation misrepresents the outcome of a failed tool call as successful, potentially corrupting downstream workflows with invalid data. An honest, structured escalation is always preferable to masking failures with unverified fallbacks."
+        },
+        {
+          "letter": "D",
+          "text": "Continue retrying indefinitely at the subagent level, logging each attempt and resetting the retry count, ensuring that transient errors like timeouts are never escalated to the coordinator.",
+          "correct": false,
+          "explanation": "Local recovery is explicitly bounded by the retry policy; retrying indefinitely after the cap is reached violates that policy and wastes resources. It also forecloses the coordinator's ability to respond with broader strategies, such as switching to an alternative service or notifying an operator."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f2-015",
+      "domain": 2,
+      "task_id": "2.3",
+      "objective": "Distribute tools appropriately across agents and configure tool choice",
+      "situation": "A legal-document analysis agent has a single retrieve_clause tool that can pull arbitrary text ranges from any uploaded file by byte offset, which the model frequently misuses to grab unrelated or malformed spans. The team wants to replace it with a constrained alternative that only ever returns whole, well-defined clauses.",
+      "question": "Which redesign best follows the pattern of replacing a generic tool with a constrained one?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Keep retrieve_clause unchanged and add a second agent whose only job is to double-check the byte ranges after retrieval",
+          "correct": false,
+          "explanation": "Adding a checking agent works around the problem after the fact rather than constraining the tool itself, and increases pipeline complexity without fixing the root cause."
+        },
+        {
+          "letter": "B",
+          "text": "Replace retrieve_clause with a get_clause_by_id tool that only accepts a validated clause identifier from a pre-parsed clause index",
+          "correct": true,
+          "explanation": "Swapping the unconstrained byte-offset tool for get_clause_by_id, which only accepts validated identifiers from a pre-parsed index, mirrors the documented pattern of replacing a generic tool with a narrower one that structurally prevents the misuse."
+        },
+        {
+          "letter": "C",
+          "text": "Keep retrieve_clause but double the number of example byte-offset calls in its description so the model learns better offsets",
+          "correct": false,
+          "explanation": "More examples may improve offset guesses somewhat, but the tool still accepts arbitrary byte ranges, so the structural cause of malformed spans remains unaddressed."
+        },
+        {
+          "letter": "D",
+          "text": "Give the agent broader access by also adding a raw_file_read tool so it can cross-check offsets against the full document",
+          "correct": false,
+          "explanation": "Adding another broad, unconstrained tool increases the surface for misuse and decision complexity rather than replacing the problematic tool with a scoped alternative."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f2-002",
+      "domain": 2,
+      "task_id": "2.4",
+      "objective": "Integrate MCP servers into Claude Code and agent workflows",
+      "situation": "An architect is rolling out a GitHub MCP server for the whole engineering team. Every teammate has their own GitHub personal access token, and the config must be checked into the repo without ever committing a real secret.",
+      "question": "How should the architect configure this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Add the server with project scope, then add .mcp.json to .gitignore so the checked-in repository never actually contains the shared server configuration file",
+          "correct": false,
+          "explanation": "Ignoring .mcp.json removes the shared configuration entirely, meaning no teammate gets the server automatically and the stated goal of a checked-in, team-wide config is not met."
+        },
+        {
+          "letter": "B",
+          "text": "Add the server with project scope in .mcp.json, and set the header to Authorization: Bearer ${GITHUB_TOKEN} so each teammate's environment supplies the value at connection",
+          "correct": true,
+          "explanation": "Project scope stores the server in .mcp.json for team-wide sharing via version control, and ${GITHUB_TOKEN} expansion pulls the value from each user's own environment at connection time, so no secret is ever committed."
+        },
+        {
+          "letter": "C",
+          "text": "Add the server with user scope in ~/.claude.json, and paste each teammate's literal token value into the shared header field before committing that file to the repo",
+          "correct": false,
+          "explanation": "User scope stores the entry in ~/.claude.json, which is private to one machine and not shared with the team, and pasting literal tokens defeats the goal of never committing secrets."
+        },
+        {
+          "letter": "D",
+          "text": "Add the server with local scope, then have every teammate individually edit their own copy of .mcp.json to insert their personal token in place of a placeholder",
+          "correct": false,
+          "explanation": "Local scope is private to the current project on one machine and is not checked into version control at all, so it cannot serve as the shared team configuration the scenario requires."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f2-068",
+      "domain": 2,
+      "task_id": "2.5",
+      "objective": "Select and apply built-in tools (Read, Write, Edit, Bash, Grep, Glob) effectively",
+      "situation": "Claude Code is asked to rename an environment variable from API_TIMEOUT_MS to REQUEST_TIMEOUT_MS everywhere it is referenced across a codebase of several hundred files, with each occurrence sitting in different surrounding code.",
+      "question": "Which approach best discovers the full scope of the change before applying it?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Run Glob with the pattern **/API_TIMEOUT_MS to locate files whose names contain the variable, then edit only those matching files",
+          "correct": false,
+          "explanation": "Glob matches file names, not file contents; a source file referencing the environment variable in its code would not be named after that variable, so this would find few or no relevant files."
+        },
+        {
+          "letter": "B",
+          "text": "Run Write on the project's environment configuration file first, then rely on Claude to infer other affected files from that one change afterward",
+          "correct": false,
+          "explanation": "Writing one file first does not reveal the other files that also reference the variable, and Claude cannot reliably infer scope from a single unrelated edit rather than actually searching the codebase."
+        },
+        {
+          "letter": "C",
+          "text": "Run Grep with output mode content and a glob scope to list every file and line referencing API_TIMEOUT_MS, then review that list before editing",
+          "correct": true,
+          "explanation": "Grep in content mode returns the matching file and line for every occurrence of the pattern, giving a complete, reviewable inventory of every reference to the variable before any files are modified, scoped further with a glob parameter if needed."
+        },
+        {
+          "letter": "D",
+          "text": "Run Bash to open every file in an interactive editor, since a variable rename of this kind must be reviewed visually rather than located programmatically",
+          "correct": false,
+          "explanation": "Bash has no built-in mechanism to open files in an interactive editor within this workflow, and manually inspecting hundreds of files is far less reliable than a programmatic content search."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "f3-014",
+      "domain": 3,
+      "task_id": "3.1",
+      "objective": "Configure CLAUDE.md files with appropriate hierarchy, scoping, and modular organization",
+      "situation": "In a monorepo, an engineer working exclusively on packages/web finds that Claude Code's context is cluttered at startup with CLAUDE.md content from packages/admin-dashboard and several packages/legacy-* packages. This happens because the monorepo's root CLAUDE.md file uses import statements to load all subpackage CLAUDE.md files. The engineer wants these excluded from their own sessions without affecting other teammates who might work in those packages.",
+      "question": "What should they do?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Delete the CLAUDE.md files from packages/admin-dashboard and packages/legacy-* directly, since unused files should be removed from the repository",
+          "correct": false,
+          "explanation": "Deleting shared CLAUDE.md files would remove project documentation and instructions for teammates who do work in those packages, causing team-wide regressions. The use case calls for a personal, local exclusion, not a repository-level deletion."
+        },
+        {
+          "letter": "B",
+          "text": "Add claudeMdExcludes patterns for those packages to the committed .claude/settings.json at the repository root, since exclusions can only be configured at the project scope",
+          "correct": false,
+          "explanation": "A committed .claude/settings.json is shared project configuration and would apply team-wide, not just to this engineer. Local exclusions belong in .claude/settings.local.json, while project-level settings are for durable shared configuration."
+        },
+        {
+          "letter": "C",
+          "text": "Add claudeMdExcludes patterns for those packages to .claude/settings.local.json, since local settings apply only to that engineer's machine",
+          "correct": true,
+          "explanation": "Anthropic's documentation describes claudeMdExcludes as a way to exclude rules in monorepos or prevent irrelevant instructions from loading into Claude Code sessions. .claude/settings.local.json is intended for personal overrides within a project and is typically excluded from version control via .gitignore, so the exclusions affect only that engineer and not other teammates."
+        },
+        {
+          "letter": "D",
+          "text": "Ask the admin-dashboard and legacy package owners to move their CLAUDE.md files into .claude/rules/, since only root-level CLAUDE.md files are loaded across package boundaries",
+          "correct": false,
+          "explanation": "The documented mechanism for this scenario is claudeMdExcludes to keep specific CLAUDE.md files from loading, not moving files into .claude/rules/. Also, changing file locations in shared packages would impact other teammates and is not a local, personal override."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "f3-068",
+      "domain": 3,
+      "task_id": "3.2",
+      "objective": "Create and configure custom slash commands and skills",
+      "situation": "A project's .claude/skills/review/SKILL.md is checked into the repo for team-wide use. A senior engineer also keeps a ~/.claude/skills/review/SKILL.md on their laptop for personal projects, unaware it uses the same name.",
+      "question": "When this engineer works in the shared repository and runs /review, which skill actually executes?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The project skill at .claude/skills/review/SKILL.md, because project-scoped skills always take priority over personal ones with the same name.",
+          "correct": false,
+          "explanation": "This is incorrect. The official skill precedence places personal skills above project-level skills. Therefore, a project skill will not override a personal one; it is the reverse. For team-wide standards, it is recommended to commit project skills to the repository, but they will be superseded if a user has a personal skill with the identical name."
+        },
+        {
+          "letter": "B",
+          "text": "Neither skill executes, and Claude Code reports a naming conflict error until one of the two files is renamed.",
+          "correct": false,
+          "explanation": "Claude Code silently resolves naming conflicts using its priority order without raising an error. The higher-precedence skill (personal, in this hierarchy) simply overrides the lower one. While using unique, descriptive skill names is recommended to avoid accidental overrides, no error is thrown if a conflict exists."
+        },
+        {
+          "letter": "C",
+          "text": "The personal skill at ~/.claude/skills/review/SKILL.md, because a skill with the same name at the personal level overrides one from the project level.",
+          "correct": true,
+          "explanation": "According to official Claude Code documentation, skill priority follows a strict hierarchy: Enterprise > Personal (~/.claude/skills/) > Project (.claude/skills/) > Plugins. When a personal and a project skill share the same name, the personal skill takes precedence and is the one that executes. This behavior allows individual users to override team-level skills with their own customizations."
+        },
+        {
+          "letter": "D",
+          "text": "Both skills execute in sequence, first the personal skill and then the project skill, since Claude Code merges same-named skills rather than choosing one.",
+          "correct": false,
+          "explanation": "Claude Code does not merge skills with identical names or chain their execution. The priority hierarchy is used to select exactly one skill definition, and only that skill runs when invoked. The conflict resolution is based on precedence, not concatenation."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "f3-053",
+      "domain": 3,
+      "task_id": "3.3",
+      "objective": "Apply path-specific rules for conditional convention loading",
+      "situation": "An infrastructure team wants Claude Code to load Terraform-specific formatting and tagging conventions only when Claude edits files under the terraform/ directory, at any subfolder depth.",
+      "question": "Which YAML frontmatter for a new .claude/rules/terraform.md file correctly scopes the rule to this requirement?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "---\npaths:\n  - \"terraform/*\"\n---",
+          "correct": false,
+          "explanation": "A single star only matches files directly inside terraform/ and would miss files in nested subfolders such as terraform/modules/network/main.tf."
+        },
+        {
+          "letter": "B",
+          "text": "---\npaths:\n  - \"terraform/**/*\"\n---",
+          "correct": true,
+          "explanation": "The paths field takes a YAML list, and the double-star glob terraform/**/* matches files under terraform/ at any depth, including nested subfolders."
+        },
+        {
+          "letter": "C",
+          "text": "---\ninclude:\n  - \"terraform/**/*\"\n---",
+          "correct": false,
+          "explanation": "The frontmatter field recognized for path scoping is paths, not include; a rule using include would not be treated as path-scoped."
+        },
+        {
+          "letter": "D",
+          "text": "---\npaths: \"terraform/**/*\"\n---",
+          "correct": false,
+          "explanation": "The paths field is documented as a YAML list of patterns, not a bare string; while a single pattern is common, it should be expressed as a list item under paths:."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f3-082",
+      "domain": 3,
+      "task_id": "3.4",
+      "objective": "Determine when to use plan mode vs direct execution",
+      "situation": "During a multi-phase refactor, Claude needs to grep across hundreds of files to catalog every usage of a deprecated helper function before deciding what to do next. The architect is worried this discovery output will consume most of the main conversation's context window.",
+      "question": "What should the architect do to prevent this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Delegate the cataloging work to an Explore subagent, which runs the searches in its own context and returns a condensed summary to the conversation",
+          "correct": true,
+          "explanation": "The Explore subagent isolates verbose discovery work like broad greps in its own context window and returns only the summary, preserving the main conversation's context for the rest of the multi-phase task."
+        },
+        {
+          "letter": "B",
+          "text": "Have Claude paste the full grep output directly into the conversation and then manually delete the least relevant lines from the transcript afterward",
+          "correct": false,
+          "explanation": "Pasting the full output into the main conversation first consumes the context budget the architect is trying to protect, even if some lines are removed afterward."
+        },
+        {
+          "letter": "C",
+          "text": "Raise the configured context window limit for the session so the raw search results no longer need to be trimmed at all before use",
+          "correct": false,
+          "explanation": "There is no setting that expands a model's context window on demand; the discovery output still needs to be isolated rather than resized."
+        },
+        {
+          "letter": "D",
+          "text": "Switch the main session into plan mode, which is specifically designed to automatically summarize all grep output before it reaches the conversation",
+          "correct": false,
+          "explanation": "Plan mode restricts Claude to read-only actions before edits are approved; it does not isolate or summarize search output the way a dedicated subagent does."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f3-017",
+      "domain": 3,
+      "task_id": "3.5",
+      "objective": "Apply iterative refinement techniques for progressive improvement",
+      "situation": "A payments engineer asks Claude Code to implement a discount calculation function and wants to minimize back-and-forth correction cycles from the outset. Order totals must round to the nearest cent using banker's rounding, and stacking discounts must apply in a specific order that is easy to get wrong.",
+      "question": "What should the engineer do before Claude writes any implementation code?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Describe the rounding and stacking rules in a single long paragraph of prose and trust that a sufficiently detailed paragraph will be interpreted correctly the first time",
+          "correct": false,
+          "explanation": "A single prose paragraph describing rules that are easy to get wrong is exactly the kind of description prone to inconsistent interpretation; a test suite provides a much more reliable, checkable target."
+        },
+        {
+          "letter": "B",
+          "text": "Write a test suite first that encodes the rounding and stacking rules with concrete cases, then have Claude implement against it and iterate on any failures",
+          "correct": true,
+          "explanation": "Writing a test suite that encodes the specific rounding and stacking behavior first turns an easy-to-get-wrong set of rules into a concrete, executable check that Claude can implement against and use to drive focused iteration on any failures."
+        },
+        {
+          "letter": "C",
+          "text": "Ask Claude to implement the function using whatever rounding and stacking order seems most common in e-commerce systems, then correct it if the checkout totals look wrong later",
+          "correct": false,
+          "explanation": "Guessing at common e-commerce conventions risks not matching the engineer's actual banker's-rounding and stacking-order requirements, and catching the mismatch later in checkout totals is a costlier way to find the same bugs a test suite would catch immediately."
+        },
+        {
+          "letter": "D",
+          "text": "Have Claude implement the function without tests, then manually spot-check three or four representative orders by hand in a spreadsheet",
+          "correct": false,
+          "explanation": "Manual spreadsheet spot-checks of a few orders provide a weaker, non-repeatable signal than an executable test suite that can be rerun automatically as Claude iterates."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f3-054",
+      "domain": 3,
+      "task_id": "3.6",
+      "objective": "Integrate Claude Code into CI/CD pipelines",
+      "situation": "An engineering lead wants CI-invoked Claude Code reviews to consistently flag missing test coverage using the team's specific definition of a \"valuable test\" (asserts behavior, not implementation details) and to know which fixtures already exist in the test helpers directory.",
+      "question": "Where should this project-specific guidance be encoded so every CI run picks it up automatically without being repeated in each workflow prompt?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "In the GitHub Actions workflow YAML as a long inline prompt string duplicated across every review job",
+          "correct": false,
+          "explanation": "Duplicating standards inline in every workflow file means any update requires editing multiple YAML files and risks drift between jobs, unlike a single shared CLAUDE.md."
+        },
+        {
+          "letter": "B",
+          "text": "In a CLAUDE.md file at the repository root describing testing standards, the valuable-test criteria, and available fixtures",
+          "correct": true,
+          "explanation": "CLAUDE.md is the mechanism Claude Code reads automatically for project context such as testing standards, fixture conventions, and review criteria, so it persists across every CI-invoked run without re-specifying it."
+        },
+        {
+          "letter": "C",
+          "text": "In the pull request description template, so each contributor retypes the testing standards before requesting review",
+          "correct": false,
+          "explanation": "PR description templates depend on contributors manually retyping guidance, which is unreliable and does not guarantee Claude reads it during an automated CI run."
+        },
+        {
+          "letter": "D",
+          "text": "In the --append-system-prompt flag value hardcoded into the CI runner's shell profile",
+          "correct": false,
+          "explanation": "Hardcoding standards into a shell profile ties them to a specific runner's environment rather than the repository, so they would not travel with the codebase or apply consistently across runners."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f4-022",
+      "domain": 4,
+      "task_id": "4.1",
+      "objective": "Design prompts with explicit criteria to improve precision and reduce false positives",
+      "situation": "An architect wants a Claude-based reviewer to classify findings into severity levels consistently across many pull requests and multiple reviewers on the team.",
+      "question": "Which prompt design best achieves consistent severity classification?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Define each severity level with a short description plus a concrete code example illustrating what qualifies at that level, so the model has a consistent reference point for every classification.",
+          "correct": true,
+          "explanation": "Providing a short description and a concrete code example for each severity level gives the model an unambiguous, checkable anchor for classification. This fixed reference point promotes consistent severity labels across different pull requests and multiple reviewers."
+        },
+        {
+          "letter": "B",
+          "text": "Tell the model to default to medium severity for every finding, escalating or de-escalating only when it provides specific technical justification referencing the team's predefined severity criteria.",
+          "correct": false,
+          "explanation": "Defaulting all findings to medium severity and requiring justification to change biases classifications toward that default. This does not provide a reliable method for correctly identifying true severity, as it relies on a threshold that may not align with the actual impact of findings."
+        },
+        {
+          "letter": "C",
+          "text": "Instruct the model to assign severity based on how urgent the issue feels in the context of the specific pull request, considering the component's criticality, recent commit history, and related incidents.",
+          "correct": false,
+          "explanation": "'How urgent it feels' is a subjective judgment with no fixed reference point, which leads to inconsistent severity labels across different reviews and reviewers. Relying on contextual factors like component criticality and commit history without explicit criteria introduces variability, not consistency."
+        },
+        {
+          "letter": "D",
+          "text": "Ask the model to compare the current finding to the average severity of findings from the last ten pull requests, using that historical baseline to normalize severity assignments across reviews.",
+          "correct": false,
+          "explanation": "Normalizing against the average severity of the last ten pull requests makes classifications relative to a shifting baseline, not an absolute standard. This approach can cause severity drift over time and fails to ensure uniform application across different review periods."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f4-050",
+      "domain": 4,
+      "task_id": "4.2",
+      "objective": "Apply few-shot prompting to improve output consistency and quality",
+      "situation": "A team's code-review assistant prompt already spells out an exhaustive, itemized rubric for flagging issues, but reviewers still receive inconsistently formatted findings across runs: some list severity before location, others omit the suggested fix entirely. The team wants the most effective fix for this output-consistency problem.",
+      "question": "What should they do?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Split the prompt into two calls: one that generates findings and a second that reformats them into the target schema",
+          "correct": false,
+          "explanation": "Adding a second formatting pass adds latency and cost and does not address the root cause: the first call's instructions are still ambiguous about structure, so the second call inherits inconsistent input to reformat."
+        },
+        {
+          "letter": "B",
+          "text": "Rewrite the rubric as an even longer numbered list that spells out every field, its position, and its formatting rule in detail",
+          "correct": false,
+          "explanation": "Piling on more prose instructions is the approach the team already tried; detailed instructions alone tend to produce inconsistent formatting because the model still has to infer the exact structure from a description rather than seeing it demonstrated."
+        },
+        {
+          "letter": "C",
+          "text": "Lower the temperature parameter to zero so the same tokens are sampled deterministically across every single run",
+          "correct": false,
+          "explanation": "Temperature controls sampling randomness and can reduce run-to-run variance, but it does not teach the model what the correct field order or completeness should be, so structural inconsistency driven by ambiguous instructions would persist."
+        },
+        {
+          "letter": "D",
+          "text": "Add three to five worked examples in example tags that each show the exact field order and formatting wanted",
+          "correct": true,
+          "explanation": "When detailed instructions alone produce inconsistent formatting, concrete input-output examples are the most reliable way to pin down the exact structure and field order, and a handful of well-chosen examples covering an edge case generalizes better than more prose."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f4-061",
+      "domain": 4,
+      "task_id": "4.3",
+      "objective": "Enforce structured output using tool use and JSON schemas",
+      "situation": "A logistics company ingests shipment confirmation emails from many different carriers. Dates appear as 03/14/2026, 14-Mar-2026, and 2026.03.14 depending on the carrier, but the extraction schema defines ship_date as a string with a strict ISO 8601 pattern. Extractions frequently fail schema validation because the source dates don't match the expected format.",
+      "question": "According to the current Anthropic official guidance, what is the most effective fix?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Split ship_date into three fields such as ship_date_us, ship_date_eu, and ship_date_iso, each expecting a different carrier date format, and populate only the one matching the extracted string.",
+          "correct": false,
+          "explanation": "Splitting into ship_date_us, ship_date_eu, and ship_date_iso still requires the model to correctly classify which format a given source string is in before it can pick the right field, so the same misclassification risk that causes today's validation failures is just relocated rather than removed — and it pushes the job of figuring out which field is populated onto every downstream consumer instead of giving them one normalized value."
+        },
+        {
+          "letter": "B",
+          "text": "Retain the strict ISO 8601 schema constraint for ship_date and add an explicit description in the JSON schema telling Claude to parse and normalize the carrier date string to ISO 8601 format (e.g., YYYY-MM-DD).",
+          "correct": false,
+          "explanation": "Anthropic's structured outputs documentation lists a fixed set of supported string formats (date-time, time, date, duration, email, hostname, uri, ipv4, ipv6, uuid) and warns that pattern-based constraints have limits: simple regex patterns work well, but complex patterns can trigger 400 errors. Nothing in that feature set lets a schema accept several source formats on input while emitting only ISO 8601 on output — a description merely asks the model to reinterpret free-form carrier text (03/14/2026, 14-Mar-2026, 2026.03.14) correctly on every single call, with no fallback if it misreads an ambiguous format. Tightening the instructions targets the model's judgment, not the actual cause of the validation failures."
+        },
+        {
+          "letter": "C",
+          "text": "Remove the ship_date field from the extraction schema and infer the shipment date later from other fields such as tracking number lookup or email metadata.",
+          "correct": false,
+          "explanation": "The source emails already state a shipment date explicitly; dropping the field trades a formatting problem for a missing-data problem, since a tracking-number lookup or email-metadata inference is not guaranteed to exist or to be accurate for every carrier. Nothing about the failure described — a format mismatch — is fixed by removing the value that failed to match."
+        },
+        {
+          "letter": "D",
+          "text": "Loosen the schema to accept any string for ship_date, and add a downstream step that uses a date parser to normalize the value to ISO 8601 format before storing it in the database.",
+          "correct": true,
+          "explanation": "Loosening ship_date to a plain string lets extraction succeed no matter which carrier format appears in the source email, and moving the format conversion to a downstream date-parsing step means the transformation from '14-Mar-2026' or '2026.03.14' into ISO 8601 is applied by deterministic, testable code rather than depending on the model correctly inferring the source format under a strict pattern on every call. It also keeps the original string on hand for auditing if a parse ever needs to be checked by hand."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f4-062",
+      "domain": 4,
+      "task_id": "4.4",
+      "objective": "Implement validation, retry, and feedback loops for extraction quality",
+      "situation": "A tax-document extractor needs a dependent's Social Security number, but the field has been physically redacted with a black marker on the scanned form supplied to the pipeline. Repeated retries with detailed error feedback still return an empty field.",
+      "question": "What does this situation illustrate?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A tool-input validation failure that will resolve itself once the model is given a strict schema for the SSN field",
+          "correct": false,
+          "explanation": "Strict schema enforcement governs structure and type, not whether a genuinely absent value can be conjured from a redacted image; adding schema strictness will not surface the redacted number."
+        },
+        {
+          "letter": "B",
+          "text": "A limit of retries: when required information is genuinely absent from the source, feedback retries cannot recover it",
+          "correct": true,
+          "explanation": "Retries address format and structural mistakes, not the fundamental absence of information in the source document; a redacted field cannot be recovered no matter how the retry prompt is worded."
+        },
+        {
+          "letter": "C",
+          "text": "A prompt-caching issue where the redacted value was cached in a prior turn and needs to be evicted before retrying",
+          "correct": false,
+          "explanation": "The scenario describes a data-availability limitation in the source document, not a caching artifact, so cache eviction is unrelated to the root cause."
+        },
+        {
+          "letter": "D",
+          "text": "A schema syntax error that structured output enforcement should have already eliminated before it reached this layer entirely",
+          "correct": false,
+          "explanation": "This has nothing to do with JSON syntax or type conformance; the field is empty because the underlying information is physically unavailable in the document, not because the output violates the schema."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f4-004",
+      "domain": 4,
+      "task_id": "4.5",
+      "objective": "Design efficient batch processing strategies",
+      "situation": "A data pipeline promises stakeholders that classification results for any document will be delivered no later than 48 hours after ingestion. The team plans to route documents through the Message Batches API, which can take up to 24 hours to finish a batch.",
+      "question": "What is the longest interval the team can wait between batch submission cycles while still meeting the 48-hour promise?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "24 hours between submissions, since a document waiting the full interval still finishes within the 24-hour batch window before the 48-hour deadline",
+          "correct": true,
+          "explanation": "According to the Message Batches API documentation, batch processing can take up to 24 hours to complete. To satisfy a 48‑hour delivery promise, the worst‑case wait (the full interval) plus the maximum processing time must not exceed 48 hours. Setting the submission interval to 24 hours gives 24 + 24 = 48 hours, which is the longest interval that still meets the commitment."
+        },
+        {
+          "letter": "B",
+          "text": "6 hours between submissions, since frequent small batches always complete faster than the standard 24-hour processing window allows",
+          "correct": false,
+          "explanation": "Batch processing time is independent of submission frequency; the API can take up to 24 hours regardless of batch size or frequency. A 6‑hour interval is even shorter than necessary and does not represent the longest interval that meets the 48‑hour deadline."
+        },
+        {
+          "letter": "C",
+          "text": "48 hours between submissions, since the deadline itself defines how rarely the pipeline needs to kick off a new batch cycle",
+          "correct": false,
+          "explanation": "With a 48‑hour interval, a document that arrives immediately after a submission could wait 48 hours before being batched, then face up to 24 hours of processing. This 72‑hour worst case violates the 48‑hour promise."
+        },
+        {
+          "letter": "D",
+          "text": "12 hours between submissions, since halving the processing window doubles the safety margin the pipeline needs against demand spikes",
+          "correct": false,
+          "explanation": "A 12‑hour interval would result in a worst‑case delivery time of 36 hours (12 + 24), which is well within the promise. However, the question asks for the longest allowable interval, and 24 hours is feasible, so 12 hours is not the correct answer."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f4-065",
+      "domain": 4,
+      "task_id": "4.6",
+      "objective": "Design multi-instance and multi-pass review architectures",
+      "situation": "An architect defines a 'code-reviewer' subagent and invokes it from the main agent immediately after code generation.",
+      "question": "Which statement accurately describes what context the reviewer subagent starts with?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The subagent inherits the parent's reasoning trace but not the actual code files, so the parent must re-describe the implementation in prose",
+          "correct": false,
+          "explanation": "The subagent does not inherit any reasoning trace from the parent; its context is a fresh conversation seeded only by its own prompt and the invocation prompt."
+        },
+        {
+          "letter": "B",
+          "text": "The subagent automatically receives the parent's entire conversation transcript, including every tool call and result from the generation phase",
+          "correct": false,
+          "explanation": "The parent's conversation history and tool results are explicitly not passed to the subagent; only the Agent tool's prompt string carries information across."
+        },
+        {
+          "letter": "C",
+          "text": "The subagent starts with its own system prompt plus the Agent tool's prompt string, but not the parent's history or tool results",
+          "correct": true,
+          "explanation": "A subagent's context window starts fresh; it receives its own system prompt and the Agent tool's prompt string, but not the parent's conversation history or tool results."
+        },
+        {
+          "letter": "D",
+          "text": "The subagent shares the same context window as the parent, so any file the parent read during generation is already visible to the subagent",
+          "correct": false,
+          "explanation": "Subagents run in their own separate context, not a shared context window with the parent."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "f5-021",
+      "domain": 5,
+      "task_id": "5.1",
+      "objective": "Manage conversation context to preserve critical information across long interactions",
+      "situation": "A support team relies solely on repeated summarization of long chats to keep prompts short, without any separate structured tracking of transactional details.",
+      "question": "Over many support sessions, what is the most likely consequence for exact figures such as amounts, dates, and order numbers mentioned early in a conversation?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "They are progressively generalized or dropped from the summary, since summarization optimizes for brevity over specific values",
+          "correct": true,
+          "explanation": "— each summarization pass tends to compress specific values into vaguer language, so exact figures are the ones most likely to degrade or disappear across repeated passes without separate structured tracking."
+        },
+        {
+          "letter": "B",
+          "text": "They remain exactly as stated indefinitely, since summarization only condenses narrative language and never affects numeric values",
+          "correct": false,
+          "explanation": "Summarization inherently condenses text, including numeric details, so exact values are not immune to being generalized away."
+        },
+        {
+          "letter": "C",
+          "text": "They become more accurate over time as the model has more opportunities to notice and correct any errors in the original figures",
+          "correct": false,
+          "explanation": "Summarization does not add new information or verify prior figures; it condenses existing text, so it cannot make figures more accurate."
+        },
+        {
+          "letter": "D",
+          "text": "They are automatically moved into a separate memory store by the summarization process without any additional configuration",
+          "correct": false,
+          "explanation": "No automatic mechanism relocates values to persistent storage; without deliberate structured extraction, exact figures are only present in the same summarized narrative as everything else."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f5-035",
+      "domain": 5,
+      "task_id": "5.2",
+      "objective": "Design effective escalation and ambiguity resolution patterns",
+      "situation": "An insurance customer asks whether their policy covers a rental car while their electric vehicle's battery is being replaced under a separate manufacturer recall. The policy documentation addresses rental reimbursement only for collision and comprehensive claims, and does not mention manufacturer recall repairs.",
+      "question": "What should the agent do?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Approve rental reimbursement, since recall repairs are similar enough in nature to comprehensive collision claims",
+          "correct": false,
+          "explanation": "- approving reimbursement by analogy to comprehensive claims extends coverage beyond what the documented policy states."
+        },
+        {
+          "letter": "B",
+          "text": "Escalate the question, since the policy documentation does not address this specific recall-related scenario",
+          "correct": true,
+          "explanation": "- the policy is silent on rental coverage during recall repairs, a gap that should be escalated rather than resolved by the agent's own judgment."
+        },
+        {
+          "letter": "C",
+          "text": "Deny rental reimbursement, since the recall repair is not listed among the covered claim types",
+          "correct": false,
+          "explanation": "- treating an unaddressed scenario as automatically excluded asserts a coverage decision the policy never actually makes."
+        },
+        {
+          "letter": "D",
+          "text": "Direct the customer to the manufacturer, since the recall is the underlying cause of the repair",
+          "correct": false,
+          "explanation": "- redirecting the customer to the manufacturer avoids answering the coverage question rather than resolving the policy gap appropriately."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f5-019",
+      "domain": 5,
+      "task_id": "5.3",
+      "objective": "Implement error propagation strategies across multi-agent systems",
+      "situation": "A legal-research subagent searches a case-law database for precedents matching a narrow fact pattern. The database responds successfully but the search genuinely matches zero cases. Separately, the same subagent's next query fails because the database connection pool is exhausted and refuses new connections.",
+      "question": "The subagent reports both outcomes as 'no results found.' Why is this reporting flawed, and what should change?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "It is flawed because the subagent should have terminated the entire workflow once the pool was exhausted",
+          "correct": false,
+          "explanation": "Terminating the entire workflow is an overreaction and not aligned with best practices. The subagent should report the failure clearly so that the workflow’s coordinator can decide on an appropriate course of action, such as retrying after backoff, switching to an alternate data source, or failing gracefully with a partial result set. Hard failure without notification reduces resilience and usability."
+        },
+        {
+          "letter": "B",
+          "text": "It is not flawed at all, since both queries ultimately produced zero usable case citations for the coordinator to review",
+          "correct": false,
+          "explanation": "This is incorrect because the two outcomes have fundamentally different causes: one is a valid but empty result set, the other is an operational failure. Treating them identically hides a critical infrastructure issue that may affect reliability and data completeness. The coordinator cannot differentiate between an exhaustive, accurate search and a failed attempt, leading to potential misinterpretation of legal research completeness."
+        },
+        {
+          "letter": "C",
+          "text": "It is flawed only because 'no results found' is too informal; formal legal wording would fix the issue",
+          "correct": false,
+          "explanation": "The formality of the message is irrelevant to the core problem. The flaw lies in misclassifying a system failure as a successful but empty search, not in the specific phrasing. Adopting formal legal language would not correct the underlying error handling deficiency; the subagent must signal the nature of the failure to enable proper orchestration logic."
+        },
+        {
+          "letter": "D",
+          "text": "It conflates a completed zero-match search with a connection failure; the latter should be a distinct access failure",
+          "correct": true,
+          "explanation": "Anthropic's error handling distinguishes between successful tool calls that return no data and tool execution failures. A zero-match search is a successful execution that should return a clear 'No results' indication via tool_result without is_error: True. A connection pool exhaustion is a system-level failure that should be reported as an error (e.g., is_error: True with an appropriate error message). Conflating them prevents the coordinator from making informed decisions about retries, fallbacks, or alerting."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "f5-073",
+      "domain": 5,
+      "task_id": "5.4",
+      "objective": "Manage context effectively in large codebase exploration",
+      "situation": "An architect is setting conventions for what agents should write into scratchpad files during a large codebase exploration.",
+      "question": "Which content best serves the goal of counteracting context degradation on later questions?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A single vague note such as 'explored the codebase and things generally look fine,' without further detail.",
+          "correct": false,
+          "explanation": "A vague summary provides nothing specific to anchor later answers and does not prevent the agent from falling back on generic assumptions."
+        },
+        {
+          "letter": "B",
+          "text": "Concrete facts such as exact class names, file paths, and discovered mechanisms, recorded as they are found.",
+          "correct": true,
+          "explanation": "Specific, concrete findings are exactly what later questions need to avoid drifting into generic 'typical pattern' language, giving the agent something precise to reference."
+        },
+        {
+          "letter": "C",
+          "text": "Only a timestamp of when each exploration step occurred, without any description of what was found.",
+          "correct": false,
+          "explanation": "Timestamps without any description of findings give the coordinator no usable information about what was actually discovered."
+        },
+        {
+          "letter": "D",
+          "text": "The complete raw contents of every file the agent opened during the investigation, copied in full into the scratchpad.",
+          "correct": false,
+          "explanation": "Copying full raw file contents defeats the purpose of a scratchpad, reintroducing the same volume of data the agent was trying to avoid keeping in active context."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "f5-014",
+      "domain": 5,
+      "task_id": "5.5",
+      "objective": "Design human review workflows and confidence calibration",
+      "situation": "A reviewer team has capacity to manually check only 8% of the extractions produced daily by a Claude-based intake pipeline. Extractions vary in model-reported confidence, and some source documents contain contradictory values for the same field across pages.",
+      "question": "How should the team prioritize which extractions receive human review?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Route low-confidence extractions and documents with ambiguous or contradictory source values to review first, using remaining capacity for a smaller random sample of high-confidence cases.",
+          "correct": true,
+          "explanation": "Reviewer capacity is best used by routing low‑confidence extractions and documents with ambiguous or contradictory source values to review first, since these are the extractions most likely to contain errors. The remaining capacity can then be used for a smaller random sample of high‑confidence cases to detect novel error patterns."
+        },
+        {
+          "letter": "B",
+          "text": "Review only the extractions with the highest confidence scores, using all available review capacity on the extractions most likely to be trusted downstream, and forgo review of lower-confidence extractions.",
+          "correct": false,
+          "explanation": "Reviewing only the extractions with the highest confidence scores focuses on the cases least likely to contain errors. This leaves risky low‑confidence extractions and contradictory source documents completely unchecked, missing the very errors that review is meant to catch."
+        },
+        {
+          "letter": "C",
+          "text": "Review a fixed random 8% of all extractions each day, regardless of confidence score or document characteristics, to maintain a statistically representative sample that catches errors uniformly.",
+          "correct": false,
+          "explanation": "A fixed random 8% sample ignores the team's existing signals—low confidence scores and contradictory source values—that indicate likely errors. This approach wastes scarce reviewer capacity on extractions that are probably correct while under‑reviewing the cases that most need human attention."
+        },
+        {
+          "letter": "D",
+          "text": "Review whichever extractions were processed first each day, since earlier documents are statistically more likely to contain the fields reviewers care about, and defer later extractions to conserve capacity.",
+          "correct": false,
+          "explanation": "The order in which documents are processed has no proven relationship to error likelihood or the presence of important fields. Prioritizing by arrival time is not a principled basis for allocating review capacity and is likely to miss many errors."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "f5-016",
+      "domain": 5,
+      "task_id": "5.6",
+      "objective": "Preserve information provenance and handle uncertainty in multi-source synthesis",
+      "situation": "A synthesis agent is finalizing a report that combines a subagent's structured findings about a software library's API surface with a subagent's narrative summary of community sentiment about the library. The draft currently renders the API findings as flowing prose paragraphs.",
+      "question": "What change would improve this section?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Convert the community sentiment summary into a structured list of methods and parameters to match the API section's tone",
+          "correct": false,
+          "explanation": "Community sentiment is qualitative and does not map onto a structured list of methods and parameters, so forcing that format would misrepresent the content."
+        },
+        {
+          "letter": "B",
+          "text": "Render both the API findings and sentiment summary as a shared table with columns for finding type and source subagent",
+          "correct": false,
+          "explanation": "Cramming both technical details and qualitative sentiment into one table format distorts content that is better served by different, content-appropriate formats."
+        },
+        {
+          "letter": "C",
+          "text": "Render the API findings as a structured list of methods, parameters, and behaviors, keeping the sentiment summary as prose",
+          "correct": true,
+          "explanation": "Technical findings like API surfaces are best rendered as structured lists for scannability, while narrative sentiment is better preserved as prose, matching format to content type rather than forcing uniformity."
+        },
+        {
+          "letter": "D",
+          "text": "Merge the API findings and sentiment summary into one continuous paragraph so the report reads as a unified narrative",
+          "correct": false,
+          "explanation": "Merging structured technical details into flowing prose makes it harder to scan for specific methods or parameters than a structured list would."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    }
+  ],
+  "professional": [
+    {
+      "id": "p1-015",
+      "domain": 1,
+      "task_id": "1.1",
+      "objective": "Translate business problems into Claude-based AI solutions",
+      "situation": "A large enterprise platform exposes several thousand internal APIs as tools, and loading every tool definition into context up front would overwhelm the model's window and hurt tool-selection accuracy.",
+      "question": "Which feature addresses this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Fine-grained tool streaming, because streaming tool parameters without buffering reduces the context each tool definition consumes.",
+          "correct": false,
+          "explanation": "Fine-grained tool streaming reduces latency for large tool-call parameters as they stream out; it does not reduce how many tool definitions must be loaded into context up front."
+        },
+        {
+          "letter": "B",
+          "text": "Programmatic tool calling, because calling tools from within code execution containers removes the need to define them up front.",
+          "correct": false,
+          "explanation": "Programmatic tool calling lets Claude invoke tools from within code execution containers to cut latency and token use for multi-tool workflows, but tool definitions still need to be available, not eliminated."
+        },
+        {
+          "letter": "C",
+          "text": "Tool search, because it lets Claude dynamically discover and load only the relevant tools on demand using regex-based search.",
+          "correct": true,
+          "explanation": "Tool search is designed to scale to thousands of tools by dynamically discovering and loading tools on demand via regex-based search, optimizing context usage and selection accuracy."
+        },
+        {
+          "letter": "D",
+          "text": "MCP connector, because connecting to remote MCP servers automatically limits how many tool definitions are loaded into context.",
+          "correct": false,
+          "explanation": "The MCP connector lets Claude call remote MCP servers directly from the Messages API; it does not by itself solve the problem of thousands of tool definitions overwhelming context."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p1-063",
+      "domain": 1,
+      "task_id": "1.2",
+      "objective": "Design end-to-end architectures (input → processing → output → feedback loops)",
+      "situation": "A platform team is scoping the input and processing stages for a multi-tenant enterprise assistant that must ingest documents, call dozens of internal APIs, and control cost across variable workloads.",
+      "question": "Select all statements that accurately describe capabilities available for this architecture. (Select 4.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The effort parameter trades intelligence for latency and cost within one model, often a better lever than switching models",
+          "correct": true,
+          "explanation": "The effort parameter is documented as trading intelligence for latency and cost within a single model, and tuning it is described as often a better lever than switching models, directly relevant to controlling cost across variable workloads."
+        },
+        {
+          "letter": "B",
+          "text": "Tool search lets Claude scale to thousands of tools by dynamically discovering and loading them on demand via regex search",
+          "correct": true,
+          "explanation": "Tool search is documented as enabling Claude to scale to thousands of tools through dynamic, regex-based discovery and on-demand loading, which fits a multi-tenant assistant calling dozens of internal APIs."
+        },
+        {
+          "letter": "C",
+          "text": "The Advisor tool removes the need for an executor model by having one model perform both planning and execution",
+          "correct": false,
+          "explanation": "The Advisor tool pairs a faster executor model with a higher-intelligence advisor model that provides guidance mid-generation; it does not eliminate the executor or collapse both roles into one model."
+        },
+        {
+          "letter": "D",
+          "text": "Data residency lets inference routing be controlled per request through a geographic routing parameter",
+          "correct": true,
+          "explanation": "Data residency is documented as letting inference routing be specified per request, such as 'global' or 'us', through the inference_geo parameter."
+        },
+        {
+          "letter": "E",
+          "text": "PDF support lets Claude process and analyze text and visual content directly from PDF documents in a request",
+          "correct": true,
+          "explanation": "PDF support is documented as enabling Claude to process and analyze both text and visual content from PDF documents, relevant to the document-ingestion part of this architecture."
+        },
+        {
+          "letter": "F",
+          "text": "Programmatic tool calling requires a human approval step before every single tool invocation Claude makes",
+          "correct": false,
+          "explanation": "Programmatic tool calling is about Claude calling tools programmatically from within code execution containers to reduce latency and token consumption; it does not require a human approval step for every invocation."
+        }
+      ],
+      "correct": [
+        "A",
+        "B",
+        "D",
+        "E"
+      ],
+      "select": 4
+    },
+    {
+      "id": "p1-071",
+      "domain": 1,
+      "task_id": "1.3",
+      "objective": "Select appropriate architectural patterns (workflow, agentic, augmented LLM)",
+      "situation": "A finance team generates a quarterly report by pulling data, drafting a summary, and formatting it as a PDF. The steps are always the same and predictable, and the team wants consistent, auditable behavior on every run.",
+      "question": "Which approach is most appropriate and why?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "An autonomous agent, because giving the LLM full control over tool use and step ordering produces more consistent output across runs",
+          "correct": false,
+          "explanation": "Autonomous agents introduce variability in step ordering and tool use precisely because the model directs its own process, which works against the team's stated need for consistent, auditable behavior."
+        },
+        {
+          "letter": "B",
+          "text": "A workflow with orchestrator-workers, because the unpredictable number of subtasks each quarter requires dynamic delegation to worker LLMs",
+          "correct": false,
+          "explanation": "The scenario states the steps are always the same each quarter, so there is no unpredictable subtask decomposition that would justify orchestrator-workers."
+        },
+        {
+          "letter": "C",
+          "text": "A workflow with prompt chaining, because the fixed, predictable steps benefit from predefined code paths and easier auditing than an agent",
+          "correct": true,
+          "explanation": "When a task decomposes into a fixed, predictable sequence of steps, a predefined workflow like prompt chaining offers more consistent, auditable behavior than granting an LLM open-ended control."
+        },
+        {
+          "letter": "D",
+          "text": "An autonomous agent, because open-ended environmental feedback loops reduce token costs compared to a fixed sequence of LLM calls",
+          "correct": false,
+          "explanation": "Autonomous agents typically increase cost and latency due to iterative feedback loops and tool calls, not reduce them, compared to a fixed sequence of calls."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p1-016",
+      "domain": 1,
+      "task_id": "1.4",
+      "objective": "Design multi-agent systems and orchestration strategies",
+      "situation": "You design an Anthropic agent hierarchy in which a subagent spawns another subagent, which spawns another, and so on, with each subagent including the Agent tool in its allowed tools.",
+      "question": "At what depth does this spawning chain stop?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A subagent three levels below the main agent cannot spawn further subagents unless it runs in the foreground",
+          "correct": false,
+          "explanation": "A three-level nesting limit is not a hard cap. Some releases have used a default depth of 3, but that default can be configured up to the five-level hard limit, for example via CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH. Foreground execution also does not grant deeper spawning; it only affects how permission prompts are handled."
+        },
+        {
+          "letter": "B",
+          "text": "A subagent five levels below the main agent cannot spawn further subagents, regardless of foreground or background execution",
+          "correct": true,
+          "explanation": "Anthropic enforces a hard maximum nesting depth of five levels below the main agent. At depth five, the subagent does not receive the Agent tool and cannot spawn further subagents. This limit applies regardless of foreground or background execution; foreground execution only changes permission prompting, not nesting depth."
+        },
+        {
+          "letter": "C",
+          "text": "Subagents can nest indefinitely as long as each level's tools array includes Agent",
+          "correct": false,
+          "explanation": "Nesting is not indefinite. Even if each level's tools array includes Agent, Anthropic caps subagent nesting at five levels below the main agent. Once a subagent reaches depth five, it is not given the Agent tool and therefore cannot spawn another subagent."
+        },
+        {
+          "letter": "D",
+          "text": "Only the top-level subagent may ever spawn another subagent; every subagent below it is always restricted from doing so",
+          "correct": false,
+          "explanation": "Multiple levels of subagents can spawn further subagents, not just the top-level subagent. The hard limit is reached only when a subagent is five levels below the main agent; at that depth, spawning is blocked by the missing Agent tool."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p1-059",
+      "domain": 1,
+      "task_id": "1.5",
+      "objective": "Apply decomposition techniques for complex problem solving",
+      "situation": "A solution architect is decomposing an agent's access to a database, a ticketing system, and a CRM into modular, independently maintainable connections rather than hardcoding each integration into the agent's own code.",
+      "question": "Which approach fits this goal?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Connect to each external system through its own MCP server so the database, ticketing, and CRM integrations stay modular and reusable",
+          "correct": true,
+          "explanation": "MCP lets each external system be exposed through its own server as a modular, reusable connection, decomposing integration concerns away from the agent's own implementation."
+        },
+        {
+          "letter": "B",
+          "text": "Route every external system call through a single generic HTTP tool and have the model construct each request format inline",
+          "correct": false,
+          "explanation": "A single generic HTTP tool pushes the burden of constructing correct, system-specific request formats onto the model at inference time, which is fragile and error-prone compared to dedicated integrations."
+        },
+        {
+          "letter": "C",
+          "text": "Implement one custom client-side tool per external system directly in the agent's codebase, duplicating authentication logic for each",
+          "correct": false,
+          "explanation": "Hardcoding a custom tool per system directly in the agent's codebase duplicates integration logic and ties each connection to the agent implementation rather than decomposing it into a reusable, independent module."
+        },
+        {
+          "letter": "D",
+          "text": "Grant the agent direct Bash access to curl commands for each external system so no dedicated tool or server needs to be defined",
+          "correct": false,
+          "explanation": "Direct Bash access to curl commands skips structured tool definitions entirely, losing the modularity, permissioning, and maintainability that a dedicated integration layer provides."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p1-060",
+      "domain": 1,
+      "task_id": "1.6",
+      "objective": "Align solutions to business value pillars (efficiency, transformation, productivity, cost, performance SLAs)",
+      "situation": "A legal operations team currently has paralegals manually reading and tagging thousands of contracts per month. Leadership frames the initiative not as automating the existing manual process but as fundamentally redesigning the contract intake workflow so that paralegals shift to reviewing model-flagged exceptions and negotiating terms.",
+      "question": "Which business value pillar does this framing primarily represent?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Transformation, because the initiative restructures the underlying workflow and staff roles, not merely speeding up the same process",
+          "correct": true,
+          "explanation": "Redesigning the intake workflow and shifting staff to exception review and negotiation is a structural change to how work is done, which is the hallmark of the transformation pillar rather than simply accelerating an unchanged process."
+        },
+        {
+          "letter": "B",
+          "text": "Cost reduction, because fewer paralegal hours are billed per contract under the newly introduced tagging process",
+          "correct": false,
+          "explanation": "Cost reduction focuses on lowering spend for a given output, but the scenario is framed around role and workflow redesign, not a stated cost target, so cost is not the primary pillar being described."
+        },
+        {
+          "letter": "C",
+          "text": "Performance SLA, because the initiative is measured against a fixed contract turnaround time commitment made to clients",
+          "correct": false,
+          "explanation": "Performance SLA pillars center on measurable service commitments such as latency or turnaround guarantees; the scenario describes a role and workflow change with no SLA metric mentioned."
+        },
+        {
+          "letter": "D",
+          "text": "Productivity, because the same paralegals complete the same tagging tasks faster within the same unchanged workflow structure",
+          "correct": false,
+          "explanation": "Productivity gains describe doing the same tasks faster or with less effort within the existing workflow; this scenario explicitly changes the workflow and role structure, which goes beyond a productivity framing."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p2-009",
+      "domain": 2,
+      "task_id": "2.1",
+      "objective": "Select appropriate Claude models based on trade-offs",
+      "situation": "A finance team is deciding how to formally validate whether they should switch their document-extraction pipeline from Claude Haiku 4.5 to Claude Sonnet 5. They want to follow Anthropic's recommended process rather than making the change based on informal impressions.",
+      "question": "Which sequence of steps matches the recommended approach for deciding whether to upgrade or change models?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Enable fast mode on the current model, run a speed benchmark on typical documents, and treat any throughput gain as justification to stay with the current model without comparing extraction quality.",
+          "correct": false,
+          "explanation": "Fast mode is a feature that affects generation speed, not a method for evaluating extraction quality. A throughput increase alone does not justify staying with a model if its accuracy or edge-case handling are inferior; the recommended process focuses on comparing quality across models using real-world data."
+        },
+        {
+          "letter": "B",
+          "text": "Poll internal Slack channels for anecdotal opinions on model quality, rank models by mention frequency, test the top few on a sample document, and adopt the highest-ranked model as the replacement.",
+          "correct": false,
+          "explanation": "Relying on anecdotal internal opinions and mention frequency is not part of the recommended evaluation. The formal approach requires structured benchmark tests with actual prompts and data to objectively compare model performance, rather than subjective rankings."
+        },
+        {
+          "letter": "C",
+          "text": "Switch to the highest-priced available model immediately, run a few typical document-extraction tasks, compare the results by cost per accurate field, and adopt the model with the lowest cost per field.",
+          "correct": false,
+          "explanation": "Anthropic's process emphasizes systematic benchmarking with your own data before committing to a switch, not immediately jumping to the highest-priced model. Cost per accurate field is only one factor and should be considered alongside other quality metrics after thorough testing, not as the sole criterion for adoption."
+        },
+        {
+          "letter": "D",
+          "text": "Create benchmark tests specific to the use case, test with actual prompts and data, compare accuracy/quality/edge-case handling across models, and weigh performance and cost trade-offs.",
+          "correct": true,
+          "explanation": "This sequence matches Anthropic's documented recommendation: build benchmark tests tailored to your specific use case with real prompts and data, then compare metrics like accuracy, quality, and edge-case handling across models, and finally weigh performance against cost. It ensures the decision is driven by empirical evidence rather than informal impressions."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p2-038",
+      "domain": 2,
+      "task_id": "2.2",
+      "objective": "Design system prompts, templates, and guardrails",
+      "situation": "A team is building a customer support assistant and wants the system prompt to reliably shape Claude's tone and behavior across thousands of daily conversations. The current system prompt is a single sentence: \"You are a helpful assistant.\" Support agents report inconsistent formality and occasional off-topic tangents.",
+      "question": "What is the most effective first change to the system prompt design?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Give Claude a specific role describing the product, audience, and tone, since even a one-sentence role framing measurably focuses behavior and register",
+          "correct": true,
+          "explanation": "Anthropic's guidance is that setting a role in the system prompt focuses Claude's behavior and tone for the use case, and even a single sentence makes a measurable difference."
+        },
+        {
+          "letter": "B",
+          "text": "Replace the system prompt with a list of banned phrases only, since negative constraints are more reliable than positive role framing for tone",
+          "correct": false,
+          "explanation": "Telling Claude what to do (a role and desired tone) is more effective than only telling it what not to do; a banned-phrase list alone doesn't establish consistent register."
+        },
+        {
+          "letter": "C",
+          "text": "Increase the max_tokens parameter so Claude has more room to self-correct its tone mid-response after drifting off topic",
+          "correct": false,
+          "explanation": "max_tokens controls output length, not tone consistency, and does not address the root cause of inconsistent framing."
+        },
+        {
+          "letter": "D",
+          "text": "Move all behavioral guidance into the first user turn instead, since system prompts have less influence on tone than user messages do",
+          "correct": false,
+          "explanation": "The system prompt is the intended place to set persistent role and tone; shifting this to the user turn discards the mechanism designed for exactly this purpose."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p2-039",
+      "domain": 2,
+      "task_id": "2.3",
+      "objective": "Apply prompt engineering techniques (zero-shot, few-shot, chain-of-thought)",
+      "situation": "A legal-summary prompt needs to consistently produce concise, neutral-toned summaries formatted as three bullet points, but current outputs vary in tone and structure. The team wants a single change to the system prompt that combines role framing with concrete demonstration of the target tone and structure.",
+      "question": "What should they add?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A single sentence in the system prompt that forbids emotional language, relying on this prohibition alone to produce neutral-toned three-bullet summaries without any role framing or example outputs.",
+          "correct": false,
+          "explanation": "A single sentence forbidding emotional language tells Claude what to avoid but provides no guidance on the desired neutral tone or three-bullet structure. Without role framing or example outputs, the model cannot reliably infer the intended format and style."
+        },
+        {
+          "letter": "B",
+          "text": "A system prompt directive that sets the temperature parameter to a lower value, expecting this adjustment alone to ensure neutral-toned, consistently structured three-bullet summaries without any role framing or example outputs.",
+          "correct": false,
+          "explanation": "Lowering the temperature parameter reduces randomness in output generation but does not teach Claude the specific neutral tone or the three-bullet format. Temperature is not a mechanism for content pattern-matching or tone instruction; it cannot replace role framing or examples."
+        },
+        {
+          "letter": "C",
+          "text": "Include a system prompt that casts Claude as a legal analyst and provides two to three <example> blocks, each displaying an input document and the desired neutral-toned three-bullet summary.",
+          "correct": true,
+          "explanation": "Casting Claude as a legal analyst sets the role, while providing two to three <example> blocks with input documents and desired summaries demonstrates both the neutral tone and the exact three-bullet structure. This combines role framing with concrete demonstration, effectively steering the model to produce consistent outputs."
+        },
+        {
+          "letter": "D",
+          "text": "A system prompt request that Claude first generate a draft summary internally, then output a paragraph analyzing its own tone before presenting the final three-bullet neutral summary, using the self-critique to ensure consistency.",
+          "correct": false,
+          "explanation": "Requesting an internal draft and a self-critique paragraph before the final summary alters the output format by adding extra content, rather than demonstrating the target three-bullet structure. This approach does not directly model the concise, neutral summary the team wants."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p2-032",
+      "domain": 2,
+      "task_id": "2.4",
+      "objective": "Optimize context windows and manage token usage",
+      "situation": "A batch pipeline reuses the same 8,000-token system prompt roughly every 20 minutes, well outside the default 5-minute cache lifetime, and the team wants to keep benefiting from cache reads across those gaps without repeatedly paying the cache write cost on every run.",
+      "question": "What should they configure?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Set cache_control with ttl set to one hour on the stable prefix, accepting the higher write cost, so that the cache survives the 20-minute gaps.",
+          "correct": true,
+          "explanation": "Setting a 1-hour TTL via cache_control on the stable prefix ensures the cache remains valid across the 20-minute gaps. Although the write cost is higher than the 5-minute default, the team avoids paying the full cache write cost on every run."
+        },
+        {
+          "letter": "B",
+          "text": "Keep the default 5-minute ephemeral cache_control on the system prompt and accept that each run pays a fresh cache write cost because the cache expires between runs.",
+          "correct": false,
+          "explanation": "Keeping the default 5-minute ephemeral cache_control means the cache expires before the next run, so each run incurs a fresh cache write cost. This preserves the problem the team wants to solve."
+        },
+        {
+          "letter": "C",
+          "text": "Disable caching for this prefix entirely, because the 20-minute gaps between runs make the pipeline ineligible for prompt caching and the cache would never serve reads.",
+          "correct": false,
+          "explanation": "Prompt caching is not ineligible due to 20-minute gaps; the 1-hour TTL option is specifically designed for less-frequent reuse patterns like this. Disabling caching would forgo the cost savings entirely."
+        },
+        {
+          "letter": "D",
+          "text": "Increase max_tokens on each request to extend the cache lifetime so that a larger output budget keeps the cached prefix active across the 20-minute gaps between runs.",
+          "correct": false,
+          "explanation": "max_tokens controls the maximum number of tokens in the generated output and has no effect on how long a cached prefix is retained. Increasing it cannot extend the cache lifetime across the 20-minute gaps."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p2-018",
+      "domain": 2,
+      "task_id": "2.5",
+      "objective": "Implement prompt reuse strategies (caching, modular prompts, Skills)",
+      "situation": "A support-triage agent invokes Claude roughly every 20 minutes with an unchanged 6,000-token system prompt and tool set, but the gaps between calls sometimes stretch past 10 minutes during quiet periods. Using the default ephemeral cache_control (5-minute TTL), the team keeps paying cache-write rates on many calls because the cache keeps expiring between calls.",
+      "question": "Which change most directly reduces this while keeping the cache reusable?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Add a second automatic-caching breakpoint at the very start of the messages array, so the system prompt is cached as a separate entry with its own 5-minute TTL, letting it be reused on calls even if the tools cache expires.",
+          "correct": false,
+          "explanation": "Adding a breakpoint does not give each part its own TTL; the entire cache entry expires after the same 5-minute period. The system prompt and tools would still be cached together (or the breakpoint might split them), but the TTL is per cache entry, not per segment, so this does not extend reuse time."
+        },
+        {
+          "letter": "B",
+          "text": "Set cache_control to {\"type\": \"ephemeral\", \"ttl\": \"1h\"} on the stable prefix so the cache entry survives the longer gaps between calls, at a higher per-write price than the 5-minute default.",
+          "correct": true,
+          "explanation": "Setting a 1-hour TTL keeps the cache entry alive across gaps longer than 5 minutes, so it won't expire between calls. Although the per-write cost is higher than the 5-minute default, it reduces the number of cache writes, making it cost-effective when calls are frequent enough to benefit from reuse but not always within 5 minutes of each other."
+        },
+        {
+          "letter": "C",
+          "text": "Remove cache_control entirely and send uncached requests, so each call avoids paying a cache-write fee for a 5-minute TTL that expires during quiet gaps over 10 minutes, paying only standard input token costs.",
+          "correct": false,
+          "explanation": "Removing cache_control avoids cache-write fees but forces every call to pay full standard input token costs for the system prompt and tools. Even with occasional cache expirations, keeping caching with a longer TTL yields lower total cost by allowing cheap cache reads on most calls."
+        },
+        {
+          "letter": "D",
+          "text": "Lower max_tokens to 0 on every triage call so each request pays only for cache reads and avoids output generation, offsetting the cost of the 5-minute cache write with savings on completion tokens.",
+          "correct": false,
+          "explanation": "Setting max_tokens=0 prevents the model from generating any output, making it useless for a support-triage agent. It does not extend the cache lifetime or avoid cache writes; it only eliminates output token costs, which doesn't address the cache expiry problem."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p3-086",
+      "domain": 3,
+      "task_id": "3.1",
+      "objective": "Evaluate tool/agent configuration for capability bloat",
+      "situation": "A main agent runs with permissionMode: \"bypassPermissions\" for fast prototyping. It spawns a custom subagent defined with a narrower tools field containing only Read, Bash, and Agent.",
+      "question": "A reviewer evaluating this configuration for capability bloat should conclude which of the following?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The subagent's tools field is ignored entirely under bypassPermissions, so it gains access to the full set of tools available to the parent, including any tools that were omitted from its original configuration.",
+          "correct": false,
+          "explanation": "The tools field is not ignored; it still determines which tools the subagent can access. bypassPermissions only removes approval checks for allowed tools, but it does not grant access to tools that are not listed in the subagent's configuration."
+        },
+        {
+          "letter": "B",
+          "text": "The subagent's narrower tools field still limits which tools it can call, but because it inherits bypassPermissions from the parent, every one of those calls, including Bash, executes without any approval check.",
+          "correct": true,
+          "explanation": "The subagent inherits the parent's bypassPermissions mode, and this cannot be overridden. The tools field in the subagent definition still restricts which tools it can use, but because of the inherited mode, any tool it is allowed to call, including Bash, will run without prompting for approval."
+        },
+        {
+          "letter": "C",
+          "text": "The subagent automatically runs in \"default\" permission mode regardless of the parent's bypassPermissions because subagents cannot inherit that setting; every tool invocation, including Bash, will therefore prompt the user for approval.",
+          "correct": false,
+          "explanation": "Subagents do inherit the permission mode from the parent, so when the parent uses bypassPermissions, the subagent also runs with that mode. The claim that subagents cannot inherit this setting is false; they do not reset to \"default\" mode automatically."
+        },
+        {
+          "letter": "D",
+          "text": "Because the subagent has a different system prompt than the parent, permission mode does not carry over, so each Bash call it makes still prompts the user for confirmation, regardless of the parent's bypassPermissions setting.",
+          "correct": false,
+          "explanation": "A different system prompt does not prevent permission mode inheritance. The subagent inherits the parent's permission mode regardless of its own instructions, so it will not prompt for confirmation if the parent uses bypassPermissions."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p3-071",
+      "domain": 3,
+      "task_id": "3.2",
+      "objective": "Analyze authentication and authorization requirements to identify security gaps",
+      "situation": "During a Windows deployment review, a security analyst notices that Claude Code has been granted read access to a UNC path resembling \\\\fileserver\\shared\\ and that the environment has WebDAV client support enabled.",
+      "question": "Cross-referencing this against Claude Code's documented network-request approval model, what gap should the analyst flag?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "WebDAV access can let filesystem-looking reads trigger real network requests to remote hosts, bypassing the tool-based permission system; disable WebDAV and avoid paths that may resolve through it",
+          "correct": true,
+          "explanation": "Claude Code's documentation specifically warns that enabling WebDAV or granting access to paths like \\\\* that may contain WebDAV subdirectories can let filesystem-looking access trigger network requests to remote hosts, bypassing the permission system that normally gates network-capable tools. The recommended mitigation is disabling WebDAV and avoiding such paths."
+        },
+        {
+          "letter": "B",
+          "text": "UNC paths are always blocked by Claude Code's working-directory boundary regardless of WebDAV, so no additional configuration change is needed for this shared path beyond what already exists",
+          "correct": false,
+          "explanation": "The working-directory boundary governs where Claude can write without prompting; it doesn't neutralize the WebDAV-specific risk of filesystem-looking paths silently resolving to network requests, which is called out as a distinct concern."
+        },
+        {
+          "letter": "C",
+          "text": "WebDAV only affects write operations, so read-only access to the shared path carries no meaningful authorization risk in this particular deployment configuration",
+          "correct": false,
+          "explanation": "The documented risk isn't limited to write operations; the concern is that what looks like a file read can actually trigger a network request, which affects the authorization model for network access regardless of read versus write."
+        },
+        {
+          "letter": "D",
+          "text": "The gap only matters if the fileserver is reachable over the public internet, since WebDAV requests confined to a local network segment are exempt from the documented risk",
+          "correct": false,
+          "explanation": "The documented WebDAV risk isn't scoped to internet-reachable servers; it applies to WebDAV-capable paths generally, since the concern is the mechanism bypassing permission checks, not the network location of the destination."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p3-018",
+      "domain": 3,
+      "task_id": "3.3",
+      "objective": "Evaluate accuracy-latency trade-offs and justify configuration decisions",
+      "situation": "A team is running an autonomous coding agent expected to work continuously for several hours on a large refactor, making repeated tool calls and consuming a token budget in the millions. Early testing at the default effort setting showed the agent scoping its investigation too narrowly and missing edge cases across the codebase.",
+      "question": "Which configuration change best addresses this while acknowledging the resulting trade-off?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Keep effort at its default level and add a system instruction asking the agent to be more thorough, accepting that prompted instructions alone will reliably substitute for the token budget increase that deeper exploration requires.",
+          "correct": false,
+          "explanation": "Documentation notes that if shallow reasoning appears on complex problems, effort should be raised rather than prompted around, since instructions alone do not reliably substitute for the token budget a higher effort level provides."
+        },
+        {
+          "letter": "B",
+          "text": "Switch to a faster, smaller model at low effort to reduce per-call latency, accepting reduced reasoning depth in exchange for faster completion of a task originally scoped for extended agentic exploration.",
+          "correct": false,
+          "explanation": "Moving to a smaller, faster model at low effort reduces reasoning depth further, which would worsen the narrow-scoping problem rather than address the need for broader, more thorough exploration."
+        },
+        {
+          "letter": "C",
+          "text": "Raise effort to xhigh and increase max_tokens accordingly, accepting higher token cost and longer per-turn latency in exchange for the extended exploration needed for a multi-hour refactor.",
+          "correct": true,
+          "explanation": "Xhigh is recommended for long-running agentic and coding tasks with token budgets in the millions, and using it with an increased max_tokens allows for the extended exploration needed to catch edge cases, at the acknowledged cost of higher latency and spend."
+        },
+        {
+          "letter": "D",
+          "text": "Lower effort to medium and shorten the prompt, accepting a narrower investigation scope in exchange for faster individual tool calls throughout the multi-hour session.",
+          "correct": false,
+          "explanation": "Lowering effort further would narrow the agent's investigation scope even more, worsening the exact problem observed rather than fixing it."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p3-010",
+      "domain": 3,
+      "task_id": "3.4",
+      "objective": "Analyze observability challenges and select monitoring strategies at scale",
+      "situation": "A team operating a self-hosted Claude apps gateway with per-developer spend limits experiences a two-second Postgres timeout during a database failover. Requests keep succeeding during the outage instead of being rejected.",
+      "question": "Given the gateway's default enforcement behavior, what is happening and how would the team change it if guaranteeing no unmetered spend matters more than availability?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The gateway is documented to cache the last known spend total in memory indefinitely, so requests during the outage are actually checked against that stale cached total rather than bypassing enforcement",
+          "correct": false,
+          "explanation": "The gateway does not describe an indefinite in-memory cache of spend totals; the documented behavior during a store outage is fail-open (or fail-closed if configured), not a stale-cache fallback."
+        },
+        {
+          "letter": "B",
+          "text": "Enforcement fails open by default when the spend-limit store is unreachable, so requests proceed with a warning logged; fail_closed_on_error: true would instead return 429 when the pre-check can't reach Postgres",
+          "correct": true,
+          "explanation": "The gateway's pre-check queries Postgres with a two-second timeout and, by default, fails open on an unreachable or slow store so an infrastructure outage doesn't become an inference outage; fail_closed_on_error inverts that trade-off toward guaranteed metering at the cost of availability."
+        },
+        {
+          "letter": "C",
+          "text": "Spend enforcement is documented to always fail closed by design, so the observed behavior must mean an admin had previously set an unlimited null cap on every applicable scope",
+          "correct": false,
+          "explanation": "Default enforcement is documented as fail-open, not fail-closed, and a null cap would mean an explicit unlimited allowance rather than an unrelated database outage."
+        },
+        {
+          "letter": "D",
+          "text": "The two-second timeout is documented to affect only the /effective reporting endpoint, so live request enforcement on /v1/messages continues unaffected by any Postgres outage",
+          "correct": false,
+          "explanation": "The two-second timeout applies to the enforcement pre-check performed on every /v1/messages request, not just the reporting endpoint, so a Postgres outage does affect live enforcement."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p3-021",
+      "domain": 3,
+      "task_id": "3.5",
+      "objective": "Design a RAG pipeline with appropriate chunking and indexing strategies",
+      "situation": "A pipeline currently retrieves 150 candidate chunks per query directly from the vector and lexical indexes and passes all 150 into the generation prompt. The team wants to keep the broad initial recall from 150 candidates but reduce the noise and token cost of what actually reaches the generative model, without discarding relevant chunks that ranked just outside the top few by raw similarity score.",
+      "question": "What should they add to the pipeline?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A higher generation temperature, such as 0.8, so the model can better distinguish relevant content from noise in the full candidate set of 150 chunks.",
+          "correct": false,
+          "explanation": "Generation temperature controls randomness in the model's output, not which chunks are included in the prompt. It cannot filter or reorder retrieved chunks, so it does nothing to reduce noise or token cost from the full candidate set."
+        },
+        {
+          "letter": "B",
+          "text": "A reranking stage that rescores the 150 retrieved candidates and passes a smaller, reordered top set (for example, the top 20) to the generative model.",
+          "correct": true,
+          "explanation": "A reranking stage rescored the broad set of 150 candidates for relevance and then passes a smaller, reordered top set (for example, top 20) to the generative model. This directly reduces noise and token cost while preserving relevant chunks that might have ranked lower in the initial retrieval."
+        },
+        {
+          "letter": "C",
+          "text": "A deduplication step that removes chunks with identical content hashes from the 150 retrieved candidates, keeping unique chunks to reduce the token load on the generative model.",
+          "correct": false,
+          "explanation": "Deduplication by content hash removes exact duplicates but does not assess relevance or rescore candidates, so many noisy but unique chunks would still be passed to the model. It fails to cut down the prompt size based on relevance."
+        },
+        {
+          "letter": "D",
+          "text": "A larger context window model, such as a 128k-token model, so all 150 candidates can be included without truncation, preserving the full retrieval set for generation.",
+          "correct": false,
+          "explanation": "Using a larger context window model like 128k tokens simply accommodates all 150 chunks without addressing relevance, actually increasing token cost and noise from irrelevant chunks. It contradicts the goal of reducing noise and token cost while preserving broad recall."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p3-022",
+      "domain": 3,
+      "task_id": "3.6",
+      "objective": "Apply retrieval strategies matched to data shape and query pattern",
+      "situation": "A research agent runs for several hours, repeatedly retrieving and discussing documents, and the conversation is approaching its context window limit while still needing to reference earlier findings.",
+      "question": "Which strategy matches this query pattern?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Switch to a model with a smaller context window to force more frequent manual summarization by the user.",
+          "correct": false,
+          "explanation": "Deliberately choosing a smaller context window shrinks the working space available and shifts summarization work onto the user instead of using built-in context management."
+        },
+        {
+          "letter": "B",
+          "text": "Enable server-side compaction so earlier turns are automatically summarized while the session continues past the limit.",
+          "correct": true,
+          "explanation": "Server-side compaction is the primary mechanism for long-running, retrieval-heavy sessions approaching the context limit: it summarizes earlier turns automatically so the conversation can continue while preserving prior findings."
+        },
+        {
+          "letter": "C",
+          "text": "Re-upload every previously retrieved document at the start of each new turn so nothing is lost from history.",
+          "correct": false,
+          "explanation": "Re-uploading every prior document each turn accelerates hitting the context limit rather than managing it, and duplicates content already in the conversation history."
+        },
+        {
+          "letter": "D",
+          "text": "Increase max_tokens on each request so more output room is reserved for new retrieval results.",
+          "correct": false,
+          "explanation": "Raising max_tokens changes how much a single turn can output, not how much accumulated conversation history fits in the window, so it does not address the approaching limit."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p3-056",
+      "domain": 3,
+      "task_id": "3.7",
+      "objective": "Evaluate connection protocols and select the appropriate integration mechanism (MCP, API/CLI, agent-to-agent)",
+      "situation": "A data team needs to process ten thousand support tickets overnight, where each ticket requires Claude to call tools on a remote MCP server to look up account history before drafting a response, and they want to minimize cost by processing everything asynchronously in bulk.",
+      "question": "Which setup fits this requirement?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Run each ticket through the Claude Code CLI in a for-loop, since the CLI batches requests automatically to reduce overall cost.",
+          "correct": false,
+          "explanation": "Looping the CLI over each ticket runs requests sequentially and interactively; the CLI has no automatic batch-pricing mode."
+        },
+        {
+          "letter": "B",
+          "text": "Use the Agent SDK's session resume feature to process all ten thousand tickets sequentially inside one long-running session.",
+          "correct": false,
+          "explanation": "Session resume continues one conversation's context; processing ten thousand independent tickets sequentially in one session is not what it is designed for and would not reduce cost the way batching does."
+        },
+        {
+          "letter": "C",
+          "text": "Configure the MCP server with defer_loading enabled, which activates a built-in nightly batch-processing mode on Anthropic's infrastructure.",
+          "correct": false,
+          "explanation": "defer_loading only controls when a tool's description is surfaced to the model; it does not enable any batch-processing mode."
+        },
+        {
+          "letter": "D",
+          "text": "Submit requests through the Message Batches API with mcp_servers included, since MCP tool calls there price the same as regular Messages calls.",
+          "correct": true,
+          "explanation": "mcp_servers can be included in Message Batches API requests, and MCP tool calls made through batches are priced the same as in regular Messages API calls, fitting the async, cost-sensitive overnight workload."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p3-033",
+      "domain": 3,
+      "task_id": "3.8",
+      "objective": "Evaluate progressive discovery vs. monolithic context strategy",
+      "situation": "A long-running Claude Code SDK session has tool search enabled. Partway through the session, the SDK compacts earlier messages to free context space.",
+      "question": "What happens to tools Claude had already discovered before the compaction?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Previously discovered tools remain permanently loaded in context regardless of compaction, since discovery is a one-time operation per session.",
+          "correct": false,
+          "explanation": "Discovery is not a one-time operation that permanently pins tools in context. Compaction can evict older context, including tool definitions; the session does not keep every discovered tool loaded indefinitely. The tool catalog remains searchable, but the definitions themselves can be removed from the active context."
+        },
+        {
+          "letter": "B",
+          "text": "All remaining undiscovered tools are automatically loaded into context at once to compensate for the tools that compaction removed.",
+          "correct": false,
+          "explanation": "Compaction does not trigger automatic loading of all undiscovered tools. Tool search is on-demand: Claude queries the catalog only when it needs a tool, rather than loading everything at once. Bulk-loading undiscovered tools would work against the context-saving purpose of compaction."
+        },
+        {
+          "letter": "C",
+          "text": "The entire session terminates because compaction is incompatible with tool search and the two features cannot be used together.",
+          "correct": false,
+          "explanation": "Tool search and compaction are compatible features. Compaction does not terminate the session; it frees context space while tool search allows Claude to re-find needed tools afterward. There is no incompatibility that would cause the session to end."
+        },
+        {
+          "letter": "D",
+          "text": "Previously discovered tools may be removed from context, and Claude searches the tool catalog again if it needs them later.",
+          "correct": true,
+          "explanation": "Tool search discovers and injects tool definitions into the active context. Compaction reclaims context by removing or summarizing older content, which can include previously discovered tool definitions. Because tool search remains enabled, Claude can query the tool catalog again and re-discover the tools if they become relevant later. This is the expected behavior for long-running sessions with tool search."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p4-031",
+      "domain": 4,
+      "task_id": "4.1",
+      "objective": "Define evaluation metrics (accuracy, latency, cost, safety, security)",
+      "situation": "A team has already defined accuracy, latency, and cost targets for a new medical-information chatbot.",
+      "question": "Given the sensitivity of health-related conversations, which additional evaluation dimensions should they add to the plan? (Select 3.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A consistency metric should check that semantically equivalent, differently worded questions receive similar answers.",
+          "correct": true,
+          "explanation": "A consistency metric ensures that semantically equivalent questions receive similar answers, which is vital for reliability in a medical context where users may phrase health queries differently. This builds trust by delivering dependable information regardless of wording."
+        },
+        {
+          "letter": "B",
+          "text": "The number of engineers currently assigned to the chatbot project, indicating the team's capacity to iterate on the model safely.",
+          "correct": false,
+          "explanation": "The number of engineers assigned to the project is a resourcing metric, not an evaluation dimension for the chatbot's operation. Staffing levels do not directly measure safety, accuracy, or any behavioral aspect of the chatbot."
+        },
+        {
+          "letter": "C",
+          "text": "The total number of parameters in the underlying model architecture, indicating its capacity to handle medical queries.",
+          "correct": false,
+          "explanation": "The total number of parameters is an architectural detail of the model, not an evaluation metric that assesses real-world behavior or outcomes. It indicates capacity but does not directly measure safety, privacy, or response quality."
+        },
+        {
+          "letter": "D",
+          "text": "A privacy-preservation metric measures how safely the assistant handles sensitive health information shared by users.",
+          "correct": true,
+          "explanation": "A privacy-preservation metric evaluates how safely the assistant handles sensitive health information, which is essential for maintaining user trust and regulatory compliance. Such a metric directly addresses the unique risks of processing personal health data."
+        },
+        {
+          "letter": "E",
+          "text": "The specific cloud region hosting the team's internal ticketing system, confirming data residency compliance for support workflows.",
+          "correct": false,
+          "explanation": "The cloud region of an internal ticketing system relates to data residency for support workflows, not to evaluating the medical chatbot itself. This metric is outside the scope of the chatbot's performance or safety dimensions."
+        },
+        {
+          "letter": "F",
+          "text": "A safety metric such as harmful-content or toxicity flagging rate should be measured against a set numeric target.",
+          "correct": true,
+          "explanation": "Implementing a safety metric like a harmful-content or toxicity flagging rate with a numeric target is crucial for a health-related chatbot to prevent unsafe outputs. Measuring this directly aligns with the need to mitigate risks in sensitive medical conversations."
+        }
+      ],
+      "correct": [
+        "A",
+        "D",
+        "F"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p4-017",
+      "domain": 4,
+      "task_id": "4.2",
+      "objective": "Design evaluation datasets and test frameworks using mixed methodologies",
+      "situation": "An evaluator wants to measure how empathetic a Claude-based support assistant's responses sound, using an automated grader on 400 conversations.",
+      "question": "Which setup best follows recommended practice for this kind of subjective, automated grading?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Use exact-match comparison against a single reference response written by a therapist, since empathy has one correct phrasing",
+          "correct": false,
+          "explanation": "Empathy can be expressed through many valid phrasings, so exact-match against one reference response would fail most genuinely empathetic responses that word things differently."
+        },
+        {
+          "letter": "B",
+          "text": "Use a separate Claude call, different from the model being evaluated, to rate each response on a 1-5 empathy scale against a rubric",
+          "correct": true,
+          "explanation": "Best practice for LLM-based Likert grading of subjective qualities like empathy is to use a different model instance for grading than for generation, reducing the risk of self-serving bias in the scores."
+        },
+        {
+          "letter": "C",
+          "text": "Use cosine similarity between each response and a reference set of empathetic phrases, since embeddings capture emotional tone directly",
+          "correct": false,
+          "explanation": "Cosine similarity to a fixed set of phrases measures surface-level lexical or semantic overlap, not the graded, rubric-based judgment that empathy scoring requires."
+        },
+        {
+          "letter": "D",
+          "text": "Use the same model instance that generated the responses to rate its own empathy on a 1-5 scale, since it has full context",
+          "correct": false,
+          "explanation": "Having the same model grade its own output risks self-preferencing bias, which is exactly why guidance recommends using a separate model for the grading pass."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p4-044",
+      "domain": 4,
+      "task_id": "4.3",
+      "objective": "Conduct A/B testing and iterative improvements",
+      "situation": "A product team building an FAQ assistant wants to confirm that a revised prompt answers the same underlying question consistently, even when customers phrase it in different ways. They collect 50 groups of paraphrased questions and generate a response for each phrasing under both the old and new prompt.",
+      "question": "Which evaluation method directly measures whether responses within each group stay semantically aligned with one another?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Compute the cosine similarity between sentence embeddings of responses within each paraphrase group to measure semantic alignment.",
+          "correct": true,
+          "explanation": "Computing cosine similarity between sentence embeddings of responses within each paraphrase group directly measures how semantically similar the responses are. This approach quantifies semantic alignment, making it suitable for evaluating consistency across paraphrased inputs."
+        },
+        {
+          "letter": "B",
+          "text": "Measure the average response latency for each paraphrase group and compare it across prompt versions; stable latency across paraphrases suggests alignment.",
+          "correct": false,
+          "explanation": "Measuring average response latency reflects the speed of the system, not the semantic consistency of the answers. Stable latency across paraphrases does not indicate that responses within a group are semantically aligned."
+        },
+        {
+          "letter": "C",
+          "text": "Ask the assistant to rate the semantic consistency of its answers within each paraphrase group, then use the self-ratings to compute a consistency score.",
+          "correct": false,
+          "explanation": "Asking the assistant to self-rate its semantic consistency introduces subjectivity and potential bias, as the model may not objectively assess its own outputs. This method does not provide a reliable, objective measurement of semantic alignment."
+        },
+        {
+          "letter": "D",
+          "text": "Count the number of exact word matches between each generated response and its original question, then average these counts within each paraphrase group.",
+          "correct": false,
+          "explanation": "Counting exact word matches between responses and their original questions only measures surface-level lexical overlap, not semantic alignment. It fails to capture whether the underlying answers are semantically consistent across different phrasings."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p4-056",
+      "domain": 4,
+      "task_id": "4.4",
+      "objective": "Diagnose system issues (prompt failure, hallucinations, model mismatch)",
+      "situation": "A legal team feeds a 350,000-token set of concatenated contracts into Claude Haiku 4.5 in a single request and asks it to list every indemnification clause. The response consistently omits clauses that appear late in the concatenated file, even though those clauses are present and clearly worded.",
+      "question": "What is the correct diagnosis?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The account is being rate-limited partway through the request, so only the first portion of the document is ever processed.",
+          "correct": false,
+          "explanation": "Rate limiting would produce a failed or incomplete API call, not a completed response that systematically omits only the later portions of the document."
+        },
+        {
+          "letter": "B",
+          "text": "The clauses are being hallucinated as absent, so the fix is to have the assistant admit uncertainty about clauses it cannot find.",
+          "correct": false,
+          "explanation": "Omitting real content isn't the same failure mode as inventing false content; the pattern of consistently missing only late-appearing clauses points to a context-window limit, not fabrication."
+        },
+        {
+          "letter": "C",
+          "text": "The input exceeds Claude Haiku 4.5's 200k-token window, so later content is cut off; use a model with a 1M-token window.",
+          "correct": true,
+          "explanation": "Claude Haiku 4.5 has a 200k-token context window, and a 350,000-token input exceeds it; content beyond the window's capacity cannot be attended to, which explains why clauses appearing later in the concatenated file are consistently missed. Switching to a model with a 1M-token window resolves the omission."
+        },
+        {
+          "letter": "D",
+          "text": "The prompt lacks an explicit output schema, so the model is dropping clauses to keep its JSON output short and valid.",
+          "correct": false,
+          "explanation": "A missing schema would cause structural inconsistency in the output format, not a consistent pattern of omitting clauses located near the end of an oversized input."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p4-050",
+      "domain": 4,
+      "task_id": "4.5",
+      "objective": "Optimize token usage, latency, and cost-performance trade-offs",
+      "situation": "A customer-facing chat application currently uses Claude Opus 4.8 for every request, including simple FAQ-style questions, because the team wants consistent quality. Leadership now wants to reduce average cost per conversation without rewriting the application logic or degrading answers on genuinely difficult questions.",
+      "question": "Which set of changes together address this goal appropriately, according to Anthropic's optimization guidance? (Select 2.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Increase the effort parameter to the maximum for every request to minimize costly follow-up clarifying turns and reduce the total number of requests per conversation.",
+          "correct": false,
+          "explanation": "Raising the effort parameter to maximum increases token consumption per turn, as the model exerts more reasoning effort. While it might reduce the number of turns, the increased per-turn cost generally outweighs any savings from fewer turns, contradicting the goal of lowering average cost per conversation."
+        },
+        {
+          "letter": "B",
+          "text": "Reduce the prompt cache TTL from 1 hour to 5 minutes across all requests to lower the average per-token cost by minimizing cache storage overhead.",
+          "correct": false,
+          "explanation": "Prompt caching cost depends on the balance between write frequency and reuse. A very short TTL like 5 minutes can lead to more cache misses, requiring additional write operations that may increase overall cost compared to a 1-hour TTL for content that is reused over a longer period. There is no universal rule that shorter TTLs are cheaper."
+        },
+        {
+          "letter": "C",
+          "text": "Disable extended thinking entirely and increase max_tokens to compensate, maintaining answer length while eliminating reasoning token costs.",
+          "correct": false,
+          "explanation": "Disabling extended thinking removes a reasoning mechanism without necessarily reducing token spend, as the model may produce longer or less focused responses. Increasing max_tokens could actually increase output token usage, contradicting the goal of reducing average cost per conversation."
+        },
+        {
+          "letter": "D",
+          "text": "Lower the effort parameter for routine turns to cut token spend, and benchmark Sonnet 5 or Haiku 4.5 against quality bars for FAQ traffic.",
+          "correct": true,
+          "explanation": "Lowering the effort parameter for routine turns reduces token usage, directly cutting cost. Benchmarking smaller models like Sonnet 5 or Haiku 4.5 against quality bars for FAQ traffic ensures that cost savings do not come at the expense of unacceptable quality, aligning with Anthropic’s guidance to use a two-lever approach of effort tuning and model selection."
+        },
+        {
+          "letter": "E",
+          "text": "Create benchmark tests for the FAQ use case, compare accuracy across candidate models and weigh performance against cost before downgrading.",
+          "correct": true,
+          "explanation": "Anthropic’s guidance for model selection emphasizes creating use-case-specific benchmarks, comparing accuracy and quality across candidate models, and explicitly weighing performance against cost before making a change. This ensures that any model switch is defensible and does not blindly sacrifice quality."
+        },
+        {
+          "letter": "F",
+          "text": "Route all traffic through the Message Batches API to aggregate requests into batch jobs, delivering completed answers asynchronously to lower cost per conversation.",
+          "correct": false,
+          "explanation": "The Message Batches API introduces asynchronous processing with delays, which is fundamentally incompatible with the real-time, interactive nature of a customer-facing chat application. This approach would degrade user experience and is not suitable for a scenario requiring immediate responses."
+        }
+      ],
+      "correct": [
+        "D",
+        "E"
+      ],
+      "select": 2
+    },
+    {
+      "id": "p4-066",
+      "domain": 4,
+      "task_id": "4.6",
+      "objective": "Monitor system performance using logging and observability tools",
+      "situation": "A developer building on the Agent SDK sets OTEL_METRICS_EXPORTER=console while debugging a query() call locally, and immediately the SDK's response stream becomes unreadable and messages stop parsing correctly.",
+      "question": "Why did this happen, and what should the developer do instead?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The console exporter buffers indefinitely without flushing, which blocks the subprocess pipe and eventually causes the SDK to time out and print partial JSON, requiring setting OTEL_BSP_SCHEDULE_DELAY to force periodic flushes or exporting via OTLP to a local collector.",
+          "correct": false,
+          "explanation": "The console exporter does not buffer indefinitely or block the pipe; it writes output directly. The corruption arises from interleaving telemetry with the SDK's message data, not from a lack of flushing. Exporting via OTLP is a valid workaround, but the described buffering problem is not the root cause."
+        },
+        {
+          "letter": "B",
+          "text": "The console exporter requires an interactive terminal that is unavailable inside a query() call, so it silently crashes the CLI subprocess and corrupts the pipe, requiring the developer to set OTEL_EXPORTER_OTLP_ENDPOINT to a local OpenTelemetry collector instead.",
+          "correct": false,
+          "explanation": "The failure is caused by output stream collision, not by requiring an interactive terminal that is unavailable. The CLI subprocess does not need an interactive terminal, and it does not crash the subprocess; instead, the telemetry output corrupts the message channel."
+        },
+        {
+          "letter": "C",
+          "text": "The console exporter only supports trace output, so setting it for metrics forces the CLI to fall back to a malformed legacy log format on stdout, requiring the developer to set OTEL_EXPORTER_OTLP_ENDPOINT to a local collector to capture metrics instead.",
+          "correct": false,
+          "explanation": "The console exporter supports metrics as well as traces, so it does not force a fallback to a malformed legacy log format. The issue is that writing telemetry to standard output collides with the SDK's own stdout-based protocol, not a signal-format limitation."
+        },
+        {
+          "letter": "D",
+          "text": "The console exporter writes telemetry to standard output, which the SDK also uses as its message channel, so the two streams collide; set OTEL_EXPORTER_OTLP_ENDPOINT to a local collector or all-in-one Jaeger container instead.",
+          "correct": true,
+          "explanation": "The SDK communicates with its CLI subprocess over standard output, so when the console exporter also writes telemetry there, the two streams interleave and corrupt message parsing. Setting OTEL_EXPORTER_OTLP_ENDPOINT to a local collector or Jaeger container redirects telemetry to a separate endpoint, preventing the collision."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p5-051",
+      "domain": 5,
+      "task_id": "5.1",
+      "objective": "Implement guardrails and safety controls",
+      "situation": "A governance team is designing layered guardrails for a customer-facing agent to reduce jailbreak and direct prompt injection risk, consistent with Anthropic's guidance for strengthening guardrails against a user acting as the adversary.",
+      "question": "Select all techniques that are part of this recommended layered defense. (Select 3.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Disable all logging of refused requests so that repeated jailbreak attempts cannot be correlated back to a single account",
+          "correct": false,
+          "explanation": "Disabling logging removes the visibility needed to detect and respond to repeat-offender patterns, contradicting the monitoring guidance."
+        },
+        {
+          "letter": "B",
+          "text": "Raise the temperature parameter on every request so Claude's phrasing varies enough that known jailbreak templates no longer pattern-match",
+          "correct": false,
+          "explanation": "Raising temperature changes phrasing randomness but is not a documented jailbreak defense and does not screen or block harmful content."
+        },
+        {
+          "letter": "C",
+          "text": "Expand the model's context window so it can hold a longer conversation history before a jailbreak attempt succeeds",
+          "correct": false,
+          "explanation": "A larger context window does not screen input or enforce boundaries; it only changes how much history the model retains."
+        },
+        {
+          "letter": "D",
+          "text": "Pre-screen user input with a lightweight model constrained to a simple harm classification before it reaches the main conversation",
+          "correct": true,
+          "explanation": "This is the documented harmlessness-screen technique: a lightweight model classifies input before it reaches the main conversation."
+        },
+        {
+          "letter": "E",
+          "text": "Write a system prompt that states explicit ethical and legal boundaries and tells Claude exactly how to refuse disallowed requests",
+          "correct": true,
+          "explanation": "Prompt engineering that states ethical and legal boundaries and specifies how Claude should refuse is one of the documented mitigations."
+        },
+        {
+          "letter": "F",
+          "text": "Track and respond to accounts that repeatedly trigger the same refusal, including throttling or restricting repeat offenders",
+          "correct": true,
+          "explanation": "Responding to repeat offenders, including throttling or banning, is explicitly listed as a guardrail-strengthening technique."
+        }
+      ],
+      "correct": [
+        "D",
+        "E",
+        "F"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p5-025",
+      "domain": 5,
+      "task_id": "5.2",
+      "objective": "Identify risks, limitations, and failure modes of LLM systems",
+      "situation": "A team uses structured outputs with a JSON schema to force Claude's fraud-detection tool calls into a fixed format, and treats a successfully validated response as proof that the fraud determination is correct.",
+      "question": "Which limitation of structured outputs does this practice overlook?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Structured outputs cannot be combined with tool use, so any fraud-detection tool call that returns a schema-conformant response must have been fabricated by the model without any tool-sourced data.",
+          "correct": false,
+          "explanation": "Structured outputs can be combined with tool use; they do not force the model to fabricate data. The claim that tool-sourced data cannot be returned in a schema-conformant response is false, as the features work together to validate both inputs and outputs."
+        },
+        {
+          "letter": "B",
+          "text": "Structured outputs disable Claude's reasoning process, so schema-conformant responses are always produced without any chain-of-thought analysis, directly predicting the output tokens from training patterns.",
+          "correct": false,
+          "explanation": "Structured outputs enforce the final response format but do not disable the model's internal reasoning or chain-of-thought analysis. The model still processes the task normally, and the schema only constrains the output representation, not the reasoning process."
+        },
+        {
+          "letter": "C",
+          "text": "Structured outputs are only available in beta and expire after 24 hours, so any response older than a day should be treated as unverified, as the schema validation is only active during the beta period.",
+          "correct": false,
+          "explanation": "Structured outputs are a stable feature, not limited to a temporary beta or a 24-hour expiration period. Schema validation remains active for all responses regardless of when they were generated, so this concern does not reflect an actual limitation of the feature."
+        },
+        {
+          "letter": "D",
+          "text": "Structured outputs guarantee that a response conforms to the specified schema's shape and types, but they do not verify that the field values themselves are factually or analytically correct.",
+          "correct": true,
+          "explanation": "Structured outputs ensure that a response matches the schema's shape and types, but they provide no guarantee that the field values are factually or analytically accurate. Treating schema conformance as proof of correctness overlooks the fundamental limitation that validated structure does not equal validated content."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p5-003",
+      "domain": 5,
+      "task_id": "5.3",
+      "objective": "Apply human-in-the-loop validation strategies",
+      "situation": "A platform team is designing human-in-the-loop safeguards for a Claude agent that has access to a tool capable of writing directly to a production database. They want multiple valid, defensible ways to guarantee a human reviews any write before it executes, layered so that a misconfiguration in one layer doesn't silently remove human oversight.",
+      "question": "Which of the following are valid parts of such a design? (Select 3.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A canUseTool callback that presents the pending write to a human reviewer and blocks execution until they respond, used as the resolution step for any call not already settled by hooks, deny rules, ask rules, or the permission mode.",
+          "correct": true,
+          "explanation": "canUseTool is the final resolution step for any call not already settled earlier in the flow, so it is the right place to block execution pending human review."
+        },
+        {
+          "letter": "B",
+          "text": "Relying on the model's own judgment to describe the write it is about to make in its response text, since a sufficiently detailed explanation in the transcript satisfies the same oversight goal as an execution-blocking approval step.",
+          "correct": false,
+          "explanation": "Describing an action in the transcript is not an execution-blocking control; the write still proceeds regardless of how much detail the model provides about it."
+        },
+        {
+          "letter": "C",
+          "text": "A bare entry for the database-write tool in allowedTools, since listing a tool there causes the SDK to summarize the pending write and email it to a reviewer before treating the call as approved.",
+          "correct": false,
+          "explanation": "A bare allowedTools entry auto-approves the tool and the call never reaches canUseTool; there is no automatic email-summarization behavior tied to allow rules."
+        },
+        {
+          "letter": "D",
+          "text": "An explicit ask rule for the database-write tool in settings.json, since ask rules route the call to canUseTool for confirmation even when the session is running under bypassPermissions.",
+          "correct": true,
+          "explanation": "Explicit ask rules from settings.json route the matching call to canUseTool for confirmation, and this still applies even in bypassPermissions mode."
+        },
+        {
+          "letter": "E",
+          "text": "A PreToolUse hook matched to the database-write tool that returns permissionDecision \"ask\" (or defers pending an external approval), since hook decisions are evaluated first and still apply under bypassPermissions.",
+          "correct": true,
+          "explanation": "A PreToolUse hook is evaluated first and its ask or defer decision holds even under bypassPermissions, making it a reliable layer of oversight."
+        },
+        {
+          "letter": "F",
+          "text": "Setting the session's permissionMode to bypassPermissions for the whole session, since that mode still asks for confirmation on any tool whose name contains the word \"write.\"",
+          "correct": false,
+          "explanation": "bypassPermissions does not inspect tool names for keywords like \"write\"; it approves everything that reaches that step unless an explicit ask or deny rule matches."
+        }
+      ],
+      "correct": [
+        "A",
+        "D",
+        "E"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p5-047",
+      "domain": 5,
+      "task_id": "5.4",
+      "objective": "Ensure compliance with regulations (e.g., GDPR, HIPAA, FedRAMP)",
+      "situation": "A HIPAA-enabled healthcare organization uses the Claude API's structured outputs feature with strict tool schemas to extract diagnosis codes. A developer proposes embedding actual patient identifiers as enum values inside the JSON schema to constrain valid outputs.",
+      "question": "Why is this a compliance problem?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Enum values are encrypted separately using patient-specific keys, so embedding identifiers within them actually aligns with the recommended safeguards for protecting PHI in API calls.",
+          "correct": false,
+          "explanation": "There is no documented safeguard that encrypts enum values using patient-specific keys in the API. Embedding actual patient identifiers into enum values places PHI into a cached component, directly contradicting recommended security practices and creating a compliance risk."
+        },
+        {
+          "letter": "B",
+          "text": "JSON schemas are never cached or stored by the API provider beyond the request lifetime, so identifiers placed there carry no additional retention risk and remain ephemeral.",
+          "correct": false,
+          "explanation": "JSON schemas are cached by the API provider for a period after their last use, not ephemeral to a single request. Placing identifiers in the schema would persist them in cache, creating an unintended retention risk beyond the request lifetime."
+        },
+        {
+          "letter": "C",
+          "text": "Structured outputs are not covered by the HIPAA BAA with the API provider, so using them for diagnosis code extraction would breach the agreement regardless of schema content.",
+          "correct": false,
+          "explanation": "Structured outputs are HIPAA-eligible and covered under the API provider's BAA, although with a qualification that schemas are cached and must not contain PHI. The blanket claim that structured outputs are not covered at all is false; the compliance concern here is specifically about embedding identifiers in the schema."
+        },
+        {
+          "letter": "D",
+          "text": "Cached JSON schemas used for strict structured outputs do not receive the same PHI protections as message content; identifiers must stay only in prompts and responses.",
+          "correct": true,
+          "explanation": "JSON schemas used for strict structured outputs are compiled and cached separately from message content, and these cached artifacts do not receive the same PHI protections as prompts and responses. Patient identifiers must therefore remain only in prompts and responses, never in the schema definition."
+        }
+      ],
+      "correct": "D",
+      "select": 1
+    },
+    {
+      "id": "p5-045",
+      "domain": 5,
+      "task_id": "5.5",
+      "objective": "Address ethical AI considerations (bias, fairness, transparency)",
+      "situation": "A solutions architect is scoping the ethical-risk controls for a Claude-based assistant that will draft internal performance-review summaries from manager notes across a multinational workforce. The compliance team wants a set of concrete measures that address bias, fairness, and transparency before launch.",
+      "question": "Which of the following measures should be included? (Select 3)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Run paired-scenario evaluations comparing summary tone and detail across employee groups given identical underlying performance notes.",
+          "correct": true,
+          "explanation": "Paired-scenario testing across demographic groups is a direct, evidence-based way to detect tone or detail disparities that would indicate bias, mirroring how Anthropic evaluates paired requests for evenhandedness."
+        },
+        {
+          "letter": "B",
+          "text": "Document, in a form reviewers can inspect, which specific decision factors the assistant is instructed to weigh whenever it drafts a summary.",
+          "correct": true,
+          "explanation": "Documenting the decision factors the assistant weighs gives reviewers a transparent, inspectable basis for the summaries, directly addressing the transparency requirement."
+        },
+        {
+          "letter": "C",
+          "text": "Let each manager's personal phrasing preferences silently override the standardized summary template with absolutely no logging kept.",
+          "correct": false,
+          "explanation": "Unlogged silent overrides of the standardized template reintroduce exactly the kind of unaccounted inconsistency that undermines both fairness and transparency."
+        },
+        {
+          "letter": "D",
+          "text": "Restrict summary review access to a single manager with no secondary sign-off, to keep the rollout process deliberately lightweight.",
+          "correct": false,
+          "explanation": "A single reviewer with no secondary sign-off removes an accountability check rather than adding one, working against the governance goals of the review."
+        },
+        {
+          "letter": "E",
+          "text": "Skip bias testing across the initial launch region and only extend testing later if formal complaints get filed after go-live.",
+          "correct": false,
+          "explanation": "Deferring bias testing until after complaints arise reverses the compliance team's request for pre-launch controls and lets biased summaries reach employees before any check occurs."
+        },
+        {
+          "letter": "F",
+          "text": "Give every employee, regardless of role or seniority, a mechanism to request the specific factors that shaped their own summary.",
+          "correct": true,
+          "explanation": "Giving employees a way to request the factors behind their own summary extends transparency to the people most affected by the assistant's output, supporting fairness and accountability."
+        }
+      ],
+      "correct": [
+        "A",
+        "B",
+        "F"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p6-019",
+      "domain": 6,
+      "task_id": "6.1",
+      "objective": "Conduct structured discovery and requirement gathering",
+      "situation": "During a discovery call, a customer support team says they want to route 50,000 short ticket-triage requests per day, need sub-second responses to keep chat wait times low, and have a limited annual budget for the pilot.",
+      "question": "Which model selection approach best matches these discovery findings?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Begin implementation with Claude Fable 5 through Project Glasswing, since the 1M token context window will reduce the number of requests needed per day",
+          "correct": false,
+          "explanation": "Claude Fable 5's large context window addresses processing large volumes of text per request, not the discovery findings of low latency and tight budget for short triage prompts."
+        },
+        {
+          "letter": "B",
+          "text": "Begin implementation with Claude Haiku 4.5, test the triage prompts against production ticket samples, and upgrade only if it fails to reach the required accuracy threshold",
+          "correct": true,
+          "explanation": "Anthropic's guidance recommends starting with a fast, cost-effective model like Haiku 4.5 for high-volume, straightforward, latency-sensitive, cost-sensitive tasks, then upgrading only if a capability gap is found through testing."
+        },
+        {
+          "letter": "C",
+          "text": "Begin implementation with Claude Sonnet 5 configured for extended thinking on every request, since frontier intelligence is needed even for short triage prompts",
+          "correct": false,
+          "explanation": "Extended thinking on every request adds latency and cost that conflicts with the stated sub-second response requirement and limited budget."
+        },
+        {
+          "letter": "D",
+          "text": "Begin implementation with Claude Opus 4.8 at the xhigh effort setting, since ticket triage requires the deepest available reasoning for professional support quality",
+          "correct": false,
+          "explanation": "Opus 4.8 at xhigh effort is positioned for complex agentic coding and enterprise work requiring the deepest reasoning, not high-volume, sub-second, budget-constrained ticket triage."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    },
+    {
+      "id": "p6-037",
+      "domain": 6,
+      "task_id": "6.2",
+      "objective": "Communicate architectural decisions and trade-offs",
+      "situation": "You're designing a research-assistant agent that reuses a large, static knowledge base across sessions spaced 30 to 45 minutes apart. In an architecture review, you need to justify choosing the 1-hour prompt cache over the standard 5-minute cache.",
+      "question": "What is the correct justification?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The 1-hour cache is necessary because the 5-minute cache TTL forces re-ingestion of the shared knowledge base across the typical 30–45-minute session gaps, thereby doubling cost and latency each time.",
+          "correct": true,
+          "explanation": "The 1‑hour cache TTL prevents the shared knowledge base from being re‑ingested for every session, because the typical 30–45‑minute gap between sessions exceeds the 5‑minute cache lifetime. Avoiding this re‑ingestion reduces both the cost and the latency that would otherwise double each time the cache expires."
+        },
+        {
+          "letter": "B",
+          "text": "The 1-hour cache is necessary for the large knowledge base because it exceeds the 5-minute cache's 200k-token limit, which would otherwise force partial ingestion and degrade the agent's accuracy across sessions.",
+          "correct": false,
+          "explanation": "The 5‑minute cache does not impose a 200k‑token limit; both caches can store up to the model's context window size. The choice between cache durations depends on the access pattern, not on token limits, so a large knowledge base can be ingested once into either cache."
+        },
+        {
+          "letter": "C",
+          "text": "The 5-minute cache is limited to Batch API requests, so for a synchronous agent that reuses a knowledge base across 30-to-45-minute gaps, the 1-hour cache is the only option that preserves the context between sessions.",
+          "correct": false,
+          "explanation": "Prompt caching is not limited to the Batch API; it is available for synchronous requests as well. Therefore, the 1‑hour cache is not the only option that works with a synchronous agent, but it is required here because the session gaps outlast the standard 5‑minute cache."
+        },
+        {
+          "letter": "D",
+          "text": "Prompt caching duration governs tool access for the research agent, and only the 1-hour cache enables the code execution and web fetch tools that are necessary for processing the static knowledge base across sessions.",
+          "correct": false,
+          "explanation": "Cache duration has no influence on which tools are available to the agent; tool enablement is a separate capability. The 1‑hour cache does not gate code execution or web fetch tools, so this justification is not valid."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p6-015",
+      "domain": 6,
+      "task_id": "6.3",
+      "objective": "Manage stakeholder feedback loops and expectation alignment (including SLAs)",
+      "situation": "A financial services customer's legal stakeholder is reviewing a contract addendum before approving production rollout of a support agent that would use the code execution tool alongside web search. Legal asks whether all data associated with these two tools qualifies for the customer's required Zero Data Retention (ZDR) arrangement.",
+      "question": "What should the technical lead say?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Neither web search nor code execution can qualify for ZDR under any configuration, because ZDR applies only to the core model API and not to ancillary tools like web search or code execution; therefore legal should reject any support agent design that depends on these tools for this customer.",
+          "correct": false,
+          "explanation": "Web search can be ZDR eligible with dynamic filtering off, so a blanket rejection of both tools overstates the restriction."
+        },
+        {
+          "letter": "B",
+          "text": "Both web search and code execution are always fully ZDR eligible because retention posture is determined solely by the model in use, not by which server-side tools are active; so long as the model itself is under a ZDR agreement, legal can approve the agent without tool-specific carve-outs.",
+          "correct": false,
+          "explanation": "ZDR eligibility depends on both the model and tools; code execution is documented as not ZDR eligible regardless of model, so tool-specific carve-outs are necessary."
+        },
+        {
+          "letter": "C",
+          "text": "Web search is ZDR eligible except when dynamic filtering is enabled while code execution is not ZDR eligible, so legal should not treat the combined workflow as meeting a blanket ZDR requirement unless dynamic filtering is off and code execution is handled separately.",
+          "correct": true,
+          "explanation": "Web search is ZDR eligible except when dynamic filtering is enabled, while code execution is not ZDR eligible, so a combined agent workflow requires careful treatment rather than blanket approval."
+        },
+        {
+          "letter": "D",
+          "text": "ZDR eligibility is scoped solely to the Message Batches API and does not extend to real-time tool calls like web search or code execution, meaning the support agent's data flows are outside the ZDR agreement and legal should proceed without additional restrictions on these tools.",
+          "correct": false,
+          "explanation": "ZDR eligibility applies to features and models generally, not limited to Message Batches API; web search and code execution have their own ZDR statuses."
+        }
+      ],
+      "correct": "C",
+      "select": 1
+    },
+    {
+      "id": "p6-011",
+      "domain": 6,
+      "task_id": "6.4",
+      "objective": "Document architectures and provide implementation guidance",
+      "situation": "An architect is assembling an implementation handoff document so an engineering team can safely operate a new production agent built on the Agent SDK.",
+      "question": "Which elements should the handoff document include? (Select 3.)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "A record of the exact timestamp of every individual API request the agent will send once it is deployed.",
+          "correct": false,
+          "explanation": "A pre-recorded log of every future request timestamp cannot exist before deployment and is not a meaningful architecture document element."
+        },
+        {
+          "letter": "B",
+          "text": "The hook configuration and matchers used to enforce logging, approval, or blocking at each lifecycle point.",
+          "correct": true,
+          "explanation": "Hook configuration determines when logging, approval, or blocking behavior fires, which the operating team needs to understand to reason about the agent's runtime behavior."
+        },
+        {
+          "letter": "C",
+          "text": "The specific built-in and custom tools the agent is allowed to use and the permission mode governing them.",
+          "correct": true,
+          "explanation": "Documenting which tools are allowed and the permission mode is essential so the operating team understands exactly what actions the agent can take."
+        },
+        {
+          "letter": "D",
+          "text": "A guarantee that the agent's permission configuration will never need to change as its usage scales over time.",
+          "correct": false,
+          "explanation": "Promising that permissions will never need revisiting is an unrealistic and unverifiable claim, not implementation guidance."
+        },
+        {
+          "letter": "E",
+          "text": "The authentication method configured, such as an API key, Bedrock, Vertex, or Foundry, and how it is supplied.",
+          "correct": true,
+          "explanation": "The authentication method and credential handling determine how the agent connects to Claude and must be documented so the team can operate and rotate credentials correctly."
+        },
+        {
+          "letter": "F",
+          "text": "The complete revision history of every open-source dependency that the SDK transitively imports into the build.",
+          "correct": false,
+          "explanation": "The transitive dependency source history is not implementation guidance for operating the agent; it is unrelated to how the team configures or runs the deployed system."
+        }
+      ],
+      "correct": [
+        "B",
+        "C",
+        "E"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p6-047",
+      "domain": 6,
+      "task_id": "6.5",
+      "objective": "Support lifecycle phases (discovery, design, handoff, monitoring, iteration)",
+      "situation": "Monitoring data shows that a deployed research assistant frequently uses far more output tokens than necessary on routine questions, driving up latency and cost without improving answer quality.",
+      "question": "During the iteration phase, which change best addresses this finding?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Lower the effort parameter for routine questions so fewer tokens are used without losing needed reasoning",
+          "correct": true,
+          "explanation": "- the effort parameter directly trades off response thoroughness against token usage, so tuning it down for routine questions targets the observed over-verbosity."
+        },
+        {
+          "letter": "B",
+          "text": "Disable prompt caching so each request is processed independently and token usage is easier to audit",
+          "correct": false,
+          "explanation": "Disabling prompt caching affects input-side cost and latency, not the excessive output-token usage the monitoring data identified."
+        },
+        {
+          "letter": "C",
+          "text": "Increase the context window limit so the model has more room to reason before producing an answer",
+          "correct": false,
+          "explanation": "Increasing the context window gives the model more input room but does not address unnecessarily verbose output on routine questions."
+        },
+        {
+          "letter": "D",
+          "text": "Switch to the highest-intelligence model, since more capable models always respond more concisely",
+          "correct": false,
+          "explanation": "Model intelligence and response conciseness are not directly linked; a more capable model is not guaranteed to use fewer output tokens on routine questions."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p7-015",
+      "domain": 7,
+      "task_id": "7.1",
+      "objective": "Configure Claude tools and environments for teams (e.g., Claude Code)",
+      "situation": "A team runs Claude Code inside a dev container so every engineer works in an identical environment. The lead wants the container to enforce organization-wide permission and tool policy in a way that a developer cannot bypass simply by editing a file checked into the repository.",
+      "question": "Which combination of choices meets this requirement?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Deliver the policy through server-managed settings or an MDM-deployed file, as a Dockerfile step can be altered by anyone with repository write access.",
+          "correct": true,
+          "explanation": "A Dockerfile step can be changed by anyone with repository write access, so to enforce tamper-resistant policy, it must be delivered from outside the repository. Server-managed settings or an MDM-deployed file provide the highest-precedence managed tier that cannot be bypassed by editing project files."
+        },
+        {
+          "letter": "B",
+          "text": "Add the permission rules to devcontainer.json under containerEnv, so that environment variables load the policy before any repository code runs in the container.",
+          "correct": false,
+          "explanation": "The containerEnv property in devcontainer.json is intended for environment variables, not for defining Claude Code permission rules. Moreover, devcontainer.json lives in the repository, so a developer could change it and bypass the policy."
+        },
+        {
+          "letter": "C",
+          "text": "Add the permission rules to the project's .claude/settings.json, so that project-level settings automatically apply inside the container just as they do on the host.",
+          "correct": false,
+          "explanation": "The project-level .claude/settings.json is a normal settings file that can be edited by anyone with repository access and is overridable by local or user settings. It does not enforce organization-wide policy that a developer cannot bypass."
+        },
+        {
+          "letter": "D",
+          "text": "Copy the organization's managed-settings.json into /etc/claude-code/ from the Dockerfile, ensuring the policy is baked into the container image build that every developer uses.",
+          "correct": false,
+          "explanation": "Because the Dockerfile is checked into the repository, any developer with write access can alter or remove the COPY step that places the managed-settings.json, so the policy is not truly enforced and can be bypassed."
+        }
+      ],
+      "correct": "A",
+      "select": 1
+    },
+    {
+      "id": "p7-025",
+      "domain": 7,
+      "task_id": "7.2",
+      "objective": "Improve developer workflows using AI-assisted tooling",
+      "situation": "A team wants Claude Code to automatically fix flaky tests across their monorepo, with strong guardrails: destructive git operations must always require human approval, all edits should be logged for audit, and heavy log-searching work should not bloat the main session's context.",
+      "question": "Which combination of features addresses these three needs? (Select 3)",
+      "options": [
+        {
+          "letter": "A",
+          "text": "The Agent tool with unrestricted access, letting the subagent fix tests and search logs, and requiring approval only for destructive git operations.",
+          "correct": false,
+          "explanation": "Unrestricted access grants the subagent the ability to perform any tool action, including destructive ones, without prompting for human approval, thereby undermining the guardrail of mandatory oversight for dangerous operations."
+        },
+        {
+          "letter": "B",
+          "text": "A permissions.ask rule scoped to destructive Git commands, such as git reset, that forces Claude to prompt for confirmation before running them, in every permission mode.",
+          "correct": true,
+          "explanation": "An ask rule explicitly forces Claude Code to prompt for confirmation whenever it tries a matching action; scoped to destructive Git commands like git reset, it guarantees a human approval step before they execute, in every permission mode. A deny rule instead blocks the command outright and never prompts, so it would stop git reset from ever running rather than gating it behind approval."
+        },
+        {
+          "letter": "C",
+          "text": "A PostToolUse hook that appends every Edit and Write tool call to an audit log file, ensuring all changes are recorded for review.",
+          "correct": true,
+          "explanation": "A PostToolUse hook triggered on Edit and Write tool calls provides a deterministic audit trail by appending every change to a log file, ensuring all modifications are recorded regardless of the model's own logging."
+        },
+        {
+          "letter": "D",
+          "text": "A CLAUDE.md file listing the testing framework and layout, requiring approval for destructive git commands, and spawning a subagent for log searches.",
+          "correct": false,
+          "explanation": "A CLAUDE.md file can document testing conventions and project layout, but it does not itself implement permission rules, automatically spawn subagents, or produce audit logs; those capabilities require explicit tool configurations and hook definitions beyond a static markdown file."
+        },
+        {
+          "letter": "E",
+          "text": "A subagent dedicated to searching logs and test output returns a concise summary to avoid cluttering the main session's context.",
+          "correct": true,
+          "explanation": "Offloading log searching to a dedicated subagent confines the heavy exploration to that subagent's own context window and returns only a concise summary, preventing the main session from becoming bloated with raw log output."
+        },
+        {
+          "letter": "F",
+          "text": "The bypassPermissions permission mode for uninterrupted test fixing, along with an audit-logging hook and a log-search subagent.",
+          "correct": false,
+          "explanation": "The bypassPermissions mode skips permission prompts for destructive Git operations that aren't covered by an explicit ask rule, so it directly contradicts the requirement that such operations always require human approval."
+        }
+      ],
+      "correct": [
+        "B",
+        "C",
+        "E"
+      ],
+      "select": 3
+    },
+    {
+      "id": "p7-009",
+      "domain": 7,
+      "task_id": "7.3",
+      "objective": "Support debugging and operational issue resolution",
+      "situation": "A custom subagent that runs a full integration test suite stops midway and Claude Code reports \"Agent terminated early due to an API error: You've hit your session limit · resets 3:45pm\". The main conversation is otherwise healthy.",
+      "question": "What is the correct way to handle this?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Restart Claude Code entirely, since a subagent failure of this kind corrupts the parent session's conversation state.",
+          "correct": false,
+          "explanation": "A subagent's API error does not corrupt the parent session's conversation state; the main conversation remains usable while the underlying limit is addressed."
+        },
+        {
+          "letter": "B",
+          "text": "Wait until the session limit resets at the time shown, then ask Claude to retry the task or resume the subagent from where it stopped.",
+          "correct": true,
+          "explanation": "The error detail after the colon should be matched to its own section, in this case Usage limits, and handled per that section's guidance: wait for the reset time shown, then retry the task or resume the subagent."
+        },
+        {
+          "letter": "C",
+          "text": "Switch the subagent's model to a smaller one with /model, since session limits apply per model with a separate allowance.",
+          "correct": false,
+          "explanation": "The session limit shown is a plan-wide rolling allowance, not a separate allocation per model, so switching to a smaller model does not bypass it."
+        },
+        {
+          "letter": "D",
+          "text": "Run /rewind on the main conversation to undo the subagent invocation, since resetting the session limit requires clearing recent turns.",
+          "correct": false,
+          "explanation": "/rewind steps back to an earlier checkpoint in the conversation; it has no effect on the account's session usage limit or its reset time."
+        }
+      ],
+      "correct": "B",
+      "select": 1
+    }
+  ]
+}

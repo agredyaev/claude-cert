@@ -16,18 +16,21 @@ Answer-key integrity plus current-document freshness for evolving Claude product
   "sensitive_term_occurrences": {
     "updatedToolOutput": 13,
     "updatedMCPToolOutput": 7,
-    ".claude/commands/": 28,
-    "allowedTools": 64,
-    "bypassPermissions": 82,
-    "Message Batches API": 73,
-    "--resume": 20,
+    ".claude/commands/": 18,
+    "allowedTools": 59,
+    "bypassPermissions": 84,
+    "Message Batches API": 66,
+    "--resume": 17,
     "--bare": 10,
-    "fork_session": 21,
-    "tool_choice": 136,
+    "fork_session": 14,
+    "tool_choice": 127,
     "Agent tool": 35
   },
   "current_docs_review": true,
   "missing_review_markers": [],
+  "source_matrix": true,
+  "source_matrix_missing": [],
+  "non_official_sources": [],
   "stale_hits": {}
 }
 ~~~

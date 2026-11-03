@@ -1562,32 +1562,32 @@
     "domain": 1,
     "task_id": "1.7",
     "objective": "Manage session state, resumption, and forking",
-    "situation": "An architect is designing a serverless pipeline where each stage runs in a fresh, short-lived container and cannot guarantee access to any previous container's local disk. The pipeline still needs later stages to act on the conclusions of an earlier stage's investigation.",
-    "question": "Which strategy best fits this constraint?",
+    "situation": "A serverless pipeline runs each stage in a fresh container with no shared local disk. A later stage needs only the verified conclusions and unresolved questions from an earlier investigation, not the full conversational transcript. The platform already has a durable application-state store.",
+    "question": "Which state-transfer design is the most robust and least coupled to local session storage?",
     "options": [
       {
         "letter": "A",
-        "text": "Capture the earlier stage's key results as application state and pass them into a new session's opening prompt",
+        "text": "Persist the earlier stage's verified conclusions and unresolved questions as durable application state, then inject that state into a new session for the later stage.",
         "correct": true,
-        "explanation": "This is the recommended pattern for stateful serverless pipelines. Serverless environments are stateless by design; each invocation starts fresh without prior context. The official approach is to externalize state to a durable store (e.g., database, cache) and retrieve it at the beginning of each new session or step. Anthropic's own architecture for AI agents uses a 'session as durable event log' that persists past prompts and outputs, explicitly passing them into new sessions to overcome short-lived constraints."
+        "explanation": "The later stage needs semantic results, not exact conversational continuity. Externalizing only the durable conclusions and unresolved questions makes the dependency explicit, survives container replacement, and avoids coupling the pipeline to Claude Code's local session files."
       },
       {
         "letter": "B",
-        "text": "Pass the earlier stage's session ID to resume in the next container and expect the transcript to be found automatically",
+        "text": "Archive the entire local Claude session directory after every stage, restore it into the next container, and resume the conversation from that restored filesystem snapshot.",
         "correct": false,
-        "explanation": "A session ID alone is insufficient because serverless functions do not retain local storage or automatically reconnect to previous sessions. The pipeline would need to store the transcript externally and retrieve it using the ID. Without explicit state capture and passing, a new container has no built-in mechanism to access the earlier stage's data."
+        "explanation": "Restoring a full session snapshot could recreate conversational continuity, but the scenario does not require it. It couples the serverless workflow to local session internals and moves much more state than the later stage needs, so it is less robust than persisting the required application state directly."
       },
       {
         "letter": "C",
-        "text": "Set fork_session=True in the next container so it branches from the earlier stage's session ID directly",
+        "text": "Persist only the earlier session ID in the application database and have the next fresh container resume that ID without restoring any transcript or session state.",
         "correct": false,
-        "explanation": "There is no standard serverless API or flag like fork_session=True that allows a new container to automatically inherit or branch from a previous container's session. Serverless functions are isolated and stateless; any sharing of context must be managed through external state stores."
+        "explanation": "A durable identifier is not the same as durable state. With no shared local session storage or restored transcript, the new container cannot reconstruct the earlier conclusions merely from an ID."
       },
       {
         "letter": "D",
-        "text": "Rely on claude --continue in the next container to pick up the most recent local session automatically",
+        "text": "Re-run the earlier investigation from source in every new container so each stage independently rediscovers the same conclusions instead of transferring state.",
         "correct": false,
-        "explanation": "The claude --continue command would attempt to resume a local session, but in a serverless environment, each container is ephemeral and does not have access to the previous container's local filesystem. Local sessions are not shared across invocations, so this approach would fail to find the earlier stage's data."
+        "explanation": "Recomputation avoids shared state but adds repeated cost and latency and can produce different conclusions. The pipeline already has a durable store and needs known results from the previous stage, so explicit state transfer is the better design."
       }
     ],
     "correct": "A",
@@ -4260,35 +4260,35 @@
     "domain": 2,
     "task_id": "2.4",
     "objective": "Integrate MCP servers into Claude Code and agent workflows",
-    "situation": "A contributor clones a team repository that includes a checked-in .mcp.json defining a deploy-tools server. They open the project in Claude Code for the first time and run claude mcp list.",
-    "question": "What should they expect to see for deploy-tools before they take any further action?",
+    "situation": "A team wants an MCP server configuration to travel with the repository so every contributor gets the same server definition after cloning it. Security also requires that cloning a repository must not silently grant that server tool access before each contributor has reviewed it.",
+    "question": "Which rollout design best satisfies both reproducibility and the trust boundary?",
     "options": [
       {
         "letter": "A",
-        "text": "It connects immediately and silently, because checking a server into .mcp.json is itself treated as implicit approval from every contributor who clones the repo",
-        "correct": false,
-        "explanation": "Being checked into version control does not grant automatic trust; each contributor must approve project-scoped servers themselves before they connect."
+        "text": "Commit the server in the project's .mcp.json and require each contributor to review and approve the project-scoped server before Claude Code connects to it.",
+        "correct": true,
+        "explanation": "Project-scoped configuration makes the server definition reproducible through version control, while the explicit approval step preserves the local trust boundary. Sharing configuration does not need to imply automatically trusting the capability."
       },
       {
         "letter": "B",
-        "text": "It fails to load at all, because project-scoped servers only activate for the teammate who originally added them via claude mcp add --scope project",
+        "text": "Have every contributor add the server manually at user scope during onboarding so it is trusted once and automatically available in every repository they open.",
         "correct": false,
-        "explanation": "Project scope is specifically designed so the configuration is shared with the whole team via .mcp.json, not restricted to only the original author's machine."
+        "explanation": "User scope can make the server broadly available, but it no longer makes the repository the source of truth and expands the capability beyond this project. It solves convenience by weakening both reproducibility and scope."
       },
       {
         "letter": "C",
-        "text": "It is renamed automatically with a numeric suffix, because Claude Code assumes any newly cloned .mcp.json server name conflicts with an existing one",
+        "text": "Keep the server local to the developer who first configured it and document the command in README so other contributors can recreate the configuration if they notice it is missing.",
         "correct": false,
-        "explanation": "Automatic renaming with a suffix happens for name collisions during imports from Claude Desktop, not as a default behavior for freshly cloned project-scoped servers."
+        "explanation": "Documentation can help onboarding, but each machine can drift and the repository does not carry the actual server definition. This fails the requirement that all contributors receive the same configuration from the clone."
       },
       {
         "letter": "D",
-        "text": "It appears as pending approval, because project-scoped servers from .mcp.json require the contributor to explicitly approve them before Claude Code connects",
-        "correct": true,
-        "explanation": "For security reasons, Claude Code prompts for approval before using project-scoped servers from .mcp.json, so a freshly cloned repo's server shows as pending approval until the contributor reviews and approves it."
+        "text": "Commit a bootstrap script that automatically installs the server into each contributor's user-level configuration on first checkout without a separate review step.",
+        "correct": false,
+        "explanation": "A bootstrap script can reproduce configuration, but silently modifying user-level MCP configuration on checkout crosses the stated trust boundary and gives the server broader scope than the project needs."
       }
     ],
-    "correct": "D",
+    "correct": "A",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "05fa81c188ff14d44400f1dbf91793280a97df3713eb961f4a1e9dce9720494f"
@@ -5329,7 +5329,7 @@
     "options": [
       {
         "letter": "A",
-        "text": "Set tool_choice to {\"type\": \"tool\", \"name\": \"extract_metadata\"} on the turn where metadata is needed, then let the model choose from the enrichment tools with auto or any on subsequent turns.",
+        "text": "On the metadata turn, force the named extract_metadata tool, then return later turns to auto/any so enrichment tools can be selected as needed.",
         "correct": true,
         "explanation": "Setting tool_choice to {\"type\": \"tool\", \"name\": \"extract_metadata\"} on the turn where metadata is needed forces the model to call that specific tool first, guaranteeing the required ordering. Once the metadata is in the conversation context, switching to auto or any on subsequent turns allows the model to freely select among the enrichment tools."
       },
@@ -5341,7 +5341,7 @@
       },
       {
         "letter": "C",
-        "text": "Set tool_choice to {\"type\": \"any\"} for the entire conversation, so the model must select a tool on every turn, relying on its training to choose extract_metadata first when metadata is absent.",
+        "text": "Require some tool call on every turn with tool_choice type any, relying on the model to infer that extract_metadata should happen first when metadata is absent.",
         "correct": false,
         "explanation": "Setting tool_choice to any forces a tool call on every turn but does not specify which one; the model could still choose an enrichment tool first. This does not guarantee that extract_metadata will be called before the enrichment tools depend on its output."
       },
@@ -7224,35 +7224,35 @@
     "domain": 3,
     "task_id": "3.5",
     "objective": "Apply iterative refinement techniques for progressive improvement",
-    "situation": "An architect asks Claude Code to \"normalize phone numbers to a standard format\" across a customer database. After two rounds of correction, Claude is still inconsistently formatting extensions and international codes.",
-    "question": "What should the architect do to communicate the transformation more effectively?",
+    "situation": "A phone-number normalization prompt already contains a concise rule and several ordinary examples. Evaluation still shows two repeatable failures: international numbers with extensions and numbers whose country code is written with a leading 00. The team has the desired output for both failing cases.",
+    "question": "What is the highest-value next refinement before changing models or adding external libraries?",
     "options": [
       {
         "letter": "A",
-        "text": "Split the normalization rules into separate sections for domestic numbers, international codes, and extensions, each described with exhaustive prose detail rather than examples.",
+        "text": "Replace the concise rule with a much longer prose specification covering every numbering convention the team can think of, but do not add the two observed failures as examples.",
         "correct": false,
-        "explanation": "Exhaustive prose detail, even if split into sections, does not remove the interpretive gaps that caused the previous failures; examples directly specify the transformation without relying on ambiguous wording."
+        "explanation": "More prose can add detail, but it does not directly demonstrate the two boundaries that are currently failing. The team already has concrete failing cases and desired outputs, which are stronger refinement evidence."
       },
       {
         "letter": "B",
-        "text": "Ask Claude to research five phone-number libraries, extract the formatted output each produces for sample international numbers, and adopt the most frequent convention as the standard.",
-        "correct": false,
-        "explanation": "Surveying external libraries introduces an irrelevant research step and does not define the specific formatting required by the architect's database; it also fails to address extension handling directly."
+        "text": "Add the two failed inputs with their desired outputs as edge-case examples and tighten the concise rule only where those examples expose ambiguity.",
+        "correct": true,
+        "explanation": "Iterative refinement should use observed failure evidence. Adding the failing cases as representative examples and clarifying only the ambiguous rule teaches the exact boundary while keeping the prompt compact and testable."
       },
       {
         "letter": "C",
-        "text": "Provide 2-3 concrete input/output pairs covering domestic, international, and extension cases so Claude can infer the exact rule from examples alone, not prose.",
-        "correct": true,
-        "explanation": "Concrete input/output examples covering domestic, international, and extension cases allow Claude to infer the exact transformation rule directly, resolving edge cases far more reliably than prose descriptions."
+        "text": "Keep the prompt unchanged and add a second model call that asks Claude whether each normalized number looks plausible before saving it.",
+        "correct": false,
+        "explanation": "A generic plausibility check does not define the missing transformation rule. It adds cost and a second uncertain judgment without teaching the first model how the two known edge cases should be normalized."
       },
       {
         "letter": "D",
-        "text": "Repeat the original instruction but prepend each rule with all-caps modifiers like IMPORTANT and MUST so that Claude gives the normalization task greater weight.",
+        "text": "Increase the maximum output tokens so Claude has more room to reason about extensions and international prefixes before returning the normalized value.",
         "correct": false,
-        "explanation": "Adding emphasis modifiers like IMPORTANT or MUST may help Claude prioritize a task, but they do not clarify the desired output format for ambiguous edge cases like extensions and international codes; the underlying ambiguity remains."
+        "explanation": "The failure is not caused by output truncation. Increasing the token budget does not supply the missing edge-case specification or the desired transformations."
       }
     ],
-    "correct": "C",
+    "correct": "B",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "0fff1acfbdf5e903d389b6c498b0975beec8bce4bfd6cf297b3216a3b16b43ee"
@@ -9200,35 +9200,35 @@
     "domain": 3,
     "task_id": "3.6",
     "objective": "Integrate Claude Code into CI/CD pipelines",
-    "situation": "A DevOps engineer wants a locked-down CI runner where Claude Code can only use a small, explicitly-approved set of read-only commands and anything else causes the run to abort rather than prompt, since no human is present to answer a permission prompt.",
-    "question": "Which configuration best matches this requirement?",
+    "situation": "A headless CI job must let Claude Code run only Read, Glob, and Grep. Any other tool request must be rejected immediately rather than waiting for a human permission prompt.",
+    "question": "Which permission design most directly enforces that policy?",
     "options": [
       {
         "letter": "A",
-        "text": "Set --max-turns to 1, limiting Claude to one tool call so no command needing approval is ever reached and the run completes entirely without any prompts.",
-        "correct": false,
-        "explanation": "Restricting to a single tool call with --max-turns 1 does not define which commands are allowed; a single call could still be a disallowed action that triggers a permission prompt, causing the run to hang. This approach fails to ensure abort-on-denial and does not establish a locked-down, read-only command set."
+        "text": "Allow Read, Glob, and Grep explicitly and run with permissionMode=dontAsk so any unresolved tool request is denied instead of prompting.",
+        "correct": true,
+        "explanation": "The explicit allow surface pre-approves the required tools, and dontAsk converts anything not otherwise allowed into a denial without invoking an interactive approval callback. That matches both the narrow capability set and headless execution."
       },
       {
         "letter": "B",
-        "text": "Set the permission mode to dontAsk, which denies anything not covered by permissions.allow rules or the built-in read-only command set without prompting.",
-        "correct": true,
-        "explanation": "dontAsk mode denies any command not explicitly allowed by permissions.allow rules or the built-in read-only set, without pausing for user input. This ensures the run aborts cleanly in unattended CI when an unapproved command is attempted, aligning with the locked-down requirement."
+        "text": "Allow Read, Glob, and Grep explicitly but run with bypassPermissions so tools outside the allow list can still execute without interrupting CI.",
+        "correct": false,
+        "explanation": "The allow list does not constrain bypassPermissions; unresolved tools can be approved by the mode. That contradicts the requirement that everything outside the approved set be rejected."
       },
       {
         "letter": "C",
-        "text": "Omit --allowedTools entirely, rely on the default interactive permission prompt to block unapproved commands, and set a short timeout so the run aborts when no one confirms.",
+        "text": "Deny Edit and Write and keep the default interactive permission mode, assuming all other unapproved commands will fail automatically in a headless runner.",
         "correct": false,
-        "explanation": "The default interactive prompt will hang indefinitely when no human is present, even with a timeout, causing unpredictable delays and potentially failing to abort cleanly. Additionally, omitting --allowedTools does not restrict Claude Code to read-only commands, allowing arbitrary command attempts that could require approval."
+        "explanation": "Blocking Edit and Write leaves other capabilities unresolved, and the default mode can still request approval. The policy requires a closed allow surface and deterministic denial, not a partial deny list plus an unavailable human."
       },
       {
         "letter": "D",
-        "text": "Set the permission mode to acceptEdits, so file writes and common filesystem commands get automatic approval, and the CI run continues without pausing.",
+        "text": "Use plan mode because it is read-only, and rely on that mode alone instead of declaring the exact tools the CI job is permitted to use.",
         "correct": false,
-        "explanation": "acceptEdits mode automatically approves file writes and common filesystem operations, defeating the read-only restriction. While it reduces prompts for those operations, other unapproved commands may still trigger prompts, and it does not enforce a strict read-only, abort-on-denial policy."
+        "explanation": "Plan mode reduces mutation risk but does not express the required three-tool capability contract. The scenario calls for an explicit small allow surface with every other request rejected."
       }
     ],
-    "correct": "B",
+    "correct": "A",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "ad986c4931036547683bb47acf8ad2d2a8b5442a24d154a09a27889b41a6618f"
@@ -10188,35 +10188,35 @@
     "domain": 3,
     "task_id": "3.3",
     "objective": "Apply path-specific rules for conditional convention loading",
-    "situation": "A developer has both a personal rule at ~/.claude/rules/formatting.md (no paths field) and their team's project rule at ./.claude/rules/formatting.md (no paths field) with conflicting formatting guidance. Both load unconditionally.",
-    "question": "According to Claude Code memory documentation, how should the developer understand load order and conflict resolution?",
+    "situation": "A repository has general project conventions that should always load, but React files under src/frontend/** need an additional formatting convention that must not affect backend Python files. The team wants the behavior committed with the repository rather than relying on each developer's personal preferences.",
+    "question": "How should the team represent the frontend-only convention?",
     "options": [
       {
         "letter": "A",
-        "text": "User-level rules load before project rules, so when the two conflict, the project rule wins. Claude gives it priority for loading later, not for being more specific.",
-        "correct": true,
-        "explanation": "Claude Code's memory documentation states, in the User-level rules section: 'User-level rules are loaded before project rules, giving project rules higher priority.' The personal ~/.claude/rules/formatting.md loads first, and when it conflicts with the project's ./.claude/rules/formatting.md, the project rule is treated as higher priority simply because it entered context after the personal one -- not because Claude judged it more specific or more important."
+        "text": "Put the frontend convention in the general project rule and tell Claude in prose to ignore that paragraph whenever it is working outside src/frontend.",
+        "correct": false,
+        "explanation": "The rule would still be loaded for unrelated files and rely on the model to interpret an exception. Path-scoped rules provide a deterministic way to load conditional guidance only where it applies."
       },
       {
         "letter": "B",
-        "text": "User-level rules under ~/.claude/rules/ are ignored whenever a project defines a rules file with the same name, so only the project's formatting.md file ever loads.",
-        "correct": false,
-        "explanation": "Neither file is ignored. Both rules load unconditionally because neither carries a paths field restricting it, so the personal ~/.claude/rules/formatting.md and the project's ./.claude/rules/formatting.md both enter context; a same-named project file does not suppress the personal one."
+        "text": "Create a separate project rule with a paths selector for src/frontend/** and keep the repository-wide conventions in the unconditional project rule.",
+        "correct": true,
+        "explanation": "A path-specific project rule expresses the condition directly: common conventions remain always active, while the frontend rule is loaded only for matching files. Because both rules live in the project, the behavior is reproducible for the team."
       },
       {
         "letter": "C",
-        "text": "User-level rules load before project rules, and project rules win any conflict, but only because project-level guidance is inherently more specific than personal guidance.",
+        "text": "Place the frontend convention in ~/.claude/rules so it stays outside the repository and ask every frontend developer to copy the same personal rule manually.",
         "correct": false,
-        "explanation": "The load order and the outcome are both right here -- project rules do win -- but the stated reason is not documented anywhere. The memory documentation attributes the project rule's priority to load order, since it loads after the user-level rule, not to project-level guidance being inherently more specific. Assuming a specificity rule would incorrectly suggest a narrower personal rule could ever outrank a broader project one."
+        "explanation": "A personal rule can affect an individual developer's sessions, but it does not give the repository a shared, reviewable convention and will drift across machines."
       },
       {
         "letter": "D",
-        "text": "Project rules load before user-level rules, so the personal formatting.md file takes higher priority over the team's shared project guidance.",
+        "text": "Create a second unconditional project rule named frontend-formatting.md and rely on its filename to make Claude apply it only when editing frontend paths.",
         "correct": false,
-        "explanation": "The documented load order is the reverse of this: user-level rules load before project rules. Reversing the order also reverses the outcome -- it is the project's shared file, loaded second, that ends up with the higher-priority position, not the personal one."
+        "explanation": "The filename does not provide path scoping. Without a paths condition the additional rule is loaded outside the frontend too, so backend work can receive irrelevant guidance."
       }
     ],
-    "correct": "A",
+    "correct": "B",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "de9d23b6c7bb60c74679843e722067b04769826d57b7bb00e12f48e42a0da351"
@@ -12012,35 +12012,35 @@
     "domain": 4,
     "task_id": "4.2",
     "objective": "Apply few-shot prompting to improve output consistency and quality",
-    "situation": "An agent has both a search_docs tool and a search_code tool available. For requests that could plausibly be answered by either tool, such as 'where is the rate limit defined,' the agent picks inconsistently between them across similar sessions. The team wants the agent to make a consistent, well-reasoned choice for this class of ambiguous request.",
-    "question": "What is the most effective change?",
+    "situation": "A support-ticket classifier has four labels and a concise written rubric. Evaluation shows inconsistent decisions only on boundary cases such as a reversed card authorization that could look like either billing or fraud. The team has a small set of human-adjudicated boundary examples and wants the cheapest prompt-level change before changing the architecture.",
+    "question": "Which change best targets the observed inconsistency?",
     "options": [
       {
         "letter": "A",
-        "text": "Add a routing step that always calls search_docs first and only falls back to search_code if no results are returned.",
-        "correct": false,
-        "explanation": "A hardcoded docs-first rule is brittle and can choose the wrong source for requests that are ambiguous but better answered from code. Anthropic recommends semantic tool definitions, clear descriptions, enums, and clarifying questions; it does not recommend replacing intent-based selection with a fixed fallback chain."
+        "text": "Add diverse labeled few-shot examples drawn from the adjudicated boundary cases, including short explanations of the feature that separates the neighboring labels.",
+        "correct": true,
+        "explanation": "The rubric already exists; the remaining problem is applying it consistently at ambiguous boundaries. Representative, diverse examples make those decision boundaries concrete and are a direct prompt-level intervention."
       },
       {
         "letter": "B",
-        "text": "Rename the two tools to be more visually distinct (e.g., docs_lookup and code_search) to reduce the chance of confusion.",
+        "text": "Add more general adjectives to each label description, such as 'important', 'serious', and 'customer-facing', without showing any labeled boundary cases.",
         "correct": false,
-        "explanation": "Distinct, verb-noun tool names can reduce collisions, but simply making names visually different does not explain when each tool should be used for queries like 'where is the rate limit defined.' Official guidance treats clear names as one best practice, not a sufficient fix for semantic ambiguity; disambiguation is better handled through descriptions and input_examples."
+        "explanation": "Generic adjectives do not define the disputed boundary and can make the rubric less precise. They add emphasis rather than evidence about how borderline inputs should be classified."
       },
       {
         "letter": "C",
-        "text": "Expand each tool's natural-language description with more adjectives that characterize its typical use cases.",
+        "text": "Hard-code a router that sends every ticket containing the word 'card' to fraud and every ticket containing the word 'invoice' to billing.",
         "correct": false,
-        "explanation": "More adjectives add noise rather than precision. Anthropic emphasizes that tool descriptions should be clear, detailed semantic contracts, and it recommends supplementary mechanisms like input_examples for ambiguous tool selection rather than verbose or vague characterization."
+        "explanation": "A keyword router can be cheap, but it replaces the semantic boundary with brittle lexical rules and will systematically misclassify legitimate cross-category cases."
       },
       {
         "letter": "D",
-        "text": "Provide input_examples in the tool definitions that demonstrate for the same ambiguous request which tool should be selected and why.",
-        "correct": true,
-        "explanation": "Anthropic's tool-use documentation recommends input_examples specifically for disambiguation when multiple tools have similar names or functions, such as showing which tool to select for an ambiguous request and why. They are optional but valuable supplements to clear tool descriptions, and Anthropic reports they can improve complex parameter generation accuracy from 72% to 90%. This directly addresses consistent, well-reasoned tool selection for ambiguous requests."
+        "text": "Add one clean, obvious example for each label but omit the ambiguous examples so Claude does not learn from unusual edge cases.",
+        "correct": false,
+        "explanation": "Obvious prototypes can demonstrate format, but the measured failures are specifically at the label boundaries. Avoiding those cases does not teach the distinction the evaluation says is unstable."
       }
     ],
-    "correct": "D",
+    "correct": "A",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "72de02f669e47c0ae6bf07465179424ddd1517fae1e06880306c9203187dfe67"
@@ -13081,13 +13081,13 @@
     "options": [
       {
         "letter": "A",
-        "text": "Set tool_choice to {\"type\": \"auto\"} so Claude evaluates the document and decides whether calling a tool is appropriate",
+        "text": "Allow Claude to decide whether a tool call is appropriate by using tool_choice type auto.",
         "correct": false,
         "explanation": "\"auto\" is the default and permits Claude to respond with plain text instead of calling any tool, which does not guarantee structured output."
       },
       {
         "letter": "B",
-        "text": "Set tool_choice to {\"type\": \"tool\", \"name\": \"extract_invoice\"} so the same extraction tool always runs regardless of document type",
+        "text": "Force the extract_invoice tool on every request, regardless of which document type was supplied.",
         "correct": false,
         "explanation": "Forcing a single named tool would incorrectly run invoice extraction even on resumes or contracts, since the document type is unknown in advance."
       },
@@ -13099,7 +13099,7 @@
       },
       {
         "letter": "D",
-        "text": "Set tool_choice to {\"type\": \"any\"} so Claude must call one of the three tools but can pick whichever matches the document",
+        "text": "Require one of the three tools to be called while leaving Claude to choose which tool matches the document.",
         "correct": true,
         "explanation": "tool_choice: \"any\" forces Claude to call some tool but leaves the choice of which tool up to the model, which is exactly what's needed when the document type is unknown but a tool call must always happen."
       }
@@ -14081,7 +14081,7 @@
       },
       {
         "letter": "C",
-        "text": "Set tool_choice to {\"type\": \"any\"} so the model is forced to pick a jurisdiction value from the enum on every single contract",
+        "text": "Require a tool call with tool_choice type any so the model must choose a jurisdiction enum value for every contract.",
         "correct": false,
         "explanation": "tool_choice controls whether a tool is invoked at all, not the permissible values within an already-defined field's enum, so it doesn't address the ambiguous-value problem."
       },
@@ -15926,32 +15926,32 @@
     "domain": 5,
     "task_id": "5.4",
     "objective": "Manage context effectively in large codebase exploration",
-    "situation": "An architect needs to understand how a refund flow touches the payments, ledger, and notification services before proposing a redesign. The main agent should stay focused on synthesizing the redesign proposal rather than tracing every function call itself.",
-    "question": "How should the architect structure this investigation?",
+    "situation": "An architect must trace how a refund flows through payments, ledger, and notification services before proposing a redesign. The trace can be verbose, but the main agent's context must remain focused on comparing redesign alternatives and preserving the final decision rationale.",
+    "question": "Which investigation structure best preserves useful evidence without bloating the main context?",
     "options": [
       {
         "letter": "A",
-        "text": "Ask the main agent to guess at the refund flow's dependencies based on similar flows it recalls from other codebases.",
+        "text": "Have the main agent perform targeted searches across all three services, periodically compacting its own notes before it resumes architecture synthesis.",
         "correct": false,
-        "explanation": "Guessing based on other codebases risks the same generic, unverified answers that context degradation produces; the flow must be traced in this specific codebase."
+        "explanation": "Targeted searches are better than reading every file, but the verbose trace still occupies the same context that must hold redesign alternatives and decision rationale. The scenario explicitly creates value for context isolation."
       },
       {
         "letter": "B",
-        "text": "Delegate a subagent with the bounded question of tracing refund flow dependencies across the three services and report a distilled summary.",
+        "text": "Delegate one bounded subagent to trace the cross-service refund path and return a compact dependency summary with the relevant entry points and evidence.",
         "correct": true,
-        "explanation": "A bounded, specific delegation lets the subagent do the verbose tracing work in its own context and return only a distilled summary, keeping the main agent free to coordinate the redesign."
+        "explanation": "The trace is a coherent bounded investigation that can run in isolated context. Returning a distilled dependency map preserves the evidence needed for architecture work without filling the main session with exploration detail."
       },
       {
         "letter": "C",
-        "text": "Have the main agent open every file in the three services one at a time and keep each file's full contents in the conversation.",
+        "text": "Delegate one independent subagent per service and ask each to summarize only its local files, without assigning any agent responsibility for cross-service call boundaries.",
         "correct": false,
-        "explanation": "Reading every file's full contents into the main agent's context reintroduces the exact problem delegation is meant to solve, consuming space needed for the redesign work."
+        "explanation": "Per-service isolation can scale exploration, but without an owner for the cross-service path the result can miss exactly the integration edges the architect needs to understand."
       },
       {
         "letter": "D",
-        "text": "Spawn a subagent with no specific instructions at all and simply let it independently decide which parts of the codebase are relevant to refunds.",
+        "text": "Delegate the trace to a subagent but require it to return every relevant source file in full so the main agent can independently verify the complete investigation.",
         "correct": false,
-        "explanation": "An unscoped subagent without a specific question tends to explore broadly and return diffuse output, undermining the benefit of isolating a focused investigation."
+        "explanation": "This preserves evidence at the cost of reintroducing the full context burden. A compact trace with specific evidence locations gives the main agent something verifiable without importing the entire exploration transcript."
       }
     ],
     "correct": "B",
@@ -17180,35 +17180,35 @@
     "domain": 5,
     "task_id": "5.6",
     "objective": "Preserve information provenance and handle uncertainty in multi-source synthesis",
-    "situation": "A coordinator agent receives structured claim-source mappings from four subagents researching the same topic from different angles. During merging, several claims are near-duplicates reported by multiple subagents with slightly different wording, and the supporting source citations are not identical across the reports.",
-    "question": "What is the best way to merge these without losing provenance?",
+    "situation": "Four research subagents return overlapping claims with slightly different wording. Some claims are supported by two sources, others by three, and a few sources disagree on details. The coordinator must deduplicate the report while preserving claim-level provenance.",
+    "question": "Which merge policy best preserves both deduplication and auditability?",
     "options": [
       {
         "letter": "A",
-        "text": "Keep only the version of the claim reported by the subagent that produced its output first, discarding the duplicates",
+        "text": "Keep every near-duplicate claim as a separate row so no provenance is lost, then let the final report writer decide which duplicates to omit.",
         "correct": false,
-        "explanation": "This approach arbitrarily prioritizes one subagent and discards source citations contributed by the other subagents. The synthesis agent is expected to preserve and merge claim-source mappings, not delete them based on response order, because doing so loses traceability for the near-duplicate claims."
+        "explanation": "This preserves raw provenance but fails the deduplication requirement and pushes reconciliation downstream. It also makes it harder to see that multiple sources support the same underlying claim."
       },
       {
         "letter": "B",
-        "text": "Delete all but one occurrence of the claim and drop its source citations, since the claim is now well established",
+        "text": "Choose one canonical wording for each claim and retain only the highest-authority source, discarding redundant supporting citations.",
         "correct": false,
-        "explanation": "Even if the claim is well established, dropping source citations removes provenance. The recommended approach is to consolidate the near-duplicates but retain the full set of supporting source citations so the merged entry remains auditable and compliant with provenance requirements."
+        "explanation": "Selecting one authoritative source can reduce clutter, but it loses corroborating provenance and can hide meaningful disagreement among sources."
       },
       {
         "letter": "C",
-        "text": "Rewrite the duplicate claims into a single new sentence that references none of the original subagents' citations",
-        "correct": false,
-        "explanation": "Rewriting without retaining any source citations destroys the original claim-source mappings and makes the provenance untraceable. The correct approach is to consolidate the claim entry while preserving all source attributions that support it."
+        "text": "Merge equivalent claims into one canonical entry, attach the union of supporting citations, and record conflicting source details explicitly instead of erasing them.",
+        "correct": true,
+        "explanation": "The canonical claim removes duplication while the source union preserves traceability. Explicitly retaining disagreements prevents normalization from turning conflicting evidence into false consensus."
       },
       {
         "letter": "D",
-        "text": "Consolidate the duplicates into one entry while retaining the full set of source citations that support it",
-        "correct": true,
-        "explanation": "The CCAR-F exam subdomain 5.6 on Preserve information provenance and handle uncertainty in multi-source synthesis requires maintaining structured claim-source mappings when combining findings. Because the near-duplicates are supported by different source citations, consolidating them into a single claim entry while retaining the full set of distinct supporting citations keeps every attribution traceable and auditable. Dropping any subagent's citation would lose provenance."
+        "text": "Merge equivalent claims and move all citations to a report-level bibliography, leaving individual claims without a source mapping.",
+        "correct": false,
+        "explanation": "A bibliography preserves the source list globally but breaks claim-level provenance. Reviewers can no longer determine which source supports which merged statement."
       }
     ],
-    "correct": "D",
+    "correct": "C",
     "select": 1,
     "source": "practice-bank",
     "fingerprint": "c0df0b02acf5388f1bb19458b6b9127c2113df02d76916b8324da4d3bb037bef"

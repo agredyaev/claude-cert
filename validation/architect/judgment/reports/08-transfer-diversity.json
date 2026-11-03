@@ -1,0 +1,18 @@
+{
+  "validator": "08-transfer-diversity",
+  "status": "PASS",
+  "summary": "Checks whether the same rule is practiced across varied contexts instead of memorized templates.",
+  "findings": [],
+  "metrics": {
+    "foundation": {
+      "objectives": 30,
+      "near_duplicate_pairs_ge_0_75": 0,
+      "flags": []
+    },
+    "professional": {
+      "objectives": 38,
+      "near_duplicate_pairs_ge_0_75": 0,
+      "flags": []
+    }
+  }
+}

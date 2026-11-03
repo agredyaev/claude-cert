@@ -6,23 +6,23 @@
   "metrics": {
     "foundation": {
       "single_answer_positions": {
-        "D": 120,
-        "B": 121,
-        "A": 128,
-        "C": 102
+        "D": 74,
+        "B": 74,
+        "A": 87,
+        "C": 59
       },
-      "max_position_deviation": 0.134,
+      "max_position_deviation": 0.197,
       "median_correct_wrong_length_ratio": 1.016,
       "duplicate_options": 0
     },
     "professional": {
       "single_answer_positions": {
-        "D": 81,
-        "A": 81,
-        "B": 80,
-        "C": 77
+        "B": 50,
+        "A": 55,
+        "D": 63,
+        "C": 56
       },
-      "max_position_deviation": 0.034,
+      "max_position_deviation": 0.125,
       "median_correct_wrong_length_ratio": 1.0,
       "duplicate_options": 0
     }

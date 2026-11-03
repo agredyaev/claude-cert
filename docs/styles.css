@@ -1682,3 +1682,45 @@ h1, h2, h3 { text-wrap: balance; }
     grid-column: 1 / -1;
   }
 }
+
+/* ---------- Foundation scenario transfer ---------- */
+.cases-page { max-width: 1040px; }
+.scenario-list { display:grid; gap:18px; margin-top:28px; }
+.scenario-card { border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-elev); padding:24px; }
+.scenario-card-head { display:flex; justify-content:space-between; gap:18px; align-items:start; }
+.scenario-card-head > div { display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+.scenario-card h2 { margin:0; font-size:1.05rem; }
+.scenario-brief { margin:12px 0 18px; color:var(--muted); line-height:1.55; max-width:86ch; }
+.scenario-prompts { display:grid; gap:16px; }
+.case-prompt { padding-top:16px; border-top:1px solid var(--border); }
+.case-prompt h3 { margin:0 0 8px; font-size:.88rem; }
+.case-prompt p { margin:0 0 10px; color:var(--muted); line-height:1.5; }
+.case-prompt label { display:block; margin-bottom:6px; color:var(--muted); font-size:.76rem; font-weight:600; }
+.case-prompt textarea { width:100%; box-sizing:border-box; min-height:110px; resize:vertical; padding:10px 12px;
+  border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--bg); color:var(--fg);
+  font:inherit; font-size:.84rem; line-height:1.5; }
+.case-prompt textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
+.case-prompt details { margin-top:9px; }
+.case-prompt summary { cursor:pointer; color:var(--accent); font-size:.78rem; font-weight:600; }
+.case-prompt details ul { margin:10px 0 0; padding-left:20px; color:var(--muted); font-size:.8rem; line-height:1.5; }
+.case-prompt details li { margin:5px 0; }
+.scenario-complete input:disabled + span { color:var(--subtle); }
+.scenario-complete input:not(:disabled) + span { color:var(--fg); }
+@media (max-width:760px) {
+  .scenario-card { padding:18px; }
+  .scenario-card-head { flex-direction:column; }
+}
+
+/* ---------- Professional capstone ---------- */
+.capstone-page .scenario-card label,
+.capstone-stress label { display:block; margin-bottom:6px; color:var(--muted); font-size:.76rem; font-weight:600; }
+.capstone-page textarea { width:100%; box-sizing:border-box; resize:vertical; padding:10px 12px;
+  border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--bg); color:var(--fg);
+  font:inherit; font-size:.84rem; line-height:1.5; }
+.capstone-page textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
+.capstone-item details { margin-top:10px; }
+.capstone-item summary { cursor:pointer; color:var(--accent); font-size:.78rem; font-weight:600; }
+.capstone-item details ul { margin:10px 0 0; padding-left:20px; color:var(--muted); font-size:.8rem; line-height:1.5; }
+.capstone-state { display:inline-block; margin-top:10px; color:var(--subtle); font-size:.72rem; }
+.is-evidenced .capstone-state { color:var(--good); }
+.is-evidenced { border-color:color-mix(in srgb, var(--good) 45%, var(--border)); }

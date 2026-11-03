@@ -1,0 +1,1910 @@
+{
+  "version": 1,
+  "purpose": "Canonical learning graph: official scope -> finer guidance -> cases -> questions -> evidence.",
+  "tracks": {
+    "CCAR-F": {
+      "code": "CCAR-F",
+      "domains": {
+        "1": {
+          "name": "Agentic Architecture & Orchestration",
+          "weight": 27,
+          "tasks": [
+            {
+              "id": "1.1",
+              "statement": "Design and implement agentic loops for autonomous task execution",
+              "score_report_units": [
+                {
+                  "id": "A1",
+                  "statement": "Configure agentic loops to emit multiple tool calls within a single response turn, enabling parallel execution of independent subtasks and reducing total round-trip latency.",
+                  "explanation": "An agentic loop may receive several tool_use blocks in one assistant response. Execute independent calls together, then return one user message containing a tool_result for each matching tool_use_id; the IDs, rather than list position, pair requests and results. This reduces avoidable round trips while preserving the model-driven loop.",
+                  "example": "A research coordinator asks for the company profile, the latest filing, and a currency rate. Those lookups do not depend on one another, so the executor starts all three in the same turn. A later calculation waits until the filing and rate results are available.",
+                  "guidance": "Use parallel calls only when their inputs and side effects are independent. Keep the full message history and original tool schemas on the follow-up request, and preserve one correctly keyed result per call so Claude can decide what comes next."
+                },
+                {
+                  "id": "A2",
+                  "statement": "Explain how the agentic loop uses model responses and stop_reason signals to decide whether to continue tool execution or terminate and return a final response.",
+                  "explanation": "The stop_reason field is the loop's control signal. A response with tool_use asks the application to execute requested tools and send their results back; end_turn means Claude has finished its response. Text such as 'done', the presence of a text block, or an arbitrary iteration count is not a reliable completion test.",
+                  "example": "Claude first returns tool_use to inspect an order. The application performs the lookup and continues. Claude then returns end_turn with the answer, so the application presents it. If max_tokens appears instead, the response is incomplete and needs application-specific handling.",
+                  "guidance": "Branch on the API field, not on wording in the generated answer. Treat each tool turn as a new loop iteration, append tool results in the required message structure, and define an explicit failure or escalation outcome for unexpected termination reasons."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 8,
+                "held_out": 7,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "1.2",
+              "statement": "Orchestrate multi-agent systems with coordinator-subagent patterns",
+              "score_report_units": [
+                {
+                  "id": "A4",
+                  "statement": "Evaluate multi-agent orchestration patterns—coordinator-worker, parallel execution, and sequential pipelines—to select the structure best satisfying research coverage, latency, and reliability requirements.",
+                  "explanation": "Coordinator-worker, parallel, and sequential pipeline patterns solve different constraints. A coordinator is useful when it must route and synthesize; parallel workers reduce wall-clock time for independent work; sequential stages provide predictable ordering. The right design balances coverage, latency, coordination overhead, and recovery needs.",
+                  "example": "For a literature report, independent agents search three topics in parallel and a coordinator synthesizes their cited findings. For invoice processing with a fixed metadata-then-line-items sequence, a sequential pipeline is easier to test and reason about.",
+                  "guidance": "Choose a workflow when the steps are known and reproducibility matters. Choose adaptive orchestration when the required workers depend on discoveries. Keep communication through the coordinator, which should detect missing coverage and route a focused follow-up rather than duplicating every task."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 11,
+                "held_out": 5,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "1.3",
+              "statement": "Configure subagent invocation, context passing, and spawning",
+              "score_report_units": [
+                {
+                  "id": "B1",
+                  "statement": "Construct subagent prompts that include all findings, structured data, and source metadata required for task completion without returning to the coordinator for missing context.",
+                  "explanation": "Subagents operate in isolated context, so a prompt such as 'analyze the document above' is incomplete unless the document was actually passed. A self-contained delegation includes the task, relevant source data, prior findings, metadata, constraints, and the output schema that the coordinator needs to synthesize the result.",
+                  "example": "A research worker receives the full article text, publication date, source URL, the coordinator's question, and a required result shape containing claims, supporting passages, and uncertainty. It can finish without asking what article or citation format the coordinator meant.",
+                  "guidance": "Delimit source data, metadata, instructions, and expected output so they cannot be confused. Pass the smallest complete context, but never omit a fact needed to make a decision. Require citations or identifiers in the result when downstream synthesis must preserve provenance."
+                },
+                {
+                  "id": "B2",
+                  "statement": "Evaluate subagent delegation strategies—goal-oriented versus procedural instructions—and select the approach that enables adaptive behavior while maintaining coordinator visibility and control.",
+                  "explanation": "Goal-oriented delegation states the outcome, boundaries, and quality criteria while leaving the worker room to adapt its investigation. Procedural delegation dictates every action and can prevent useful responses to unexpected evidence. The coordinator still retains visibility through a structured result and explicit scope.",
+                  "example": "Instead of ordering a worker to run three named searches, the coordinator asks it to determine whether an API has authentication risks, inspect the relevant evidence, and return findings with severity and file or source references. The worker can follow a new dependency if one appears.",
+                  "guidance": "Specify the objective, allowed scope, stop conditions, and result contract. Reserve rigid step sequences for genuinely fixed workflows. Ask for concise progress or coverage metadata so adaptive worker behavior remains observable and the coordinator can re-route incomplete work."
+                },
+                {
+                  "id": "B3",
+                  "statement": "Configure subagent invocations with appropriate tool restrictions, context scoping, and system prompts that constrain each agent to its designated role.",
+                  "explanation": "An AgentDefinition makes a subagent's role concrete through its description, system prompt, and allowed tools. Context scoping and tool restrictions reduce accidental work outside that role; the system prompt explains the responsibility and output expectations. These controls complement one another rather than replacing least-privilege access.",
+                  "example": "A billing-review agent can read invoices, calculate totals, and escalate, but cannot send email or issue refunds. Its system prompt says to report discrepancies with line references. A separate notification agent owns customer messaging.",
+                  "guidance": "Give each worker the narrowest useful tools and a role-specific prompt. Pass task context explicitly, define the expected result, and keep the coordinator's orchestration tools on the coordinator. Treat permissions as an architectural boundary, not as a suggestion in prose."
+                },
+                {
+                  "id": "B4",
+                  "statement": "Diagnose misconfigured subagent spawning by identifying missing tool permissions, incorrect AgentDefinition parameters, or absent coordinator-to-subagent wiring.",
+                  "explanation": "Spawning failures often come from wiring rather than model reasoning. The coordinator must be allowed to call Task, the AgentDefinition must have valid role and tool settings, and the application must connect the returned worker result back into the coordinator's flow. A missing link can look like a worker that simply ignored its assignment.",
+                  "example": "A coordinator has a well-written delegation prompt but never spawns a worker because Task is absent from allowedTools. In another case, the worker runs but has no Read permission and returns an empty review. Both are configuration defects with different fixes.",
+                  "guidance": "Inspect the chain in order: coordinator permission, invocation parameters, worker role and system prompt, allowed tools, context payload, and result aggregation. Verify that the worker's output is actually delivered to the coordinator, then classify missing context separately from an unavailable tool."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 9,
+                "held_out": 6,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "1.4",
+              "statement": "Implement multi-step workflows with enforcement and handoff patterns",
+              "score_report_units": [
+                {
+                  "id": "A3",
+                  "statement": "Design orchestration-layer safeguards ensuring every agent session ends with a completed resolution or human escalation, regardless of how the agentic loop terminates.",
+                  "explanation": "A robust orchestration layer owns the terminal states of a session. It should record either a completed resolution or a human escalation, even when a tool fails, the model stops unexpectedly, or a policy blocks the requested action. Prompt instructions alone cannot guarantee that every path reaches one of those outcomes.",
+                  "example": "A support agent verifies an order, but the refund service times out twice. The coordinator marks the case unresolved, preserves the verification and error details, and creates a human handoff rather than silently ending with an apology or retrying forever.",
+                  "guidance": "Model the outcome as explicit state, such as resolved, escalated, or failed pending escalation. Put guards around terminal paths, attach the reason and evidence to an escalation, and separate recoverable tool retries from the final decision that the session cannot continue autonomously."
+                },
+                {
+                  "id": "A8",
+                  "statement": "Design structured handoff packages that preserve accumulated context, findings, and authorization state when transferring control between agent steps or to a human operator.",
+                  "explanation": "A handoff is a structured transfer of state, not a sentence saying that another agent should take over. It must preserve the facts needed to act, what has already happened, the evidence behind the conclusion, authorization or approval status, and a clear next action. This prevents the recipient from reconstructing the case.",
+                  "example": "A refund case hands a human the customer and order IDs, damaged-item evidence, verification and replacement attempts, requested amount, escalation reason, and whether approval is still required. The human can decide immediately without access to the original transcript.",
+                  "guidance": "Define a stable handoff schema with identifiers, issue summary, actions taken, findings, unresolved questions, recommended action, and escalation reason. Include only verified authorization state; never imply that a human approved an operation when the record says it is pending."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 9,
+                "held_out": 8,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "1.5",
+              "statement": "Apply Agent SDK hooks for tool call interception and data normalization",
+              "score_report_units": [
+                {
+                  "id": "E1",
+                  "statement": "Apply PreToolUse and PostToolUse hook patterns to enforce business rules and policy constraints not delegated to model discretion.",
+                  "explanation": "Hooks intercept a tool call or result at a fixed lifecycle point, which makes them suitable for rules that must not depend on model compliance. PreToolUse can deny, ask, or update an outgoing action; PostToolUse can normalize a result before Claude sees it. This gives programmatic policy a deterministic boundary.",
+                  "example": "A PreToolUse hook blocks a refund above the approved threshold and redirects it to escalation. A PostToolUse hook converts timestamps from several services into one ISO format before the coordinator reasons over the results.",
+                  "guidance": "Use hooks for financial, legal, security, and data-integrity constraints, and use prompts for preferences. Keep hook behavior narrow and observable: identify the affected tool, return a useful reason, and specify the safe next action when a call is denied."
+                },
+                {
+                  "id": "E2",
+                  "statement": "Implement PostToolUse hooks that automatically enforce code quality constraints—such as formatting, linting, or test execution—after every file edit, independent of model instruction-following.",
+                  "explanation": "A PostToolUse hook can run formatting, linting, or tests after a file edit, so quality checks occur independently of whether Claude remembered an instruction. This differs from a general policy hook: the trigger is a successful edit and the result feeds concrete validation feedback into the next model turn.",
+                  "example": "After Claude edits a TypeScript file, a PostToolUse hook runs the repository formatter and targeted tests. It returns the actual lint error and failing assertion, allowing Claude to correct the code before the workflow reports completion.",
+                  "guidance": "Attach checks to the edit event and scope them to the affected project or file type so feedback remains timely. Return actionable diagnostics, preserve the original tool result when useful, and treat a failed check as unresolved work rather than silently accepting the edit."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 7,
+                "held_out": 9,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "1.6",
+              "statement": "Design task decomposition strategies for complex workflows",
+              "score_report_units": [
+                {
+                  "id": "A5",
+                  "statement": "Decompose complex tasks into dynamically generated subtasks that adapt as new information is discovered, rather than executing a fixed sequence regardless of intermediate findings.",
+                  "explanation": "Adaptive decomposition means the system discovers the next useful subtask from current findings. It starts by mapping the problem, then changes priorities or creates new work when a dependency, gap, or risk appears. A fixed checklist cannot represent scope that is unknown until investigation begins.",
+                  "example": "A codebase investigation first maps modules and finds that the payment path calls an undocumented gateway. The coordinator adds a gateway contract investigation before reviewing payment retries, because the new dependency changes the risk and the next useful question.",
+                  "guidance": "Use fixed chaining for predictable stages such as extraction followed by validation. Use adaptive decomposition for open-ended work: summarize discoveries, rank the next questions, and re-plan when evidence changes scope. Do not confuse adaptive planning with merely running a fixed list in parallel."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 11,
+                "held_out": 6,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "1.7",
+              "statement": "Manage session state, resumption, and forking",
+              "score_report_units": [
+                {
+                  "id": "A6",
+                  "statement": "Design state persistence strategies for multi-agent pipelines that enable reliable resumption after interruption without repeating completed work or losing prior findings.",
+                  "explanation": "Persistence for a multi-agent pipeline records enough state to resume from a checkpoint: task status, inputs, completed outputs, identifiers, findings, and known gaps. Saving only a final transcript makes interruption expensive because the coordinator cannot distinguish completed work from work that still needs execution.",
+                  "example": "A 12-file review completes eight files before the worker process stops. A manifest records those eight outputs and marks four as pending. On restart, the coordinator loads the manifest, skips completed files, and runs only the pending reviews before the integration pass.",
+                  "guidance": "Make checkpoints durable and outputs idempotent, so a repeated operation does not duplicate comments or records. Store partial results and coverage alongside status, and let the coordinator derive the next action from state rather than assuming that a prior process reached its last step."
+                },
+                {
+                  "id": "A7",
+                  "statement": "Apply session resumption techniques—including targeted re-analysis of changed files and context injection—to restore agent state accurately without repeating prior work.",
+                  "explanation": "Resuming a session restores useful context only when its assumptions still match the files and systems being inspected. Changed files require targeted re-analysis, while a concise summary can inject the prior findings and current status without replaying every old tool result. A stale resume can produce confident advice about code that no longer exists.",
+                  "example": "An agent reviewed an authentication module, then a developer changed its token parser. When work resumes, the coordinator names the changed file, re-reads the relevant callers, and supplies the prior findings as context so the review checks what is new rather than repeating the unchanged discovery.",
+                  "guidance": "Before resuming, compare the saved state with the current revision and identify changed inputs. Revalidate affected findings, inject exact identifiers and remaining work, and start fresh with a structured summary when the old context is too stale to trust."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/cli-reference"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 9,
+                "held_out": 7,
+                "multiple_response": 1
+              }
+            }
+          ]
+        },
+        "2": {
+          "name": "Tool Design & MCP Integration",
+          "weight": 18,
+          "tasks": [
+            {
+              "id": "2.1",
+              "statement": "Design effective tool interfaces with clear descriptions and boundaries",
+              "score_report_units": [
+                {
+                  "id": "J4",
+                  "statement": "Write MCP tool descriptions that clearly distinguish each tool's purpose, input formats, use-case examples, boundaries, and relationships to semantically similar tools, reducing misrouting and incorrect tool selection.",
+                  "explanation": "An MCP tool description is the model's main routing signal. It should say what the tool does and returns, accepted inputs with examples, edge cases, limits, and when to choose it over a similar tool. Distinct boundaries reduce misrouting better than generic names or short descriptions.",
+                  "example": "`lookup_customer` accepts an email or numeric ID and returns one verified profile; `search_orders` accepts a verified customer ID and returns matching orders. Their descriptions state the dependency, so the model does not use the order search as an identity lookup.",
+                  "guidance": "Describe purpose, input format, output shape, use and non-use cases, and nearby alternatives. If two tools remain semantically indistinguishable, narrow or rename one and make its unique value explicit rather than relying on the model to infer the difference."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 12,
+                "held_out": 5,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "2.2",
+              "statement": "Implement structured error responses for MCP tools",
+              "score_report_units": [
+                {
+                  "id": "J5",
+                  "statement": "Implement MCP tool error handling that surfaces structured, type-specific error information to the agent—including recoverability status and suggested next actions—rather than generic failure messages.",
+                  "explanation": "An MCP error should tell the agent what failed and what recovery is safe. Structured fields such as category, retryability, attempted input, partial results, and next actions distinguish a transient access problem from invalid input, a policy violation, or a valid empty result.",
+                  "example": "A search timeout returns `isError: true`, category `transient`, retryable true, the attempted query, and no partial results. A successful search with zero matches returns `isError: false` and an empty list, so the coordinator does not retry a valid absence.",
+                  "guidance": "Return typed errors with human-readable detail and recovery metadata. Retry transient failures locally a bounded number of times, fix validation errors before retrying, escalate permission or business failures, and preserve partial results and coverage gaps for the coordinator."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 8,
+                "held_out": 8,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "2.3",
+              "statement": "Distribute tools appropriately across agents and configure tool choice",
+              "score_report_units": [
+                {
+                  "id": "B7",
+                  "statement": "Configure tool distribution in multi-agent systems by assigning each subagent only the tools required for its designated role, reducing decision complexity and preventing out-of-role tool invocations.",
+                  "explanation": "Tool distribution should follow the subagent's responsibility. Extra tools increase the number of choices Claude must distinguish and create opportunities for out-of-role actions. A small, relevant set improves routing reliability and acts as a permission boundary for the multi-agent design.",
+                  "example": "A search worker receives web search and document-read tools, while a synthesis worker receives only the structured findings and a report writer. Neither needs the refund, deployment, or database mutation tools used elsewhere in the system.",
+                  "guidance": "Start with the role's essential tools and add a narrowly scoped utility only when a real task requires it. Keep shared access small, explain each tool's boundary, and let the coordinator handle cross-role operations that need broader authority."
+                },
+                {
+                  "id": "H4",
+                  "statement": "Configure the tool_choice parameter to guarantee tool invocation when structured output is required, and sequence multi-tool workflows so prerequisite data is obtained before dependent tools are called.",
+                  "explanation": "tool_choice controls whether Claude may answer in text, must call some tool, or must call a named tool. A forced call is useful when workflow order matters, such as collecting metadata before an enrichment lookup. Subsequent dependent calls should receive the prerequisite result rather than racing ahead.",
+                  "example": "A document workflow forces `extract_metadata` first, then permits an enrichment tool using the returned document type and identifier. If metadata extraction finds no identifier, the coordinator asks for clarification or records an unresolved field instead of calling enrichment with a guess.",
+                  "guidance": "Use auto for open conversation, any for guaranteed structured invocation among several tools, and a named choice for a required first step. Encode dependencies in orchestration state and tool schemas; do not rely solely on the order in which Claude happens to list calls."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 9,
+                "held_out": 7,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "2.4",
+              "statement": "Integrate MCP servers into Claude Code and agent workflows",
+              "score_report_units": [
+                {
+                  "id": "J1",
+                  "statement": "Distinguish between MCP resources and tools, and expose server content as resources to reduce exploratory tool calls and improve agent efficiency in cross-system queries.",
+                  "explanation": "MCP tools are callable functions that take actions or retrieve data on demand; resources are content the client can read as context. A resource can expose a catalog, schema, or document map up front, reducing exploratory tool calls when the agent needs to understand what is available rather than perform an action.",
+                  "example": "An MCP server exposes a database schema and project-document catalog as resources. The agent reads those to plan a query, then calls a narrowly defined search tool for the actual lookup. It does not call a tool repeatedly just to discover table names.",
+                  "guidance": "Expose stable descriptive content as resources and operational actions as tools. Keep resource identifiers and returned metadata clear, and use tools for mutations or parameterized work where the model must request an action explicitly."
+                },
+                {
+                  "id": "J2",
+                  "statement": "Integrate MCP servers into Claude Code and agent applications by selecting the correct server scope, configuring authentication via environment variable expansion, and verifying tool discovery.",
+                  "explanation": "MCP integration requires choosing the right configuration scope, keeping credentials outside version control, and confirming that the client discovers the expected server tools. Project configuration supports shared team wiring; environment-variable expansion lets each environment supply its own secret without embedding the token.",
+                  "example": "A team configures a GitHub MCP server in the project `.mcp.json` with `${GITHUB_TOKEN}`. Each developer or CI environment supplies that variable, and the team verifies the connection and discovered tools before the agent workflow depends on them.",
+                  "guidance": "Use project scope for shared integrations and user scope for personal experiments. Expand secrets from the environment, inspect the resulting tool list, and test representative calls or an MCP inspector so a connection that starts successfully is not mistaken for a correctly wired server."
+                },
+                {
+                  "id": "J3",
+                  "statement": "Configure MCP servers and project settings at the correct scope—project-level for shared team tooling and user-level for personal or experimental configurations.",
+                  "explanation": "Configuration scope communicates ownership and distribution. Project-level MCP settings are shared with the repository and should describe team tooling without committing secrets; user-level settings are personal and suit experiments or private services. Choosing the wrong scope either hides a needed integration from teammates or spreads a private one too widely.",
+                  "example": "A shared issue tracker server belongs in the project's configuration so every contributor receives the same tools. A developer's prototype data server belongs in user configuration and is not required for cloning or building the repository.",
+                  "guidance": "Place integrations required by the workflow at project scope, using environment variables for credentials. Keep optional or personal servers at user scope, and document any assumptions that the application makes about tool availability so missing experimental services fail clearly."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 9,
+                "held_out": 6,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "2.5",
+              "statement": "Select and apply built-in tools (Read, Write, Edit, Bash, Grep, Glob) effectively",
+              "score_report_units": [
+                {
+                  "id": "F2",
+                  "statement": "Select the appropriate Claude Code built-in tool—Grep, Glob, Read, or Bash—based on the nature of the search or file operation required for a given codebase task.",
+                  "explanation": "Built-in tools have distinct jobs. Glob discovers files by name or pattern; Grep searches file contents; Read loads a file; Edit makes a precise replacement; Write creates or replaces a file; Bash runs a shell operation when no narrower file tool fits. Choosing by operation avoids noisy or risky exploration.",
+                  "example": "Finding every test file uses Glob, locating `parseInvoice` uses Grep, understanding its implementation uses Read, changing one unique condition uses Edit, and running the test suite uses Bash. A broad shell search is unnecessary when Grep expresses the intent directly.",
+                  "guidance": "Match the tool to the question: names versus contents, inspection versus mutation, or file work versus command execution. If an edit target is not unique, read the file and make a controlled whole-file update rather than applying an ambiguous replacement."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s3",
+                "s4"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 8,
+                "held_out": 7,
+                "multiple_response": 0
+              }
+            }
+          ]
+        },
+        "3": {
+          "name": "Claude Code Configuration & Workflows",
+          "weight": 20,
+          "tasks": [
+            {
+              "id": "3.1",
+              "statement": "Configure CLAUDE.md files with appropriate hierarchy, scoping, and modular organization",
+              "score_report_units": [
+                {
+                  "id": "D1",
+                  "statement": "Select the correct Claude Code configuration mechanism—CLAUDE.md, .claude/rules/ with glob patterns, Skills, hooks, or settings permissions—based on guidance type and when it should apply.",
+                  "explanation": "Claude Code configuration mechanisms have different scopes and guarantees. CLAUDE.md carries generally useful guidance; path-scoped rules load conventions conditionally; Skills provide on-demand workflow instructions; hooks and settings permissions enforce tool-time controls. Selecting among them depends on what the instruction means and when it should apply.",
+                  "example": "A repository-wide naming convention belongs in CLAUDE.md. A testing rule for only `src/api/**` belongs in a path-scoped rule. A reusable release workflow belongs in a Skill, while blocking pushes to a protected branch belongs in a hook or permission setting.",
+                  "guidance": "Ask two questions: is this guidance or a guarantee, and is it universal or conditional? Keep always-loaded instructions focused, scope workflow content to invocation, and place rules that must survive model discretion at the enforcement boundary."
+                },
+                {
+                  "id": "D2",
+                  "statement": "Distinguish instructions that must be enforced through settings permissions or hooks from those appropriately placed in CLAUDE.md, and restructure configurations accordingly.",
+                  "explanation": "CLAUDE.md influences behavior but does not remove a tool or guarantee that a rule will be obeyed. Settings permissions and hooks operate at the action boundary, so they can allow, ask, deny, update, or validate a tool call regardless of the model's wording. The distinction matters for safety and compliance.",
+                  "example": "'Use named exports' is useful project guidance in CLAUDE.md. 'Never push directly to main' requires a pre-tool control that denies the push or asks for approval, because a prompt could be forgotten or overridden during a long session.",
+                  "guidance": "Put conventions, examples, and preferred workflows in the appropriate instruction file. Put financial, legal, security, or irreversible-action rules in deterministic controls, and make the control's decision and escalation path explicit so failures are visible."
+                },
+                {
+                  "id": "D3",
+                  "statement": "Select the appropriate method for providing project context to Claude Code—@ references, CLAUDE.md, or inline description—based on reusability, specificity, and cross-session need.",
+                  "explanation": "Inline context is specific to one request, CLAUDE.md is persistent guidance loaded for the project or user scope, and an @ reference imports reusable file content into the instruction context. An import organizes content but still expands it into context, so it improves maintainability rather than shrinking the loaded material.",
+                  "example": "A one-off request can state the exact function and acceptance criteria inline. A repository convention belongs in CLAUDE.md. Shared API conventions used by several instruction files can live in `standards/api.md` and be included with an @ path.",
+                  "guidance": "Choose inline text for a narrow, non-repeating request; persistent files for conventions that should survive sessions; and @ references for modular reuse. Keep imports readable and resolve relative paths from the file containing the reference."
+                }
+              ],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 11,
+                "held_out": 6,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "3.2",
+              "statement": "Create and configure custom slash commands and skills",
+              "score_report_units": [
+                {
+                  "id": "D4",
+                  "statement": "Create and deploy custom slash commands in the correct project or user directory so they are available to intended users and invoked on demand for task-specific workflows.",
+                  "explanation": "The CCAR-F Exam Guide v1.0 uses both custom slash-command and Skill terminology. Current Claude Code has merged custom commands into Skills: project Skills live under .claude/skills/<name>/SKILL.md, personal Skills under ~/.claude/skills/<name>/SKILL.md, and both can be invoked with /<name>. Existing .claude/commands/<name>.md files remain a compatible legacy format, so an architect must recognize them without treating them as the preferred format for new work.",
+                  "example": "A repository still contains .claude/commands/review.md; it continues to expose /review. When the team expands that workflow with reference files and scripts, they migrate it to .claude/skills/review/SKILL.md and keep it at project scope so every clone receives the same procedure.",
+                  "guidance": "For current implementations, prefer Skills for new reusable workflows. Use project scope for team-shared behavior and personal scope for private workflows. Treat .claude/commands/ as legacy-compatible/exam-snapshot knowledge, and evaluate invocation control, isolation, supporting files, and tool restrictions as part of the workflow contract."
+                },
+                {
+                  "id": "D5",
+                  "statement": "Apply the context: fork frontmatter option to Skill and slash command configurations that should execute in an isolated subagent context, preventing cross-contamination of session state.",
+                  "explanation": "The `context: fork` frontmatter option runs a Skill or slash command in an isolated subagent context. Isolation keeps verbose discovery, intermediate reasoning, and task-specific state from crowding the invoking conversation. It is a context boundary, not a replacement for passing the files, facts, and output contract the fork needs.",
+                  "example": "A `/review` Skill reads many files and returns a short findings report. With `context: fork`, those reads stay in the isolated review context, while the main session receives the report and can decide whether to act on it.",
+                  "guidance": "Use a fork when the workflow is self-contained and its output is easier to consume than its full trace. Combine it with `allowed-tools` and a clear result format, and explicitly provide any context the fork cannot inherit from the parent session."
+                }
+              ],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 12,
+                "held_out": 4,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "3.3",
+              "statement": "Apply path-specific rules for conditional convention loading",
+              "score_report_units": [],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 8,
+                "held_out": 8,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "3.4",
+              "statement": "Determine when to use plan mode vs direct execution",
+              "score_report_units": [
+                {
+                  "id": "C3",
+                  "statement": "Select the appropriate agentic review architecture—plan mode, direct execution, or multi-phase workflow—based on task scope, risk level, reversibility, and human approval requirements.",
+                  "explanation": "Plan mode, direct execution, and multi-phase workflows differ in when decisions and approvals occur. Direct execution fits a small, reversible change with a clear path. Planning creates a reviewable design for broad or uncertain work. Multi-phase workflows separate investigation, implementation, and approval when risk or dependencies justify the boundary.",
+                  "example": "Changing a typo in one file can be direct. A database migration affecting many services merits a plan before edits, followed by an approval gate. A high-risk deployment may use investigation, implementation, validation, and human approval as separate phases.",
+                  "guidance": "Assess scope, uncertainty, reversibility, and the consequences of a wrong action. Keep irreversible or high-impact steps behind explicit approval or programmatic controls, while avoiding planning overhead for a well-understood, low-risk fix."
+                }
+              ],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 9,
+                "held_out": 8,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "3.5",
+              "statement": "Apply iterative refinement techniques for progressive improvement",
+              "score_report_units": [
+                {
+                  "id": "F4",
+                  "statement": "Improve automated test generation quality by providing existing test files as context, defining fixture conventions, and specifying criteria that distinguish meaningful behavioral tests from trivial assertions.",
+                  "explanation": "Meaningful automated test generation depends on behavioral context, not merely a request to add assertions. Existing tests reveal conventions and boundaries; fixtures show setup and representative data; explicit criteria prevent tautological tests that only restate implementation details or compare a value with itself.",
+                  "example": "For a date parser, the generator sees existing fixture factories and tests for valid dates. It adds cases for an invalid calendar date and a documented format boundary, asserting the public parse result or error behavior rather than checking that an internal helper was called.",
+                  "guidance": "Give the generator nearby tests, fixture conventions, and the behavior that must remain true. Require cases that could expose a plausible regression, including meaningful edge conditions, and reject tests that merely assert symbol existence or duplicate the implementation's own calculation."
+                },
+                {
+                  "id": "I5",
+                  "statement": "Structure iterative refinement workflows by providing concrete input-output examples, targeted feedback on specific failures, and batched issue descriptions for consolidated evaluation.",
+                  "explanation": "Iterative refinement improves a prompt through concrete evidence: representative inputs, ideal outputs, targeted feedback, and a repeatable comparison. Batching related issue descriptions lets the model address known failure patterns together, while a precise correction explains what was wrong and what should change.",
+                  "example": "A reviewer repeatedly reports a valid project convention as a defect. The team adds a paired input-output example showing the accepted pattern, names the false-positive rule, and evaluates the revised prompt on a set of past findings before adopting it.",
+                  "guidance": "Record the failure and desired behavior, change the smallest relevant prompt or schema element, and compare results on varied cases. Prefer concrete criteria and examples over stronger adjectives, and keep unresolved failures visible rather than grading the revision only on one favorable input."
+                }
+              ],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 10,
+                "held_out": 6,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "3.6",
+              "statement": "Integrate Claude Code into CI/CD pipelines",
+              "score_report_units": [
+                {
+                  "id": "D6",
+                  "statement": "Configure Claude Code CLI invocations for automated CI/CD pipelines using non-interactive flags, permission modes, and cost and turn limits that prevent runaway executions.",
+                  "explanation": "CI must invoke Claude non-interactively and make its output machine-readable. The CLI print mode processes a prompt and exits; output format and schema options make results parsable, while permission modes and turn or cost limits constrain unattended execution. Interactive assumptions do not belong in a pipeline.",
+                  "example": "A pull-request job runs Claude in print mode with a review prompt, JSON output, and a schema for findings. The job parses the result into comments, applies a bounded permission configuration, and fails or requests review according to the returned severity.",
+                  "guidance": "Define a deterministic prompt, explicit output contract, and bounded runtime or spend policy. Keep credentials in the CI secret system, use an independent review context when checking generated changes, and make duplicate-comment handling part of the pipeline state."
+                }
+              ],
+              "case_families": [
+                "s2",
+                "s4",
+                "s5"
+              ],
+              "sources": [
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/cli-reference",
+                "https://code.claude.com/docs/en/hooks",
+                "https://code.claude.com/docs/en/github-actions"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 12,
+                "held_out": 4,
+                "multiple_response": 0
+              }
+            }
+          ]
+        },
+        "4": {
+          "name": "Prompt Engineering & Structured Output",
+          "weight": 20,
+          "tasks": [
+            {
+              "id": "4.1",
+              "statement": "Design prompts with explicit criteria to improve precision and reduce false positives",
+              "score_report_units": [
+                {
+                  "id": "I2",
+                  "statement": "Design prompt criteria that define explicit inclusion and exclusion boundaries, preventing the model from generating findings or extractions in categories where performance is unreliable.",
+                  "explanation": "Explicit inclusion and exclusion criteria tell a model where a category begins and ends. This is more reliable than a broad request to find everything because the prompt states what counts, what does not count, and how borderline evidence should be represented.",
+                  "example": "A security review includes exploitable authorization flaws and secrets exposed in production paths, but excludes stylistic naming issues and hypothetical risks with no reachable data. A finding outside those boundaries is omitted or labeled unclear according to the contract.",
+                  "guidance": "Write observable criteria with positive and negative examples, specify the evidence required for inclusion, and define an explicit outcome for uncertain cases. Keep exclusions close to the category they limit so the reviewer can apply the boundary consistently."
+                },
+                {
+                  "id": "I4",
+                  "statement": "Reduce automated review false positive rates by supplying project-specific conventions, accepted patterns, and exclusion criteria as persistent context applied on every review.",
+                  "explanation": "False positives often reflect missing project context rather than a general lack of model capability. Supplying accepted patterns, local conventions, and explicit exclusions gives the reviewer a stable reference for distinguishing a deliberate design choice from a defect.",
+                  "example": "A service intentionally uses direct SQL for a reporting path with a reviewed query helper. The review configuration records that accepted pattern and excludes it from the generic ORM warning, while still flagging unparameterized queries outside the helper.",
+                  "guidance": "Collect recurring false positives, encode the project-specific reason and boundary in persistent review context, and keep the exclusion narrow enough to preserve real findings. Re-evaluate conventions when the codebase changes instead of broadening an exclusion until every warning disappears."
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 11,
+                "held_out": 5,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "4.2",
+              "statement": "Apply few-shot prompting to improve output consistency and quality",
+              "score_report_units": [
+                {
+                  "id": "I1",
+                  "statement": "Apply extraction accuracy patterns—structured schemas with optional fields, format normalization instructions, and few-shot examples—to reduce hallucination and improve consistency across varied document formats.",
+                  "explanation": "Reliable extraction combines a structured schema with optional fields, normalization rules, and representative few-shot examples. The schema controls shape, normalization aligns variations such as dates or status labels, and examples demonstrate how the intended behavior handles real document differences without guessing missing facts.",
+                  "example": "Invoices from three vendors write dates as `03/04/25`, `4 March 2025`, and an ISO value. The prompt defines the target format, shows examples of each source style, and returns null when a purchase date is not present.",
+                  "guidance": "Define field meanings and missing-value behavior explicitly, include examples that cover different layouts and corner cases, and validate normalized values against source text. Improve the prompt from observed errors rather than adding vague instructions such as 'be accurate.'"
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 10,
+                "held_out": 6,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "4.3",
+              "statement": "Enforce structured output using tool use and JSON schemas",
+              "score_report_units": [
+                {
+                  "id": "H2",
+                  "statement": "Select and implement the most reliable structured output method—tool use with JSON schema, prompt-based formatting, or prefilled responses—based on required schema compliance strictness.",
+                  "explanation": "Tool use with a JSON schema is the strongest choice when downstream code needs reliable structure. Prompt formatting or assistant prefill can shape raw output but remains less strict and still needs parsing and validation. The method should match the consequence of malformed structure and the flexibility the task requires.",
+                  "example": "An invoice pipeline uses a forced extraction tool with a schema for totals and line items. A one-off report may use a prefilled JSON fence for convenience, but the application still parses it and handles malformed or semantically inconsistent values.",
+                  "guidance": "Prefer schema-backed tool use for production contracts, then validate meaning separately. Use lighter formatting techniques only when the output is not a strict integration boundary, and document the fallback behavior when a field is absent or ambiguous."
+                },
+                {
+                  "id": "H3",
+                  "statement": "Implement tool use with defined JSON schemas to enforce structured output compliance, and configure tool_choice to guarantee tool invocation when conversational responses would cause downstream failures.",
+                  "explanation": "Tool use plus JSON Schema constrains the response to a known structured call and eliminates many syntax and shape errors. It does not make the values true: totals can still disagree, fields can be semantically wrong, and source information can be missing. Required fields and tool_choice should reflect the contract.",
+                  "example": "An extraction tool requires `category` and `severity`, allows a nullable `owner`, and defines an `unclear` category. The application receives valid structured data, then checks whether the cited text actually supports the selected category and severity.",
+                  "guidance": "Use `tool_choice: any` when some extraction tool must run, or force a named tool when one schema is required. Mark unavailable facts nullable, include honest enum values, and add semantic validation after parsing rather than treating schema validity as accuracy."
+                },
+                {
+                  "id": "H5",
+                  "statement": "Resolve structured output truncation failures by splitting large review tasks into smaller scoped API calls and merging resulting data structures, rather than increasing max_tokens beyond practical limits.",
+                  "explanation": "A structured response can truncate when a review is too large for one request's combined context and output budget. Raising max_tokens only changes the output allowance and may not solve an oversized input or a practical response limit. Splitting the work into scoped calls and merging validated structures addresses the actual scale problem.",
+                  "example": "A long contract review exceeds the response budget when all clauses are requested together. The system extracts clause-level findings in smaller calls, tags each with its section, and merges them into a report while checking for duplicate or missing sections.",
+                  "guidance": "Separate large inputs by coherent boundaries, preserve document and section identifiers, and define a merge step that checks coverage and conflicts. Diagnose whether the limit is input, output, or both before changing token settings, and do not re-run successful chunks unnecessarily."
+                },
+                {
+                  "id": "H6",
+                  "statement": "Design extraction schemas with optional fields, nullable values, and appropriate enum definitions that allow the model to accurately represent missing or ambiguous information without fabricating values.",
+                  "explanation": "Schemas should represent the information a source can actually contain. Optional or nullable fields let the model say that a value is absent; `unclear` expresses unresolved classification; and `other` plus a detail field preserves categories outside a closed enum. Overly required fields create pressure to fabricate values.",
+                  "example": "A form extractor receives a document with a company name but no phone number and an unfamiliar document type. It returns `phone: null` and `type: other` with a detail string, rather than inventing a number or forcing the type into the closest enum.",
+                  "guidance": "Make required only what the downstream contract truly needs. Use null for missing source information, unclear for unresolved interpretation, and other for valid out-of-set values. Validate the selected enum and preserve source evidence so uncertainty remains visible."
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 11,
+                "held_out": 6,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "4.4",
+              "statement": "Implement validation, retry, and feedback loops for extraction quality",
+              "score_report_units": [
+                {
+                  "id": "I6",
+                  "statement": "Design feedback loop mechanisms that capture structured metadata about model errors and use those patterns to improve prompts, schemas, or few-shot examples in future iterations.",
+                  "explanation": "A feedback loop becomes useful when each model error carries structured metadata about what happened. Fields such as error category, detected pattern, source segment, confidence, and validation result let the team aggregate recurring failures and decide whether the fix belongs in the prompt, schema, examples, or routing.",
+                  "example": "An extractor mislabels totals when a document contains both a stated total and a calculated total. The system records the field, detected layout pattern, validation mismatch, and source type. Later analysis shows the issue is concentrated in scanned receipts, guiding a targeted example and review route.",
+                  "guidance": "Capture errors in a stable record, group them by meaningful dimensions, and change one part of the system at a time when comparing results. Use labeled outcomes to judge whether a feedback change improves the target without increasing another error class."
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 8,
+                "held_out": 8,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "4.5",
+              "statement": "Design efficient batch processing strategies",
+              "score_report_units": [
+                {
+                  "id": "H1",
+                  "statement": "Select the appropriate API processing mode—synchronous Messages API or asynchronous Message Batches API—based on latency requirements, workflow blocking behavior, and acceptable processing windows.",
+                  "explanation": "Synchronous Messages requests fit work that blocks a user or pipeline and needs a prompt response. The asynchronous Message Batches API fits many independent requests whose results can arrive later, trading immediate latency guarantees for lower-cost, scheduled processing. Batch requests do not provide a multi-turn tool loop inside one item.",
+                  "example": "A pre-merge check uses the synchronous API because the result gates a deployment. A nightly audit submits independent documents as a batch, correlates responses later, and reprocesses only failed items rather than holding a user request open.",
+                  "guidance": "Choose by deadline and interaction model: blocking decisions need synchronous handling; overnight, weekly, or queueable work can be batched. Give every request a stable custom_id, test prompts on a small sample, and make partial failure recovery explicit."
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 9,
+                "held_out": 7,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "4.6",
+              "statement": "Design multi-instance and multi-pass review architectures",
+              "score_report_units": [
+                {
+                  "id": "F3",
+                  "statement": "Design Claude Code review configurations that load the correct project standards, restrict unnecessary tool access, and produce structured output suitable for automated downstream processing.",
+                  "explanation": "A Claude Code review configuration defines how a review agent receives project standards, what tools it may use, and what result downstream automation can parse. It is about repeatable review behavior and boundaries. Loading review guidance, limiting unnecessary access, and requiring structured findings makes the reviewer easier to trust and integrate.",
+                  "example": "A CI review Skill loads the repository's security and API rules, allows Read and Grep but no deployment tool, and returns JSON findings with file, line, severity, rationale, and confidence. A separate formatter can then turn those records into comments.",
+                  "guidance": "Keep project conventions in the review context, scope tools to inspection, and define a schema that distinguishes no finding from an incomplete review. Use an independent review instance when possible so the reviewer does not inherit the author's reasoning context."
+                },
+                {
+                  "id": "I3",
+                  "statement": "Design specialized review passes that separate concerns—security, business logic, API design—into focused prompts with dedicated few-shot examples, preventing recall trade-offs from competing concerns in a single prompt.",
+                  "explanation": "Specialized review passes separate concerns that compete for attention. A security pass can use security-specific criteria and examples; a business-logic pass can inspect invariants; an API pass can inspect contracts. Independent focused passes improve recall and make each finding easier to explain.",
+                  "example": "A pull request receives separate security, business-rule, and API compatibility reviews, followed by an integration pass. The integration stage catches that a locally valid type change breaks a caller, while the focused passes avoid diluting their own checks.",
+                  "guidance": "Give each pass a narrow scope, dedicated examples, and a shared finding schema. Use an independent instance for review when possible, then run a cross-file integration pass that examines data flow and consolidates duplicates without erasing which pass found an issue."
+                }
+              ],
+              "case_families": [
+                "s5",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+                "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 11,
+                "held_out": 4,
+                "multiple_response": 0
+              }
+            }
+          ]
+        },
+        "5": {
+          "name": "Context Management & Reliability",
+          "weight": 15,
+          "tasks": [
+            {
+              "id": "5.1",
+              "statement": "Manage conversation context to preserve critical information across long interactions",
+              "score_report_units": [
+                {
+                  "id": "G2",
+                  "statement": "Apply context window optimization techniques—summarization, sliding windows, structured state objects, and selective retention—to maintain response quality as conversations exceed practical token limits.",
+                  "explanation": "Context optimization selects what must remain visible as a conversation grows. Summarization and sliding windows reduce history, structured state preserves facts, and selective retention trims irrelevant tool output. Each technique has a loss risk, especially for numbers, dates, and findings buried in the middle of a long input.",
+                  "example": "An order agent keeps a structured case-facts block with the exact customer ID, amount, and status while summarizing resolved turns. It trims a 40-field order response to the five return fields needed for the next decision.",
+                  "guidance": "Protect transactional facts outside lossy history, put key findings near a clear boundary, and keep only fields needed for the active task. Use summaries to compress stable narrative, not to replace exact values that later decisions must reproduce."
+                },
+                {
+                  "id": "G3",
+                  "statement": "Explain why conversation history must be explicitly included in each API request and identify the correct mechanism for maintaining state across multiple turns in a stateless API.",
+                  "explanation": "The Messages API is stateless between requests: Claude does not retain the prior turn unless the application sends the relevant history again. Continuing a conversation therefore means appending the new user or tool result to the existing sequence and resending it, along with the system prompt and applicable tool definitions.",
+                  "example": "After Claude requests `lookup_order`, the application sends the assistant tool_use block followed by a user tool_result block, then includes that full history in the next request. Sending only the latest result would leave Claude without the question or the requested call it is answering.",
+                  "guidance": "Treat conversation state as application-owned data. Preserve role and block structure, pair tool results with their tool_use IDs, and store or reconstruct the history deliberately when a session spans requests, workers, or a process restart."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 12,
+                "held_out": 4,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "5.2",
+              "statement": "Design effective escalation and ambiguity resolution patterns",
+              "score_report_units": [
+                {
+                  "id": "C1",
+                  "statement": "Apply escalation decision criteria to determine when an agent should immediately honor a human escalation request versus attempt autonomous resolution using available tools.",
+                  "explanation": "An explicit request for a human is a direct escalation decision, not a signal to investigate further. The guide separates that trigger from ordinary dissatisfaction, which can receive acknowledgment and a concrete resolution attempt. Policy gaps and inability to make progress are other reasons to escalate, but they follow their own criteria.",
+                  "example": "A customer says, 'Please connect me to a manager.' The agent immediately creates the escalation handoff. If the customer only says the service is frustrating, the agent may acknowledge the concern and offer a documented solution unless the customer then asks for a person.",
+                  "guidance": "Detect and honor an explicit human request immediately, with no extra lookup that delays the transfer. Encode the trigger as a clear rule, preserve the conversation facts for the recipient, and do not substitute sentiment scores or model confidence for the customer's stated choice."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 13,
+                "held_out": 3,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "5.3",
+              "statement": "Implement error propagation strategies across multi-agent systems",
+              "score_report_units": [],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 17,
+                "training": 14,
+                "held_out": 3,
+                "multiple_response": 1
+              }
+            },
+            {
+              "id": "5.4",
+              "statement": "Manage context effectively in large codebase exploration",
+              "score_report_units": [
+                {
+                  "id": "F1",
+                  "statement": "Apply systematic codebase exploration strategies using Grep, Glob, and Read tools that build incremental understanding while managing context window constraints.",
+                  "explanation": "Incremental exploration builds a reliable codebase model while controlling context. Glob finds candidate files, Grep locates symbols or text, and Read supplies the surrounding implementation. Repeating that sequence from entry points through callers and dependencies is more useful than loading an entire repository into one prompt.",
+                  "example": "To trace an authentication bug, the agent first finds the auth module with Glob, searches for the failing error with Grep, reads the handler, then searches for its callers and reads the relevant tests. The final summary retains the dependency path and evidence.",
+                  "guidance": "Start with the smallest search that can reveal an entry point, then expand only along relevant edges. Summarize findings as you go, preserve exact file and symbol names, and use isolated workers or scratchpads when discovery output would overwhelm the main context."
+                },
+                {
+                  "id": "G1",
+                  "statement": "Apply context management strategies—subagent isolation, scratchpad files, and targeted file reading—to sustain coherent codebase exploration across sessions exceeding context limits.",
+                  "explanation": "Long investigations need context boundaries. Subagent isolation keeps verbose discovery away from the coordinator, scratchpads preserve exact findings across compaction or sessions, and targeted reads limit the material in each turn. Together they retain the important structure without carrying every raw tool response forward.",
+                  "example": "An exploration worker traces a payments module through 15 files and returns three dependencies and one external rate limit. The coordinator stores that summary in a scratchpad and keeps only the relevant paths while a separate worker investigates the gateway.",
+                  "guidance": "Delegate bounded discovery questions, request concise structured output, and persist exact facts such as identifiers, dates, and file paths. Read the scratchpad when context degrades, then send only the needed findings to the next phase instead of replaying the full exploration."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 11,
+                "held_out": 5,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "5.5",
+              "statement": "Design human review workflows and confidence calibration",
+              "score_report_units": [
+                {
+                  "id": "C2",
+                  "statement": "Design human review routing strategies that direct extractions to reviewers based on confidence scores, document characteristics, and field-level ambiguity rather than random sampling.",
+                  "explanation": "Human review is most useful when routed to likely sources of error. Confidence must be considered at field level alongside document type and ambiguity; random sampling alone can miss a weak segment or waste reviewers on stable cases. Thresholds should come from labeled validation data, then be audited over time.",
+                  "example": "An invoice extractor is reliable on typed English invoices but often misses handwritten tax fields. The system routes low-confidence tax fields and all handwritten documents to a specialist, while stable fields continue automatically with stratified audit samples.",
+                  "guidance": "Measure accuracy by field and document segment before setting a threshold. Route ambiguous or low-confidence cases with the relevant evidence, calibrate against labeled outcomes, and retain periodic random audits so a high aggregate score does not hide a new failure pattern."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 16,
+                "training": 8,
+                "held_out": 8,
+                "multiple_response": 0
+              }
+            },
+            {
+              "id": "5.6",
+              "statement": "Preserve information provenance and handle uncertainty in multi-source synthesis",
+              "score_report_units": [
+                {
+                  "id": "B5",
+                  "statement": "Design subagent output schemas that render structured data, prose summaries, and citation metadata in the format best suited to downstream synthesis and reporting.",
+                  "explanation": "A subagent output schema should match how its result will be consumed. Structured fields support filtering and aggregation; prose explains rationale; citation metadata preserves auditability. A single unstructured paragraph forces the synthesis agent to rediscover boundaries, sources, and uncertainty that could have been explicit.",
+                  "example": "A document worker returns an array of findings with category, claim, evidence quote, source location, confidence, and a short rationale. A coordinator can render technical findings as a list while retaining quotes for a reviewer and confidence for routing.",
+                  "guidance": "Design fields around downstream decisions: identifiers for joins, enums for stable categories, prose for explanations, and source metadata for verification. Keep optional information nullable rather than inventing placeholders, and state whether a result is complete, partial, or unsupported."
+                },
+                {
+                  "id": "B6",
+                  "statement": "Design synthesis agent behavior that preserves source-level uncertainty, distinguishing well-established findings from contested claims rather than collapsing conflicting data into single confident statements.",
+                  "explanation": "Synthesis should preserve uncertainty instead of averaging disagreement into a confident sentence. Each claim needs its source and date, while conflicting values or interpretations remain visible with an explanation of the possible difference. The coordinator can then distinguish established findings from contested or incomplete coverage.",
+                  "example": "Two reports estimate a market share at 8% and 12%. The synthesis records both figures, their publication dates and methods, and flags a conflict. It does not silently select the larger number or describe the disagreement as a model error.",
+                  "guidance": "Require claim-to-source mappings in worker results, separate supported and disputed sections, and retain partial coverage notes. Treat temporal or methodological differences as evidence to investigate, not permission to choose a value without attribution."
+                }
+              ],
+              "case_families": [
+                "s1",
+                "s2",
+                "s3",
+                "s6"
+              ],
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://code.claude.com/docs/en/agent-sdk/hooks",
+                "https://code.claude.com/docs/en/agent-sdk/subagents",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+              ],
+              "questions": {
+                "total": 15,
+                "training": 11,
+                "held_out": 4,
+                "multiple_response": 0
+              }
+            }
+          ]
+        }
+      },
+      "scenario_families": [
+        {
+          "id": "s1",
+          "name": "Customer Support Resolution Agent",
+          "primary_domains": [
+            "1",
+            "2",
+            "5"
+          ],
+          "prompt_count": 3
+        },
+        {
+          "id": "s2",
+          "name": "Code Generation with Claude Code",
+          "primary_domains": [
+            "3",
+            "5"
+          ],
+          "prompt_count": 3
+        },
+        {
+          "id": "s3",
+          "name": "Multi-Agent Research System",
+          "primary_domains": [
+            "1",
+            "2",
+            "5"
+          ],
+          "prompt_count": 3
+        },
+        {
+          "id": "s4",
+          "name": "Developer Productivity with Claude",
+          "primary_domains": [
+            "2",
+            "3",
+            "1"
+          ],
+          "prompt_count": 3
+        },
+        {
+          "id": "s5",
+          "name": "Claude Code for Continuous Integration",
+          "primary_domains": [
+            "3",
+            "4"
+          ],
+          "prompt_count": 3
+        },
+        {
+          "id": "s6",
+          "name": "Structured Data Extraction",
+          "primary_domains": [
+            "4",
+            "5"
+          ],
+          "prompt_count": 3
+        }
+      ]
+    },
+    "CCAR-P": {
+      "code": "CCAR-P",
+      "domains": {
+        "1": {
+          "name": "Solution Design & Architecture",
+          "weight": 17,
+          "tasks": [
+            {
+              "id": "1.1",
+              "statement": "Translate business problems into Claude-based AI solutions",
+              "explanation": "Translating a business problem starts with the business outcome, not the model, and traces the full shape: users, inputs, data boundaries, processing stages, outputs, feedback, and the metric that proves value. The core discipline is splitting the work three ways — what suits language understanding, planning, drafting, or tool-mediated action; what an existing system already does reliably; and what a person must retain. Over-assigning to the model is the most expensive early mistake because it is also the easiest to defend in a demo.",
+              "example": "A support organization asks for faster resolution. The translation yields a classifier that routes tickets, retrieval over the knowledge base for draft answers, a deterministic refund rule kept in the billing system, and a human step for escalations — with average resolution time as the tracked metric.",
+              "guidance": "Justify every model assignment on three questions: can a wrong call be undone, what does a wrong call cost, and who answers for it. The classic error is handing a threshold that must hold on every case to a system that holds on most — it fails on the untidy inputs nobody tested and surfaces in an audit rather than in monitoring.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 7,
+                "held_out": 5,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "1.2",
+              "statement": "Design end-to-end architectures (input → processing → output → feedback loops)",
+              "explanation": "An end-to-end architecture traces one request through ingestion, model calls, tools, validation, delivery, and feedback, with every boundary annotated for trust level, failure mode, fallback, and owner. The feedback loop closes the system: outputs are measured in production and the results flow back into prompts, retrieval, and the evaluation set.",
+              "example": "A document pipeline ingests PDFs, extracts fields with Claude, validates against schema and confidence thresholds, routes low-confidence extractions to reviewers, and feeds corrections back as labeled evaluation cases.",
+              "guidance": "Draw the request path end to end before choosing components — an architecture that cannot say where a request dies is not yet a design. Boundary annotations are the deliverable: trust level, failure mode, fallback, owner, observable signal.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "1.3",
+              "statement": "Select appropriate architectural patterns (workflow, agentic, augmented LLM)",
+              "explanation": "Three shapes sit on one spectrum: a single augmented LLM call, a workflow whose control flow lives in your code, and an agent whose control flow lives inside the model. Five factors decide in order — predictability, error cost, observability, latency budget, and cost — and the first factor that rules a shape out decides. Within workflows, chain stages that consume each other's output, route inputs that differ in kind, parallelize genuinely independent work, and add generate-then-critique only when quality is verifiable.",
+              "example": "A compliant summarization of fixed inputs is a chain with deterministic guards between steps; an open-ended research task with no enumerable path justifies an agent bounded by its toolset and a turn limit.",
+              "guidance": "Eliminate by constraint, not preference — enumerate the steps if you can, and prefer the workflow whose guards you wrote. Choosing an agent because the work feels open-ended is not the same as being unable to write the steps down; teams that mine traces often find a router and a few chains rebuilt expensively inside a loop.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 6,
+                "held_out": 6,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "1.4",
+              "statement": "Design multi-agent systems and orchestration strategies",
+              "explanation": "A coordinator owns the goal, decomposes work, and synthesizes; workers each carry one scoped unit in their own context. Failures are asymmetric: a malformed or missing worker result is recoverable at the worker boundary, disagreement between workers is recoverable at synthesis with a tie-breaking rule, but a coordinator that loses the goal or its merge state usually loses the run.",
+              "example": "An audit orchestrator splits a repository into per-directory workers, checks that completed units match dispatched units before summarizing, applies an explicit rule when two workers disagree, and checkpoints its own merge state so a failed run resumes instead of restarting.",
+              "guidance": "Reach for multi-agent only when work genuinely exceeds one context — every added agent is another boundary to observe and govern. The dangerous failure is silent: reconcile coverage at synthesis so a fluent summary cannot hide missing work, and propagate one trace identifier so a run reconstructs end to end.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 9,
+                "held_out": 2,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "1.5",
+              "statement": "Apply decomposition techniques for complex problem solving",
+              "explanation": "Decomposition splits a complex task into bounded components with explicit contracts and ownership, and it comes before architecture: the split is work that suits the model, work existing systems already do reliably, and work a person must retain. Each component needs an input, an output, and a failure you can name.",
+              "example": "A contract-analysis request decomposes into clause extraction, comparison against a playbook, and exception review — each component independently testable, so a failure localizes to one contract instead of the whole request.",
+              "guidance": "Split until every component has a contract you can test and an owner who answers for it. Where a subtask cannot be bounded, that is the signal for a human step or a narrower problem statement — not a bigger prompt.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "1.6",
+              "statement": "Align solutions to business value pillars (efficiency, transformation, productivity, cost, performance SLAs)",
+              "explanation": "Value pillars — efficiency, transformation, productivity, solution cost, and performance service levels — are the language the budget holder shares with the blueprint. The case is a comparison: the baseline measured in a unit the business already tracks, the projection in the same unit, minus run cost from your own sizing model, expressed as a payback period with sensitivity. Feasibility is a verdict plus the constraint that makes it true — feasible as scoped, feasible under stated constraints, or not feasible, with the boundary condition named.",
+              "example": "An automation case compares measured handle time with the projected state, states that reviewers still handle part of the volume, and presents payback under best- and worst-case ticket mixes.",
+              "guidance": "Three errors recur: a baseline estimated rather than measured, a projection that models full automation while the design still routes work to reviewers, and run cost taken from an average when the input distribution has a heavy tail. An undocumented constraint becomes an infeasible system the moment production violates it.",
+              "sources": [
+                "https://www.anthropic.com/research/building-effective-agents",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            }
+          ]
+        },
+        "2": {
+          "name": "Claude Models, Prompting & Context Engineering",
+          "weight": 13,
+          "tasks": [
+            {
+              "id": "2.1",
+              "statement": "Select appropriate Claude models based on trade-offs",
+              "explanation": "Model choice matches capability, speed, and cost to each unit of work instead of defaulting every stage to one tier. Start at the balanced tier and move on evaluation evidence: up when the default misses the quality bar, down when the eval confirms the drop is acceptable for that task. Per-step routing only becomes possible when per-step evaluations exist.",
+              "example": "A pipeline keeps a balanced tier everywhere until the evaluation shows extraction missing the bar on one category — then routes that category to a stronger model and leaves the rest alone.",
+              "guidance": "Treat a model swap as a release: a curated case set covering the real work distribution, a grading function, and a rollback threshold agreed before the run. Results broken out by input type often expose a partial migration one averaged number conceals — send the regressed classes up and route the rest down.",
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 10,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "2.2",
+              "statement": "Design system prompts, templates, and guardrails",
+              "explanation": "A reused prompt is an asset with structure: a stated role and scope, the constraints that must hold, and an output contract naming the response shape. The skill worth practicing is spotting what a prompt leaves unsaid — wherever it is silent, the model improvises, differently each time. A well-built template makes the guarded path the path of least resistance.",
+              "example": "A support-drafting template fixes the section structure, embeds the prohibited-claims rule as a required property of the output contract, and leaves only the ticket body as a filled slot — the scaffolding carries the guarantee, so filling a slot cannot remove it.",
+              "guidance": "Express must-hold rules as structural requirements of the output rather than one more line of role description, because a guardrail written as prose can be drifted past. Review templates for silence: constraints nobody wrote are constraints nobody enforced.",
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+              ],
+              "questions": {
+                "total": 10,
+                "training": 7,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "2.3",
+              "statement": "Apply prompt engineering techniques (zero-shot, few-shot, chain-of-thought)",
+              "explanation": "Use the lightest technique that clears the bar: instruction alone first, examples when showing the desired shape is easier than specifying it, and explicit step-by-step reasoning only when the reasoning path genuinely determines the answer — each escalation costs tokens and latency on every call. Identical wording does not produce identical behavior across tiers or generations, so a prompt tuned on one model is a draft for the next.",
+              "example": "A structured extraction passes zero-shot with a schema; an unusual output casing is pinned with one example instead of a paragraph of description; a multi-step reconciliation gets explicit reasoning because the path determines the result.",
+              "guidance": "Watch for bias introduced by construction — leading phrasing, an example set drawn from one kind of case, instructions that presume the answer. No single output reveals that skew; it shows up only across many, which is what the evaluation set is for.",
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "2.4",
+              "statement": "Optimize context windows and manage token usage",
+              "explanation": "Four context mechanisms stay distinct: the window itself (active attention, resets between calls), retrieval (fetches external knowledge at query time), application state (lives in your systems, reached by tool call), and memory or summaries (continuity your application stores and passes back). Four delivery strategies layer in production — load everything, carry recent state, fetch just in time, compact into summaries — and each breaks differently: attention degrades before the hard limit, dropped detail breaks later turns, missed retrieval breaks synthesis, and summaries drop load-bearing identifiers one-way.",
+              "example": "A long-running analyst session carries recent turns, retrieves policy documents on demand, keeps account state behind a tool, and compacts everything older than the current task into a summary that preserves open decisions.",
+              "guidance": "Size the window for the largest conversation you actually expect, then add system prompt, retrieval, and headroom — the window is a ceiling, not a target. Ask four separate questions: what the model needs at the start, from recent steps, on demand, and what compresses without losing decision-relevant detail.",
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 8,
+                "held_out": 4,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "2.5",
+              "statement": "Implement prompt reuse strategies (caching, modular prompts, Skills)",
+              "explanation": "Prompt caching saves on an unchanging prefix that is identical byte for byte across requests, so stable content goes first and per-request content last — ordering is the mechanism, not configuration. Extended reasoning is a measured decision: it bills tokens and adds latency on every call where it is engaged, so run the evaluation without it and enable it only where a measured gap justifies the cost. Reuse across a team is a governance choice between a shared library, versioned self-contained packages, and ungoverned copying.",
+              "example": "A pipeline places its long policy preamble and tool schemas before the cache breakpoint and the user's document last, so the prefix caches; engaging reasoning on the routing classifier is declined because the evaluation shows no gap.",
+              "guidance": "Cache only content that holds still — where the cached content must reflect live state, the consistency window can disqualify it. Prefer versioned packages for stable procedures that travel across teams, and expect ungoverned copies to drift into slightly different behaviors.",
+              "sources": [
+                "https://platform.claude.com/docs/en/models/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+              ],
+              "questions": {
+                "total": 9,
+                "training": 5,
+                "held_out": 4,
+                "multiple_response": 2
+              }
+            }
+          ]
+        },
+        "3": {
+          "name": "Integration",
+          "weight": 19,
+          "tasks": [
+            {
+              "id": "3.1",
+              "statement": "Evaluate tool/agent configuration for capability bloat",
+              "explanation": "Capability bloat is a tool set grown past what the task needs: every tool costs tokens on every request, degrades selection accuracy as the catalog grows, and enlarges the space of actions never tested. Tools are audited the way permissions are audited — with the reason each removal was safe recorded. Protocol habits fail both ways: a shared protocol layer with one client buys integration cost and no reuse, and a developer-facing surface in front of non-developers ships friction nobody asked for.",
+              "example": "An agent configured with twelve tools misroutes calls; the audit shows four unused since launch and two overlapping, and removing them restores selection accuracy while shrinking the prompt.",
+              "guidance": "Remove tools an agent does not need instead of relying on instructions or confirmations to steer around them. Recognize the integration carried forward out of habit from the last project — that is the failure the exam is pointing at.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "3.2",
+              "statement": "Analyze authentication and authorization requirements to identify security gaps",
+              "explanation": "Five layers decide whether an enterprise integration survives review: compliance (which routes remain permitted once the obligation applies), identity (where authentication happens relative to the model call), authorization (which capabilities and data this role may reach), data handling (which fields genuinely need to enter the context), and observability (what you must reconstruct afterwards). A user asserting a role inside their own message is not identity — identity is injected by the server after authentication.",
+              "example": "An integration injects the authenticated identity after login, scopes the tool's service account to the caller's tenant, and passes an account reference rather than the account's sensitive fields into the context.",
+              "guidance": "Filter fields by necessity — if the language task does not need the value, a reference identifier usually suffices, because sensitive values in the context land in your request logs. One shared key across tenants makes a rate-limit breach unattributable, and an agent action with no audit record is increasingly treated as an action that cannot be permitted.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 9,
+                "training": 6,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "3.3",
+              "statement": "Evaluate accuracy-latency trade-offs and justify configuration decisions",
+              "explanation": "Accuracy-latency trade-offs are justified per configuration decision: the quality the stage requires, the latency the user or workflow tolerates, and what the cheaper option gives up, with the worst case budgeted rather than the median. Reliability controls belong at specific layers — retries sit beside the call itself, circuit breakers guard the service boundary, and fallback routing belongs with orchestration.",
+              "example": "A routing classifier uses a fast model under a strict per-call budget while the rare escalation path accepts a slower, stronger model — each choice defended by the stage's tolerance, and a slow downstream service is guarded by a breaker at its boundary instead of a retry loop that multiplies load.",
+              "guidance": "Name the accuracy requirement and the latency budget separately, then show why the chosen configuration serves both. Misplaced reliability controls are the recurring wrong answer: a retry inside an orchestration loop turns one slow dependency into many simultaneous calls.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "3.4",
+              "statement": "Analyze observability challenges and select monitoring strategies at scale",
+              "explanation": "Observability at scale means instrumenting the whole path — model calls, retrieval, tools, queues, downstream services — so any request can be reconstructed afterwards. Agents need trajectory-level tracing because the trajectory is the control flow: most tooling was built to alert on endpoints, not on the path an agent took.",
+              "example": "When extraction quality slides, per-stage traces show retrieval returning stale documents while the model stage performs identically to the evaluation snapshot — localizing the failure without replaying traffic.",
+              "guidance": "Propagate one trace identifier across roles and services so a run reconstructs end to end, and log enough to answer both what the system did and why. Deferring observability until after launch fails security review as often as it fails debugging.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 10,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "3.5",
+              "statement": "Design a RAG pipeline with appropriate chunking and indexing strategies",
+              "explanation": "A RAG pipeline is designed from the corpus shape and the query pattern, and neither is portable between projects. Section-numbered corpora preserve structure and retrieve at the level that answers the question; long-form prose splits on meaning boundaries so each unit stands alone; homogeneous text takes uniform spans with overlap — each choice trading retrieval precision, per-request latency, and ingestion complexity.",
+              "example": "A manuals corpus keeps its section structure so retrieval returns the procedure that answers the question, while an FAQ corpus uses uniform overlapping chunks — imposing the manuals approach on the FAQ would complicate ingestion for no gain.",
+              "guidance": "Design ingestion around what parses reliably, not what looks elegant — structure that must parse but cannot is a production failure. Add metadata and freshness controls for anything that changes, and name the trade you made among precision, latency, and upkeep.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 7,
+                "held_out": 5,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "3.6",
+              "statement": "Apply retrieval strategies matched to data shape and query pattern",
+              "explanation": "Retrieval strategy matches the query pattern: keyword matching when queries hinge on identifiers, codes, or citations, semantic matching when queries are phrased differently from the source, and both run together with a standard rank-fusion rule when both kinds arrive — which is the usual case. Retrieval is for knowledge that holds still; anything whose current value is owned by another system needs a tool call to the system of record.",
+              "example": "A policy assistant runs keyword and semantic search and merges the rankings, because engineers query by clause number while executives paraphrase — and account balances are answered by a tool call, never the index.",
+              "guidance": "Recognize retrieval applied to live state by its symptoms: answers contradicting the database, results that shift with each refresh, staleness no embedding upgrade repairs. Match the strategy to observed queries, not to the last project.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 10,
+                "training": 7,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "3.7",
+              "statement": "Evaluate connection protocols and select the appropriate integration mechanism (MCP, API/CLI, agent-to-agent)",
+              "explanation": "Protocol choice turns on reuse, not familiarity: a direct API call or SDK when one product owns the integration, a shared tool protocol such as MCP when the same tool surface must be reachable from more than one client, a managed agent runtime when the model must iterate over tools inside your application, and a coding-agent entry point only when the user is an engineer working in a repository. Every deployment also separates three layers — entry point, build-time interface, and delivery route — each negotiated with a different stakeholder.",
+              "example": "One internal tool surfaced to both a Claude Code deployment and a support agent justifies an MCP server; the same surface behind exactly one client buys the integration cost and none of the reuse.",
+              "guidance": "Work down the list and stop at the first fit, and name which layer the question is actually about before recommending anything. When a stem names a regulation or an approved-vendor constraint, the discriminator is usually that one option was already ruled out.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 9,
+                "training": 7,
+                "held_out": 2,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "3.8",
+              "statement": "Evaluate progressive discovery vs. monolithic context strategy",
+              "explanation": "Progressive discovery stages what the model can see and reach instead of loading a monolithic tool catalog or preloaded corpus, which costs tokens on every request, degrades selection accuracy as the catalog grows, and enlarges the space of actions never tested. The next step pulls what it needs.",
+              "example": "An agent starts with a search tool and loads a domain's detailed tools only when work enters that domain, so per-request tokens stay flat and the tested action space stays bounded as coverage grows.",
+              "guidance": "The monolithic strategy fails visibly as catalogs grow — selection accuracy falls before the cost does. Stage capability by the work in front of the agent, and let retrieval or an index step fetch the rest.",
+              "sources": [
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works",
+                "https://code.claude.com/docs/en/mcp",
+                "https://modelcontextprotocol.io/docs/concepts/tools",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            }
+          ]
+        },
+        "4": {
+          "name": "Evaluation, Testing & Optimization",
+          "weight": 16,
+          "tasks": [
+            {
+              "id": "4.1",
+              "statement": "Define evaluation metrics (accuracy, latency, cost, safety, security)",
+              "explanation": "Evaluation metrics cover task quality, safety, security, latency, reliability, and cost, and each metric names the decision it informs. Turning a business requirement into a threshold means naming the specific behavior, setting the passing number from the requirement rather than from whatever the prototype scored, and enumerating the failure modes as dataset categories.",
+              "example": "A vague accuracy goal becomes a grounded-fact rate at or above the agreed threshold on the labeled set, p95 latency under the published budget, and zero prohibited-content passes — each tied to a launch, routing, or rollback decision.",
+              "guidance": "A metric you cannot connect to a decision is telemetry, not evaluation. Thresholds inherited from prototype scores measure the prototype, not the requirement.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 7,
+                "held_out": 4,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "4.2",
+              "statement": "Design evaluation datasets and test frameworks using mixed methodologies",
+              "explanation": "Datasets mix curated cases, production samples, edge and adversarial inputs, and regression sets, while grading climbs a ladder: code-based checks for anything unambiguous, model-based judges for interpretation, human review for high-stakes or novel behavior and for calibrating the judge itself. Two rules make the ladder work — grade with a model other than the one tested, and prefer breadth, because many cheap automatically graded cases catch more regressions than a handful of meticulous ones.",
+              "example": "A summarization suite grades schema and length in code, scores faithfulness with a judge calibrated on human-labeled samples, routes novel high-stakes cases to people, and updates whenever the prompt, retrieval strategy, or model changes.",
+              "guidance": "Stakes decide how much you care; ambiguity decides the method — whether a prohibited action occurred is binary even when stakes are high. A stale suite is worse than none, and single-turn sets say nothing about conversation: multi-turn behavior needs its own dataset of full transcripts.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 9,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "4.3",
+              "statement": "Conduct A/B testing and iterative improvements",
+              "explanation": "A believable experiment fixes four elements before the run: a falsifiable hypothesis naming treatment, expected direction, and constraints on secondary metrics; random assignment consistent per user or session; one primary metric chosen in advance; and a sample size computed from the effect to detect — model outputs vary more than deterministic systems, so the required sample is larger than intuition suggests. Shadow testing substitutes when exposure is unacceptable: run the candidate on copied traffic, serve everyone the current version, score offline.",
+              "example": "A prompt change runs as an A/B split with per-session assignment and grounding rate declared as the primary metric; a regulated deployment instead shadows the candidate before anyone is exposed, accepting the loss of downstream behavioral signal.",
+              "guidance": "Statistical and practical significance are different questions, and a primary-metric win that degrades cost or latency may not be a win at all. Watch interaction effects — a change that helps typical inputs can hurt a rare edge case that is common during a seasonal peak.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 10,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "4.4",
+              "statement": "Diagnose system issues (prompt failure, hallucinations, model mismatch)",
+              "explanation": "Four failure classes separate cleanly, and the fix lives where the failure lives: prompt failure (an ambiguous instruction the model filled its own way — fix the prompt), hallucination (fluent content with no basis in input or sources — fix grounding through retrieval, tools, or verification, because stronger wording cannot), model mismatch (the tier does not fit the work or changed unmeasured — re-select, gated by evaluation), and orchestration failure (a subagent dropped work or a coordinator lost its thread — fix failure boundaries and tracing).",
+              "example": "A support bot invents return policies: the trace shows retrieval returning nothing while the model answered anyway — a grounding failure, so the fix is a tool or retrieval change, not a stronger instruction.",
+              "guidance": "Attribute before acting: model drift (behavior changed on stable inputs), data drift (the input distribution changed), and a model update (the version changed underneath you) look similar and take different fixes. Read the trace first.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 7,
+                "held_out": 5,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "4.5",
+              "statement": "Optimize token usage, latency, and cost-performance trade-offs",
+              "explanation": "Optimization targets the tail, not the average: median latency does not breach service levels, token distributions are usually skewed so a cost model built on an average can understate spend by a wide margin, and aggregate dashboards look healthy while a small share of requests consumes most of the budget. The levers are model selection, prompt and context size, number of tool calls, and streaming versus batch.",
+              "example": "A cost spike traces to one request category whose retrieved context tripled after a corpus change — visible only when spend is decomposed per request instead of averaged.",
+              "guidance": "Decompose per-request cost and latency alongside the aggregate view, and fix the lever the decomposition points to. Sizing the cost model on the input distribution's heavy tail is what keeps the invoice a surprise-free document.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "4.6",
+              "statement": "Monitor system performance using logging and observability tools",
+              "explanation": "Monitoring pairs collection with a feedback loop — signals, triage, decision, action, review — recorded as a table before launch: every signal paired with the condition that fires it, the person who acts, and the action expected. Scheduled reviews fire on a cadence whether or not anything looks wrong, because residency confirmations and output audits are not threshold events.",
+              "example": "A deployment pairs grounding-rate drift with a weekly owner review and a hard alert on error rate, so slow decay is caught by the cadence even when no threshold ever trips.",
+              "guidance": "The characteristic failure is a metric drifting for weeks and surfacing as a stakeholder saying the output feels less useful — every signal collected, nothing mapped to a trigger. Build the loop at design time; retrofitting it costs far more.",
+              "sources": [
+                "https://platform.claude.com/docs/en/test-and-evaluate/define-success",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 8,
+                "held_out": 4,
+                "multiple_response": 3
+              }
+            }
+          ]
+        },
+        "5": {
+          "name": "Governance, Safety & Risk Management",
+          "weight": 14,
+          "tasks": [
+            {
+              "id": "5.1",
+              "statement": "Implement guardrails and safety controls",
+              "explanation": "Guardrails layer four covers, each covering what the one below cannot: trained behavior (broad harm classes on every request, blind to your policy), system instructions (role and constraints inside one request, talkable out of), screening (disallowed content in and out, blind to side-effecting actions), and action authorization (whether this caller may take this action now). The three control points answer three different questions — does the request reach the model, does the response reach the user, may the side-effecting call run.",
+              "example": "An agent pairs input screening for hostile content, deterministic authorization scoped by role, and output screening for sensitive fields — because instructions alone are not enforcement, and one filter at the far end covers one point while sitting downstream of the irreversible step.",
+              "guidance": "Choose the check type by the question: fuzzy intent needs a model-based classifier, crisp rules belong in deterministic code, and authorization should be deterministic almost without exception — an allowlist plus identity and scope, because it must be provable and replayable. Choose the failure direction deliberately: where an unscreened request would cause harm, fail closed.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "5.2",
+              "statement": "Identify risks, limitations, and failure modes of LLM systems",
+              "explanation": "The risk categories are direct prompt injection (overrides instructions from user input), indirect injection (arrives through retrieved documents and tool results the model treats as trustworthy — the dominant vector wherever retrieval or tools exist, and invisible to input screening), token-budget exhaustion, tool and action abuse, and data exposure into context or logs. Walk the request path and the data path together, naming the control at every entry point.",
+              "example": "A retrieval agent's dominant risk is hostile instructions inside fetched documents — so documents are fenced and marked as data, consequential actions are gated regardless of content, and sensitive fields never enter the context window or the logs.",
+              "guidance": "The most dangerous failure is quiet: a rule everybody believes is being enforced that exists in no layer at all — nothing can enforce a policy it was never handed. Screening covers content, never actions; authorization covers actions, never content quality.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 5,
+                "held_out": 6,
+                "multiple_response": 2
+              }
+            },
+            {
+              "id": "5.3",
+              "statement": "Apply human-in-the-loop validation strategies",
+              "explanation": "Human review is routed by stakes, and stakes are two independent things: how easily a mistake can be undone and what it costs when it is not. Confidence decides how much volume can pass unsampled, and it is only useful to the degree it is calibrated. Placement trades coverage against latency — approval before the action buys no irreversible mistakes at the price of reviewer availability; audit after keeps throughput but only suits reversible decisions; sampling monitors without slowing the flow.",
+              "example": "Refunds above a threshold require approval with the inputs, the draft, and the flagging reason attached; low-value routings are sampled for quality rather than held — and the review packet is what keeps the approval from becoming rubber-stamping.",
+              "guidance": "Two failures collapse review into theater: volume beyond what a person can read produces consent fatigue, and a bare output with a single approve button leaves nothing to weigh. Concentrate review where it carries information — approving a plan or handling an exception — rather than signing every step.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 9,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "5.4",
+              "statement": "Ensure compliance with regulations (e.g., GDPR, HIPAA, FedRAMP)",
+              "explanation": "Each obligation — GDPR, HIPAA, FedRAMP — becomes a control, an owner, and living evidence, because regulations state outcomes and leave the implementation to you. Choosing a compliant delivery route is a prerequisite, not proof: a reviewer accepts a countersigned agreement, a screenshot of the live setting, an authorization record, or a query returning the expected rows — a design document is none of these.",
+              "example": "A regulated deployment maps its data-handling obligation to the field-minimization filter, its retention obligation to the log lifecycle, and its access obligation to the authorization record — each with a named owner and an artifact that demonstrates it is operating.",
+              "guidance": "A control with no named owner and no living artifact stops operating quietly, and the gap turns up in an audit instead of a design review — the costliest possible place. Revalidate the register on a cadence, because configurations drift after sign-off.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "5.5",
+              "statement": "Address ethical AI considerations (bias, fairness, transparency)",
+              "explanation": "Unequal outcomes enter at points you own: a retrieval corpus that over- or under-represents groups, prompt framing that encodes an assumption, few-shot examples carrying the same skew, and downstream routing that sends some groups along different paths — and an aggregate outcome metric can look healthy while harm concentrates in one subgroup. Transparency serves three readers from the same decision-level log: the affected person needs inputs and reason phrased so they can act, the regulator needs evidence comparable cases were treated comparably, the team needs the full trace.",
+              "example": "An underwriting assistant's aggregate approval rate looks healthy while one subgroup is routed to manual review more often — visible only when outcomes are segmented by group.",
+              "guidance": "Instrument fairness at the four entry points rather than assuming the model arrives fair. Keep the decision log minimal, retention-bounded, and access-controlled — it falls inside the compliance register too.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional",
+                "https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 7,
+                "held_out": 4,
+                "multiple_response": 3
+              }
+            }
+          ]
+        },
+        "6": {
+          "name": "Stakeholder Communication & Lifecycle Management",
+          "weight": 14,
+          "tasks": [
+            {
+              "id": "6.1",
+              "statement": "Conduct structured discovery and requirement gathering",
+              "explanation": "Discovery is structured elicitation, not conversation: listen to the goal in the stakeholder's own business language, translate it into requirements and named assumptions, and write both down before moving on. Experience words — seamless, fast, simple, intuitive — are signals that more questions are needed, never requirements themselves. Every statement is forced through four categories: what the system must do, must not do, must cost, and must prove.",
+              "example": "A request for a seamless handoff to agents resolves into a latency target, an integration boundary, a rule for how work passes to a person, and a failure state that exposes nothing — each buildable and measurable, with the prohibited actions captured because nobody volunteers them unprompted.",
+              "guidance": "Record one row per item: the stakeholder's words, the constraint underneath, the design decision it compels, and what you are still assuming. Do not sketch architecture mid-call — the sketch's plausibility is what stops the questions, because a stakeholder who sees a confident design assumes the questions were asked.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 8,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "6.2",
+              "statement": "Communicate architectural decisions and trade-offs",
+              "explanation": "A trade-off is presented in three elements: the benefit, the concession, and the price of undoing the choice after the rest of the system has been built on top of it — adding its effect on compliance posture in regulated settings. The package travels upward as the options considered, the criteria weighed, the recommendation, and the risks that survive it.",
+              "example": "Recommending retrieval over fine-tuning names the quality gain, the operating cost, and what unwinding would take once ingestion, caching, and evaluation are built — the third element usually decides the room, because it converts a technical comparison into a business one.",
+              "guidance": "Open on the business consequence instead of the design, and state the limits plainly — naming them is what earns a security reviewer's confidence. Approving a choice without understanding the unwind cost is not an informed decision, and the stakeholder will say so when the invoice arrives.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 7,
+                "held_out": 4,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "6.3",
+              "statement": "Manage stakeholder feedback loops and expectation alignment (including SLAs)",
+              "explanation": "Observability collects signals; a feedback loop decides what they mean — signals, triage, decision, action, review, existing as a table before launch that pairs every signal with the condition that fires it, the person who acts, and the action expected. Service levels must trace to a source: latency from the user-experience expectation captured in discovery, availability from business centrality, quality from the evaluation acceptance criteria.",
+              "example": "A handoff table pairs grounding-rate drift with a weekly owner review and a hard error-rate alert, includes a quarterly residency confirmation that fires on schedule rather than on threshold, and gives the sponsor a consumption forecast before the first invoice.",
+              "guidance": "A number that traces to none of these sources is a target someone found reasonable. Cost is the expectation that most often fails to survive launch — production volume routinely runs far above the pilot, so deliver the forecast and the spend-control posture early.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 10,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "6.4",
+              "statement": "Document architectures and provide implementation guidance",
+              "explanation": "Documentation serves three readers at once: the engineer inheriting the system needs decisions, rejected alternatives, and the trade-off each rejection settled; the compliance reviewer needs each obligation paired with its control, owner, and evidence artifact; the returning architect needs dated decisions with assumptions marked as assumptions. The completeness test is practical — could an equally capable architect who missed every design session change this system safely on the document alone?",
+              "example": "A decision record captures the choice and its date, the options considered and not chosen, the gain and cost and reversal price of the trade-off, the owner going forward, the evidence artifact, and whether that evidence is current.",
+              "guidance": "A diagram records the shape of the system, not the rationale — without rejected alternatives a successor cannot tell which choices carry weight and which were preference, and will overturn a sound one for a reason that looks sound at the time. Assumptions recorded as assumptions return as questions; assumptions woven in as facts return as incidents.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 9,
+                "training": 5,
+                "held_out": 4,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "6.5",
+              "statement": "Support lifecycle phases (discovery, design, handoff, monitoring, iteration)",
+              "explanation": "The lifecycle runs discovery, design, handoff, monitoring, iteration, and knowing which phase a decision belongs to is what tells you when a phase can close. When a deployment spans more than one route or entry point, write down which surface owns which task before integration begins, or routing drifts and a surface chosen for one job quietly acquires another.",
+              "example": "At a handoff gate the items that belong are runbooks, owners, service levels, and monitoring scope — a proposal for new model evaluation belongs to design, however sound it would be there, and recognizing that is the discriminating skill.",
+              "guidance": "Learn the phases as an ordering, not only a list: read the stem for the phase marker and reject any option that belongs to a later phase no matter how sound. Close with an outcome document — use case, scope boundary, the business metric before, the same metric after, the control that makes the comparison checkable — and capture the before number at the start, because it cannot be reconstructed at the end.",
+              "sources": [
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 11,
+                "training": 6,
+                "held_out": 5,
+                "multiple_response": 2
+              }
+            }
+          ]
+        },
+        "7": {
+          "name": "Developer Productivity & Operational Enablement",
+          "weight": 7,
+          "tasks": [
+            {
+              "id": "7.1",
+              "statement": "Configure Claude tools and environments for teams (e.g., Claude Code)",
+              "explanation": "Team configuration separates what shapes the agent — standing project instructions, packaged procedures, scoped subagents, connected tool servers — from what governs it: lifecycle hooks, permission modes, approval flows, and sandboxing. A guarantee that must hold has to come from code and configuration, not from wording in an instructions file.",
+              "example": "A team ships one shared baseline — agreed project instructions, a reviewed tool set, one permission posture — so configuration is reviewed and improved once instead of drifting across individual setups, with spend guardrails set deliberately: default model, allowed models, effort guidance, per-user and rate caps.",
+              "guidance": "Choose the distribution mechanism by reach against governance: organization-wide availability reaches everyone with the least version control, group-scoped packages carry versioned updates and rollback, repository-scoped artifacts version alongside the code, and programmatic reuse pins an explicit version. Unmanaged model choice compounds across every teammate and request.",
+              "sources": [
+                "https://code.claude.com/docs/en/overview",
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/hooks",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 12,
+                "training": 9,
+                "held_out": 3,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "7.2",
+              "statement": "Improve developer workflows using AI-assisted tooling",
+              "explanation": "Assistance pays off where the work already happens — while code is being written, during review, inside the test cycle — rather than in a chat tab someone visits occasionally. Each stage keeps the discipline it always needed: whoever ships generated code must be able to explain it, a flagged finding is an input to judgment rather than a verdict, and a proposed diagnosis is checked against evidence before anyone acts on it.",
+              "example": "A team pairs code generation with an explicit verification checklist covering correctness, security, maintainability, and human understanding, then automates the gate so it fires on every change instead of relying on a reviewer's attention.",
+              "guidance": "Engineer adoption rather than announcing it: enable one champion per team, let them convert a real workflow and absorb the early friction, then seed in batches. The two named failure modes are lumpy adoption — heavy use by a few that never standardizes — and stalling at basic chat, where access never becomes repository-aware work.",
+              "sources": [
+                "https://code.claude.com/docs/en/overview",
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/hooks",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 9,
+                "training": 7,
+                "held_out": 2,
+                "multiple_response": 3
+              }
+            },
+            {
+              "id": "7.3",
+              "statement": "Support debugging and operational issue resolution",
+              "explanation": "Support means translating symptoms into causes, then handing the path over. Quality that slid without a deployment points at a changed model or prompt, or an index drifting as the corpus grew — re-run the evaluation set and diff what moved. Response times that jumped point at context growth, a slowed dependency, or cached prefixes that stopped matching — trace the slowest span and read per-request token counts and cache hits. Intermittent tool failures point at credentials, throttling, or an unhandled error path. Spend rising against flat usage points at requests drifting to a costlier tier or caching quietly regressing.",
+              "example": "A gradual quality slide with no deployment is diagnosed by re-running the evaluation suite and diffing results against the model version change — then the runbook records the symptom-to-action path so the team handles it without you.",
+              "guidance": "Resolving one incident yourself is firefighting; leave behind a runbook of known symptom-to-action paths and an escalation map naming who owns what. Instrument token usage, latency, and error rate per call from the start, so a spike becomes a row you can sort instead of a mystery on the invoice.",
+              "sources": [
+                "https://code.claude.com/docs/en/overview",
+                "https://code.claude.com/docs/en/skills",
+                "https://code.claude.com/docs/en/hooks",
+                "https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional"
+              ],
+              "questions": {
+                "total": 10,
+                "training": 7,
+                "held_out": 3,
+                "multiple_response": 2
+              }
+            }
+          ]
+        }
+      },
+      "capstone": {
+        "artifact_count": 9,
+        "stress_test_count": 5,
+        "artifacts": [
+          {
+            "id": "problem-frame",
+            "title": "Problem frame & constraints"
+          },
+          {
+            "id": "adr",
+            "title": "Architecture decision record"
+          },
+          {
+            "id": "integration",
+            "title": "Integration & trust-boundary map"
+          },
+          {
+            "id": "evaluation",
+            "title": "Evaluation & release gates"
+          },
+          {
+            "id": "governance",
+            "title": "Safety & governance matrix"
+          },
+          {
+            "id": "cost-latency",
+            "title": "Cost & latency budget"
+          },
+          {
+            "id": "operations",
+            "title": "Observability & operations"
+          },
+          {
+            "id": "stakeholder",
+            "title": "Stakeholder brief"
+          },
+          {
+            "id": "handoff",
+            "title": "Handoff package"
+          }
+        ],
+        "stress_tests": [
+          {
+            "id": "stale-retrieval",
+            "title": "Stale retrieval after refresh"
+          },
+          {
+            "id": "overprivileged-tool",
+            "title": "Over-privileged tool"
+          },
+          {
+            "id": "slice-regression",
+            "title": "Hidden evaluation regression"
+          },
+          {
+            "id": "cost-latency-drift",
+            "title": "Cost / latency drift"
+          },
+          {
+            "id": "irreversible-request",
+            "title": "Irreversible stakeholder request"
+          }
+        ]
+      }
+    }
+  }
+}

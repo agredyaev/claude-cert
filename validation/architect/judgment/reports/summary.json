@@ -1,0 +1,48 @@
+{
+  "validators": 10,
+  "pass": 10,
+  "warn": 0,
+  "fail": 0,
+  "results": [
+    {
+      "validator": "01-scope-scenario-alignment",
+      "status": "PASS"
+    },
+    {
+      "validator": "02-cognitive-demand",
+      "status": "PASS"
+    },
+    {
+      "validator": "03-decision-hinge",
+      "status": "PASS"
+    },
+    {
+      "validator": "04-one-best-answer",
+      "status": "PASS"
+    },
+    {
+      "validator": "05-distractor-plausibility",
+      "status": "PASS"
+    },
+    {
+      "validator": "06-cue-resistance",
+      "status": "PASS"
+    },
+    {
+      "validator": "07-contrastive-rationales",
+      "status": "PASS"
+    },
+    {
+      "validator": "08-transfer-diversity",
+      "status": "PASS"
+    },
+    {
+      "validator": "09-learning-loop",
+      "status": "PASS"
+    },
+    {
+      "validator": "10-readiness-integrity",
+      "status": "PASS"
+    }
+  ]
+}

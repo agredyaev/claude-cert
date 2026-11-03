@@ -252,6 +252,11 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
   padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-sm);
   background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; line-height: 1.5; }
 .study-reflection textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.confidence-picker { margin: 12px 0 0; padding: 0; border: 0; }
+.confidence-picker legend { margin-bottom: 6px; color: var(--fg); font-size: 12px; font-weight: 650; }
+.confidence-picker label { display: inline-flex; align-items: center; gap: 5px; margin: 0 14px 0 0;
+  color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; }
+.study-confidence-result { margin-top: 8px; color: var(--muted); font-size: 12px; }
 .study-reflection-actions { display: flex; justify-content: space-between; gap: 12px;
   align-items: center; margin-top: 10px; }
 .study-reflection-error { color: var(--bad); font-size: 12px; }
@@ -583,8 +588,8 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 </head>
 <body>
 <a class="skip-link" href="#qCard">Перейти к вопросу</a>
-<header class="ravn-topbar"><a class="ravn-brand" href="../ru.html" aria-label="CCAR"><span class="ravn-brand-tagline">CCAR</span></a><nav class="language-toggle" aria-label="Interface language"><a href="en.html" onclick="this.href += window.location.search + window.location.hash">EN</a><a class="active" aria-current="page" href="ru.html" onclick="this.href += window.location.search + window.location.hash">RU</a></nav><div class="mode-controls sheet" id="optionsSheet" aria-labelledby="optionsTitle"><button type="button" class="sheet-close" aria-label="Закрыть" onclick="closeSheet()">&#10005;</button><h2 class="sheet-title" id="optionsTitle">Настройки</h2><div class="mode-toggle"><button type="button" id="modeStudy" aria-pressed="false" onclick="setMode('study')">Обучение</button><button type="button" id="modeExam" aria-pressed="false" onclick="setMode('exam')">Экзамен</button></div><div class="mode-toggle length-toggle" role="group" aria-label="Длина попытки"><button type="button" id="lengthFull" aria-pressed="false" onclick="setLength('full')">Полный · 60</button><button type="button" id="lengthQuick" aria-pressed="false" onclick="setLength('quick')">Быстрый · 20</button></div><select class="focus-select" id="focusSelect" aria-label="Тренировать один домен" onchange="setFocus(this.value)"><option value="all">Все домены</option></select><button type="button" class="nav-btn new-draw-btn" id="newDrawBtn" onclick="newDraw()"><span class="dn-icon">&#10227;</span>Новая выборка</button><button type="button" class="nav-btn misses-btn" id="missesBtn" aria-pressed="false" aria-label="Повторить слабые места" title="Повторить слабые места" onclick="toggleMisses()" disabled>Повторений сейчас нет</button><a class="nav-btn browse-btn" href="bank-ru.html">Банк вопросов</a><span class="mode-hint" id="modeHint">Сначала решите и объясните выбор, затем откройте разбор</span><p class="sheet-note" id="drawNoteSheet">Каждая попытка использует новую случайную выборку: сейчас 60 из 481 вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.</p></div><button type="button" class="options-btn" aria-controls="optionsSheet" aria-expanded="false" onclick="openSheet('optionsSheet', this)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Настройки</button></header>
-<div class="draw-note" id="drawNote"><span class="dn-icon">&#10227;</span>Каждая попытка использует новую случайную выборку: сейчас 60 из 481 вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.</div>
+<header class="ravn-topbar"><a class="ravn-brand" href="../ru.html" aria-label="CCAR"><span class="ravn-brand-tagline">CCAR</span></a><nav class="language-toggle" aria-label="Interface language"><a href="en.html" onclick="this.href += window.location.search + window.location.hash">EN</a><a class="active" aria-current="page" href="ru.html" onclick="this.href += window.location.search + window.location.hash">RU</a></nav><div class="mode-controls sheet" id="optionsSheet" aria-labelledby="optionsTitle"><button type="button" class="sheet-close" aria-label="Закрыть" onclick="closeSheet()">&#10005;</button><h2 class="sheet-title" id="optionsTitle">Настройки</h2><div class="mode-toggle"><button type="button" id="modeStudy" aria-pressed="false" onclick="setMode('study')">Обучение</button><button type="button" id="modeExam" aria-pressed="false" onclick="setMode('exam')">Экзамен</button></div><div class="mode-toggle length-toggle" role="group" aria-label="Длина попытки"><button type="button" id="lengthFull" aria-pressed="false" onclick="setLength('full')">Полный · 60</button><button type="button" id="lengthQuick" aria-pressed="false" onclick="setLength('quick')">Быстрый · 20</button></div><select class="focus-select" id="focusSelect" aria-label="Тренировать один домен" onchange="setFocus(this.value)"><option value="all">Все домены</option></select><button type="button" class="nav-btn new-draw-btn" id="newDrawBtn" onclick="newDraw()"><span class="dn-icon">&#10227;</span>Новая выборка</button><button type="button" class="nav-btn misses-btn" id="missesBtn" aria-pressed="false" aria-label="Повторить слабые места" title="Повторить слабые места" onclick="toggleMisses()" disabled>Повторений сейчас нет</button><a class="nav-btn browse-btn" href="bank-ru.html">Банк вопросов</a><span class="mode-hint" id="modeHint">Сначала решите и объясните выбор, затем откройте разбор</span><p class="sheet-note" id="drawNoteSheet">Каждая попытка использует новую случайную выборку: сейчас 60 из 301 вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.</p></div><button type="button" class="options-btn" aria-controls="optionsSheet" aria-expanded="false" onclick="openSheet('optionsSheet', this)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Настройки</button></header>
+<div class="draw-note" id="drawNote"><span class="dn-icon">&#10227;</span>Каждая попытка использует новую случайную выборку: сейчас 60 из 301 вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.</div>
 <div class="shell">
   <nav class="sidebar sheet" id="qNavSheet" aria-label="Вопросы">
     <button type="button" class="sheet-close" aria-label="Закрыть" onclick="closeSheet()">&#10005;</button>
@@ -619,7 +624,7 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 // inline object literal the parser must chew through before first paint. A
 // practice page and its bank twin name the same content-hashed URL, so the
 // second page of a session reuses the first one's download.
-const BANK_URL = "data/ccaf-exam-en-9b188960f7a6.json";
+const BANK_URL = "data/ccaf-exam-en-7029b45e2ba1.json";
 // Filled in place by installBank rather than reassigned: every function below
 // closes over this array, and so does the test harnesses' exported view of it.
 const QUESTIONS = [];
@@ -647,7 +652,8 @@ const REPORT_SUBDOMAINS = {"A1": "1.1", "A2": "1.1", "A3": "1.4", "A4": "1.2", "
 // Foundations report can never drive a Professional targeted draw.
 const OWN_EXAM_CODE = "CCAR-F";
 const BANK_ONLY = false;
-const T = {"questions": "Вопросы", "answered": "Отвечено", "mode_study": "Обучение", "mode_exam": "Экзамен", "mode_hint_study": "Сначала решите и объясните выбор, затем откройте разбор", "mode_hint_exam": "Ответы показываются после завершения", "prev": "← Назад", "next": "Далее →", "finish": "Завершить и проверить", "finish_confirm": "Осталось {n} вопрос(ов) без ответа; они будут засчитаны как неверные. Завершить попытку и показать результат?", "back_to_answers": "← Вернуться к ответам", "study_switch_confirm": "Переход в режим обучения покажет правильные ответы для уже отвеченных вопросов. Продолжить?", "time_label": "Время", "skip_to_question": "Перейти к вопросу", "answer_recorded": "Ответ выбран.", "reason_label": "Почему это лучший ответ?", "reason_placeholder": "Сформулируйте ключевое ограничение и почему альтернативы хуже.", "reason_required": "Кратко объясните выбор перед открытием разбора.", "reveal_rationale": "Зафиксировать ответ и открыть разбор", "question": "Вопрос", "your_answer": "Ваш ответ", "correct": "Правильно", "why": "Почему", "complete": "Попытка завершена", "answered_of": "Вы ответили на {a} из {t} вопросов.", "unanswered": "&#9888; Без ответа: {n} (засчитаны как неверные).", "score": "Результат", "pass": "ПРОХОД", "fail": "НЕ ПРОХОД", "by_domain": "Результат по доменам", "review_wrong": "Разобрать ошибки", "all_correct": "Все ответы правильные.", "restart": "Новая попытка — новая выборка", "weight": "вес", "threshold_note": "Порог: {p}/1000. Каждая полная попытка берёт по 12 случайных вопросов из каждого домена (60 всего); результат масштабируется до 1000 как тренировочная аппроксимация реальной шкалы 100–1000.", "incorrect": "ошибок", "domain": "Домен", "select_n": "Выберите {n} вариант(а).", "select_full": "Уже выбрано {n} вариант(а). Снимите один выбор, чтобы изменить ответ.", "not_answered": "Нет ответа", "incomplete_answer": "неполный ответ", "length_full": "Полный · {n}", "length_quick": "Быстрый · {n}", "length_aria": "Длина попытки", "new_set": "Новая выборка", "focus_all": "Все домены", "focus_label": "Тренировать один домен", "focus_note": "Тренировка домена {d}: все {n} вопросов этого домена в новой последовательности. Вернитесь к «Все домены» для полной выборки.", "drill_score": "Результат домена {d}", "focus_report": "Фокус по score report", "report_note": "Целевая тренировка по score report: {n} вопросов с повышенным весом слабых objectives при сохранении покрытия всех пяти доменов.", "report_score": "Целевая тренировка", "new_draw_confirm": "Начать новую попытку с новой случайной выборкой? Текущие ответы будут удалены.", "draw_note_full": "Каждая попытка использует новую случайную выборку: сейчас {n} из {bank} вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.", "draw_note_quick": "Быстрая тренировка: {n} случайных вопросов с весами доменов; каждая попытка использует новую выборку.", "summary_rotate": "Эта попытка была одной случайной выборкой из {n} вопросов банка на {bank}. Начните новую попытку, чтобы получить другой набор.", "threshold_note_quick": "Порог: {p}/1000. Быстрая тренировка использует сокращённую взвешенную выборку и масштабирует результат до 1000; для реалистичной репетиции используйте полный режим.", "misses_btn": "Повторить · {n}", "misses_label": "Повторить слабые места", "misses_empty": "Повторений сейчас нет", "misses_note": "Интервальное повторение: сейчас нужно повторить {n} вопрос(ов). Правильный retrieval переносит следующий review на более поздний срок.", "misses_score": "Результат повторения", "misses_clear": "Очистить ошибки", "misses_clear_confirm": "Удалить историю всех ошибок? Текущая попытка также будет завершена.", "bank_link": "Банк вопросов", "exam_link": "Тренировочный экзамен", "browse_all": "Все темы", "browse_title": "Банк вопросов", "browse_search": "Искать по вопросам, вариантам и объяснениям", "browse_domain": "Фильтр по домену", "browse_count": "{n} из {bank} вопросов", "browse_none": "По этому фильтру вопросов нет.", "cluster_note": "Вариант {i} из {n} для этого сценария", "loading": "Загрузка вопросов…", "options": "Настройки", "close": "Закрыть", "jump_to": "Перейти к вопросу", "topics": "Темы", "load_failed": "Не удалось загрузить банк вопросов. Проверьте соединение и обновите страницу."};
+const FIXED_EXAM = false;
+const T = {"questions": "Вопросы", "answered": "Отвечено", "mode_study": "Обучение", "mode_exam": "Экзамен", "mode_hint_study": "Сначала решите и объясните выбор, затем откройте разбор", "mode_hint_exam": "Ответы показываются после завершения", "prev": "← Назад", "next": "Далее →", "finish": "Завершить и проверить", "finish_confirm": "Осталось {n} вопрос(ов) без ответа; они будут засчитаны как неверные. Завершить попытку и показать результат?", "back_to_answers": "← Вернуться к ответам", "study_switch_confirm": "Переход в режим обучения покажет правильные ответы для уже отвеченных вопросов. Продолжить?", "time_label": "Время", "skip_to_question": "Перейти к вопросу", "answer_recorded": "Ответ выбран.", "reason_label": "Почему это лучший ответ?", "reason_placeholder": "Сформулируйте ключевое ограничение и почему альтернативы хуже.", "reason_required": "Кратко объясните выбор перед открытием разбора.", "confidence_label": "Насколько вы уверены?", "confidence_low": "Низкая", "confidence_medium": "Средняя", "confidence_high": "Высокая", "confidence_required": "Выберите уровень уверенности перед открытием разбора.", "reveal_rationale": "Зафиксировать ответ и открыть разбор", "question": "Вопрос", "your_answer": "Ваш ответ", "correct": "Правильно", "why": "Почему", "complete": "Попытка завершена", "answered_of": "Вы ответили на {a} из {t} вопросов.", "unanswered": "&#9888; Без ответа: {n} (засчитаны как неверные).", "score": "Результат", "pass": "ПРОХОД", "fail": "НЕ ПРОХОД", "by_domain": "Результат по доменам", "review_wrong": "Разобрать ошибки", "all_correct": "Все ответы правильные.", "restart": "Новая попытка — новая выборка", "weight": "вес", "threshold_note": "Порог: {p}/1000. Каждая полная попытка берёт по 12 случайных вопросов из каждого домена (60 всего); результат масштабируется до 1000 как тренировочная аппроксимация реальной шкалы 100–1000.", "incorrect": "ошибок", "domain": "Домен", "select_n": "Выберите {n} вариант(а).", "select_full": "Уже выбрано {n} вариант(а). Снимите один выбор, чтобы изменить ответ.", "not_answered": "Нет ответа", "incomplete_answer": "неполный ответ", "length_full": "Полный · {n}", "length_quick": "Быстрый · {n}", "length_aria": "Длина попытки", "new_set": "Новая выборка", "focus_all": "Все домены", "focus_label": "Тренировать один домен", "focus_note": "Тренировка домена {d}: все {n} вопросов этого домена в новой последовательности. Вернитесь к «Все домены» для полной выборки.", "drill_score": "Результат домена {d}", "focus_report": "Фокус по score report", "report_note": "Целевая тренировка по score report: {n} вопросов с повышенным весом слабых objectives при сохранении покрытия всех пяти доменов.", "report_score": "Целевая тренировка", "new_draw_confirm": "Начать новую попытку с новой случайной выборкой? Текущие ответы будут удалены.", "draw_note_full": "Каждая попытка использует новую случайную выборку: сейчас {n} из {bank} вопросов банка. Полный режим соответствует реальному экзамену: 60 вопросов за 120 минут.", "draw_note_quick": "Быстрая тренировка: {n} случайных вопросов с весами доменов; каждая попытка использует новую выборку.", "summary_rotate": "Эта попытка была одной случайной выборкой из {n} вопросов банка на {bank}. Начните новую попытку, чтобы получить другой набор.", "threshold_note_quick": "Порог: {p}/1000. Быстрая тренировка использует сокращённую взвешенную выборку и масштабирует результат до 1000; для реалистичной репетиции используйте полный режим.", "misses_btn": "Повторить · {n}", "misses_label": "Повторить слабые места", "misses_empty": "Повторений сейчас нет", "misses_note": "Интервальное повторение: сейчас нужно повторить {n} вопрос(ов). Правильный retrieval переносит следующий review на более поздний срок.", "misses_score": "Результат повторения", "misses_clear": "Очистить ошибки", "misses_clear_confirm": "Удалить историю всех ошибок? Текущая попытка также будет завершена.", "bank_link": "Банк вопросов", "exam_link": "Тренировочный экзамен", "browse_all": "Все темы", "browse_title": "Банк вопросов", "browse_search": "Искать по вопросам, вариантам и объяснениям", "browse_domain": "Фильтр по домену", "browse_count": "{n} из {bank} вопросов", "browse_none": "По этому фильтру вопросов нет.", "cluster_note": "Вариант {i} из {n} для этого сценария", "loading": "Загрузка вопросов…", "options": "Настройки", "close": "Закрыть", "jump_to": "Перейти к вопросу", "topics": "Темы", "load_failed": "Не удалось загрузить банк вопросов. Проверьте соединение и обновите страницу."};
 const PASS_PCT = 72;          // per-domain bar coloring threshold (%)
 const PASS_SCORE = 720;  // overall cut score on the 100–1000 scale
 // Questions drawn per domain each attempt. Either a single number applied to
@@ -944,6 +950,10 @@ function weightedSample(items, count) {
 // Weak-spot work is scheduled retrieval, not an endless list of every past
 // mistake. A miss is due immediately. A corrective success schedules a 1-day
 // review, then 3-day and 7-day reviews. The next success marks it mastered.
+function confidencePriority(value) {
+  return value === "high" ? 2 : value === "medium" ? 1 : 0;
+}
+
 function missedIds() {
   const m = loadMisses();
   const now = Date.now();
@@ -952,6 +962,7 @@ function missedIds() {
     return item && item.n > 0 && !item.mastered && (Number(item.due) || 0) <= now && qById(id);
   });
   ids.sort((a, b) => ((m[a].due || 0) - (m[b].due || 0)) ||
+                     (confidencePriority(m[b].confidence) - confidencePriority(m[a].confidence)) ||
                      (m[b].n - m[a].n) ||
                      ((m[a].t || 0) - (m[b].t || 0)) ||
                      (a < b ? -1 : a > b ? 1 : 0));
@@ -972,6 +983,7 @@ function noteResult(q, ans) {
   const m = loadMisses();
   const cur = m[q.id];
   const now = Date.now();
+  const confidence = (state.confidence && state.confidence[q.id]) || "medium";
 
   if (!correct) {
     m[q.id] = {
@@ -979,15 +991,19 @@ function noteResult(q, ans) {
       streak: 0,
       t: now,
       due: now,
+      confidence,
       mastered: false,
     };
   } else if (cur) {
     const streak = Math.min(4, (Number(cur.streak) || 0) + 1);
+    const baseInterval = REVIEW_INTERVALS[streak] || 0;
+    const calibratedInterval = confidence === "low" ? Math.round(baseInterval / 2) : baseInterval;
     m[q.id] = {
       n: Number(cur.n) || 1,
       streak,
       t: now,
-      due: streak >= 4 ? 0 : now + REVIEW_INTERVALS[streak],
+      due: streak >= 4 ? 0 : now + calibratedInterval,
+      confidence,
       mastered: streak >= 4,
     };
   } else {
@@ -1113,7 +1129,7 @@ function tallyAttempt(active, answers) {
 // `graded` holds the ids already folded into the miss counts for this attempt,
 // so answering in study mode and then finishing cannot count one item twice.
 // `browse` is the bank-browser filter; it is view state, so it is not saved.
-const state = { current: 0, answers: {}, reasons: {}, order: [], mode: "study", length: "full",
+const state = { current: 0, answers: {}, reasons: {}, confidence: {}, order: [], mode: FIXED_EXAM ? "exam" : "study", length: "full",
                 focus: "all", reportSignature: null, graded: {}, elapsed: 0,
                 browse: { domain: "all", q: "", sub: null } };
 // The header controls are live in the markup before the bank arrives. Until
@@ -1128,7 +1144,7 @@ function save() {
   // open. Refusing this stale write prevents it from recreating old study data.
   if (state.focus === "report" && state.reportSignature !== currentSignature) return false;
   const raw = JSON.stringify(
-    { v: STORE_VERSION, answers: state.answers, reasons: state.reasons, order: state.order,
+    { v: STORE_VERSION, answers: state.answers, reasons: state.reasons, confidence: state.confidence, order: state.order,
       mode: state.mode, length: state.length, focus: state.focus,
       graded: state.graded, current: state.current, elapsed: state.elapsed,
       reportSignature: state.focus === "report" ? state.reportSignature : null });
@@ -1214,6 +1230,7 @@ function resetAfterReportStorageChange() {
   state.reportSignature = signature;
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.graded = {};
   state.current = 0;
   state.order = shuffleOrder();
@@ -1405,13 +1422,23 @@ function renderQuestion(idx) {
   }).join("");
 
   const reason = (state.reasons && state.reasons[q.id]) || "";
+  const confidence = (state.confidence && state.confidence[q.id]) || "";
+  const confidenceText = confidence === "high" ? T.confidence_high
+    : confidence === "medium" ? T.confidence_medium
+    : confidence === "low" ? T.confidence_low : "";
   const reflectionHtml = state.mode === "study" && hasAnswer(q, chosen)
     ? (reveal
         ? "<div class='study-reflection committed'><strong>" + esc(T.reason_label) + "</strong><p>" +
-            esc(reason) + "</p></div>"
+            esc(reason) + "</p><div class='study-confidence-result'>" + esc(T.confidence_label) +
+            ": <b>" + esc(confidenceText) + "</b></div></div>"
         : "<div class='study-reflection'><label for='reason-" + q.id + "'>" + esc(T.reason_label) +
             "</label><textarea id='reason-" + q.id + "' rows='3' placeholder='" +
-            esc(T.reason_placeholder) + "'></textarea><div class='study-reflection-actions'>" +
+            esc(T.reason_placeholder) + "'></textarea>" +
+            "<fieldset class='confidence-picker'><legend>" + esc(T.confidence_label) + "</legend>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='low'> " + esc(T.confidence_low) + "</label>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='medium'> " + esc(T.confidence_medium) + "</label>" +
+            "<label><input type='radio' name='confidence-" + q.id + "' value='high'> " + esc(T.confidence_high) + "</label>" +
+            "</fieldset><div class='study-reflection-actions'>" +
             "<span class='study-reflection-error' id='reason-error-" + q.id + "'></span>" +
             "<button type='button' class='nav-btn primary' onclick=\"commitStudy('" + q.id + "')\">" +
             esc(T.reveal_rationale) + "</button></div></div>")
@@ -1439,12 +1466,18 @@ function commitStudy(id) {
   const field = document.getElementById("reason-" + id);
   const error = document.getElementById("reason-error-" + id);
   const reason = field ? field.value.trim() : "";
+  const confidenceField = document.querySelector("input[name='confidence-" + id + "']:checked");
   if (reason.length < 12) {
     if (error) error.textContent = T.reason_required;
     if (field) field.focus();
     return;
   }
+  if (!confidenceField) {
+    if (error) error.textContent = T.confidence_required;
+    return;
+  }
   state.reasons[id] = reason;
+  state.confidence[id] = confidenceField.value;
   noteResult(q, state.answers[id]);
   updateMissesUI();
   save();
@@ -1542,6 +1575,7 @@ function scrollQuestionIntoView() {
 
 function setMode(mode, restoring) {
   if (!booted) return;
+  if (FIXED_EXAM) mode = "exam";
   if (!restoring && mode === "study" && state.mode !== "study" &&
       Object.keys(state.answers).length > 0 &&
       typeof confirm === "function" && !confirm(T.study_switch_confirm)) {
@@ -1552,6 +1586,8 @@ function setMode(mode, restoring) {
   document.getElementById("modeExam").classList.toggle("active", mode === "exam");
   document.getElementById("modeStudy").setAttribute("aria-pressed", String(mode === "study"));
   document.getElementById("modeExam").setAttribute("aria-pressed", String(mode === "exam"));
+  document.getElementById("modeStudy").disabled = FIXED_EXAM;
+  document.getElementById("modeExam").disabled = FIXED_EXAM;
   updateModeHint();
   save();
   renderQuestion(state.current);
@@ -1588,7 +1624,7 @@ function newDraw() {
 // Length is meaningless while a domain is focused (the drill holds the whole
 // domain bank), so the toggle is disabled there and this is unreachable.
 function setLength(length) {
-  if (!booted) return;
+  if (!booted || FIXED_EXAM) return;
   if (state.focus !== "all") return;
   if (length === state.length) return;
   if (!confirmDiscard()) return;
@@ -1604,7 +1640,7 @@ function updateLengthUI() {
       btn.textContent = label.replace("{n}", examSize(len, "all"));
       btn.classList.toggle("active", state.length === len);
       btn.setAttribute("aria-pressed", String(state.length === len));
-      btn.disabled = state.focus !== "all";
+      btn.disabled = FIXED_EXAM || state.focus !== "all";
     });
   // The weak-spot drill reads its size off the order in play, not off a
   // recomputed draw: answering during the drill adds misses, and the strip
@@ -1679,6 +1715,7 @@ function clearProgress() {
   }
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.graded = {};
   state.current = 0;
   state.focus = "all";
@@ -2037,6 +2074,16 @@ function showSummary(skipConfirm) {
   const pct = total ? Math.round(correct / total * 100) : 0;
   const score = total ? Math.round(correct / total * 1000) : 0; // scaled to 1000
   const passed = score >= PASS_SCORE;
+  if (FIXED_EXAM) {
+    writeStored("local", STORE_KEY + ":result", JSON.stringify({
+      v: 1, score, pct, correct, total, passed,
+      domains: Object.fromEntries(Object.entries(domStat).map(([d, s]) => [
+        d, { correct: s.correct, total: s.total,
+             pct: s.total ? Math.round(s.correct / s.total * 100) : 0 },
+      ])),
+      completedAt: new Date().toISOString(), elapsed: state.elapsed,
+    }));
+  }
   // A domain drill covers one domain only, so the 100–1000 scaled score and
   // its pass/fail verdict would mislead: the summary reports the raw domain
   // result instead, with the same review pane below.
@@ -2243,6 +2290,7 @@ function backToAnswers() {
 function restart() {
   state.answers = {};
   state.reasons = {};
+  state.confidence = {};
   state.elapsed = 0;
   // A fresh attempt has graded nothing yet, so every item in it can record a
   // miss again — that is what makes a repeated mistake count twice.
@@ -2410,8 +2458,9 @@ function init() {
   if (saved) {
     state.answers = saved.answers || {};
     state.reasons = saved.reasons || {};
+    state.confidence = saved.confidence || {};
     state.order = saved.order;
-    state.mode = saved.mode || "study";
+    state.mode = FIXED_EXAM ? "exam" : (saved.mode || "study");
     // load() normalized the length, so a pre-quick payload restores as "full".
     state.length = saved.length;
     // Same for the focus: a pre-drill payload restores as the full draw.

@@ -4,12 +4,12 @@
   "summary": "Question-format coverage and select-N mechanics against the official MC/MR formats.",
   "findings": [],
   "metrics": {
-    "foundation_items": 481,
-    "foundation_multi": 10,
-    "foundation_multi_pct": 2.1,
-    "professional_items": 421,
-    "professional_multi": 102,
-    "professional_multi_pct": 24.2,
+    "foundation_items": 301,
+    "foundation_multi": 7,
+    "foundation_multi_pct": 2.3,
+    "professional_items": 295,
+    "professional_multi": 71,
+    "professional_multi_pct": 24.1,
     "foundation_official_items": 60,
     "professional_official_items": 63
   }

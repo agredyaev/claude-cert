@@ -244,6 +244,9 @@
     const practiceHref = ru ? 'practical/ru.html' : 'practical/en.html';
     const guideHref = ru ? 'guides/ru.html' : 'guides/en.html';
     const labsHref = ru ? 'labs/foundation-ru.html' : 'labs/foundation-en.html';
+    const readinessAHref = ru ? 'practical/readiness-a-ru.html' : 'practical/readiness-a-en.html';
+    const readinessBHref = ru ? 'practical/readiness-b-ru.html' : 'practical/readiness-b-en.html';
+    const readinessCHref = ru ? 'practical/readiness-c-ru.html' : 'practical/readiness-c-en.html';
     const professionalHref = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
     const readJson = key => {
       try {
@@ -338,6 +341,14 @@
     const masteryFill = document.getElementById('training-progress-fill');
     if (masteryFill) masteryFill.style.width = `${masteryPct}%`;
 
+    const caseState = readJson('ccaf-cases:state');
+    const caseDone = caseState && caseState.done && typeof caseState.done === 'object'
+      ? Object.values(caseState.done).filter(Boolean).length : 0;
+    const casesCopy = document.getElementById('training-cases-copy');
+    if (casesCopy) casesCopy.textContent = `${caseDone} / 6`;
+    const casesStat = document.getElementById('training-cases-stat');
+    if (casesStat) casesStat.textContent = `${caseDone} / 6`;
+
     const labState = readJson('ccaf-labs:state');
     const labDone = labState && labState.done && typeof labState.done === 'object'
       ? Object.values(labState.done).filter(Boolean).length : 0;
@@ -348,8 +359,36 @@
 
     const preflight = readJson('ccaf-preflight:state');
     const checked = Array.isArray(preflight && preflight.checked) ? new Set(preflight.checked).size : 0;
+    const evidenceCopy = document.getElementById('training-evidence-copy');
+    if (evidenceCopy) evidenceCopy.textContent = `${checked} / 10`;
+
+    const readinessAResult = readJson('ccaf-readiness-a-en:result');
+    const readinessBResult = readJson('ccaf-readiness-b-en:result');
+    const readinessCResult = readJson('ccaf-readiness-c-en:result');
+    const readinessResults = [
+      ['A', readinessAResult, readinessAHref],
+      ['B', readinessBResult, readinessBHref],
+      ['C', readinessCResult, readinessCHref],
+    ];
+    const passedReadiness = readinessResults.find(([, value]) => value && value.passed);
+    const readinessPassed = Boolean(passedReadiness);
+    const latestReadinessEntry = [...readinessResults].reverse().find(([, value]) => value);
+    const latestReadiness = latestReadinessEntry ? latestReadinessEntry[1] : null;
+    const nextUnusedReadiness = readinessResults.find(([, value]) => !value);
     const readinessCopy = document.getElementById('training-readiness-copy');
-    if (readinessCopy) readinessCopy.textContent = `${checked} / 10`;
+    if (readinessCopy) {
+      if (!latestReadinessEntry) readinessCopy.textContent = ru ? 'не пройдено' : 'not taken';
+      else {
+        const [form, value] = latestReadinessEntry;
+        readinessCopy.textContent = `Form ${form} · ${value.score} / 1000`;
+      }
+    }
+    const readinessLink = document.getElementById('training-readiness-link');
+    if (readinessLink) {
+      readinessLink.href = readinessPassed
+        ? (passedReadiness ? passedReadiness[2] : readinessAHref)
+        : (nextUnusedReadiness ? nextUnusedReadiness[2] : readinessCHref);
+    }
 
     const nextTitle = document.getElementById('training-next-title');
     const nextCopy = document.getElementById('training-next-copy');
@@ -373,6 +412,18 @@
       }))
       .filter(item => item.mastered < item.total)
       .sort((a, b) => a.ratio - b.ratio || b.attempts - a.attempts || a.index - b.index)[0];
+
+    const latestFailedReadiness = [...readinessResults].reverse()
+      .find(([, value]) => value && !value.passed);
+    const failedAt = latestFailedReadiness && latestFailedReadiness[1].completedAt
+      ? Date.parse(latestFailedReadiness[1].completedAt) : 0;
+    const remediationAfterFailure = failedAt > 0 && Object.values(masteryItems)
+      .some(item => item && Number(item.t || 0) > failedAt);
+    const failedDomains = latestFailedReadiness && latestFailedReadiness[1].domains
+      ? Object.entries(latestFailedReadiness[1].domains)
+          .sort((a, b) => Number(a[1].pct || 0) - Number(b[1].pct || 0))
+      : [];
+    const readinessWeakDomain = failedDomains.length ? failedDomains[0][0] : null;
 
     if (missCount > 0) {
       setNext(
@@ -402,6 +453,15 @@
         `${guideHref}#domain-${domain}-material`,
         ru ? 'Материал' : 'Material',
       );
+    } else if (caseDone < 6) {
+      setNext(
+        'Scenario transfer',
+        ru
+          ? `Завершено ${caseDone} из 6 официальных scenario families. Сначала сформулируйте решение, затем откройте rubric.`
+          : `${caseDone} of 6 official scenario families complete. Write the decision first, then open the rubric.`,
+        ru ? 'cases/foundation-ru.html' : 'cases/foundation-en.html',
+        ru ? 'Кейсы' : 'Cases',
+      );
     } else if (labDone < 4) {
       setNext(
         'Hands-on labs',
@@ -411,36 +471,76 @@
         labsHref,
         ru ? 'Продолжить' : 'Continue',
       );
+    } else if (!readinessAResult) {
+      setNext(
+        'Held-out readiness · A',
+        ru
+          ? '60 ранее не показанных вопросов. Exam-only: ответы откроются только после завершения.'
+          : '60 unseen questions. Exam-only: answers reveal only after completion.',
+        readinessAHref,
+        ru ? 'Начать' : 'Start',
+      );
+    } else if (!readinessPassed && latestFailedReadiness && !remediationAfterFailure) {
+      const form = latestFailedReadiness[0];
+      const domain = readinessWeakDomain || '1';
+      const pct = latestFailedReadiness[1].domains?.[domain]?.pct;
+      setNext(
+        ru ? `Remediation после Form ${form}` : `Remediate after Form ${form}`,
+        ru
+          ? `Худший домен: D${domain}${Number.isFinite(pct) ? ` · ${pct}%` : ''}. Сначала решите новые training-задачи и обновите mastery; следующая скрытая форма пока не расходуется.`
+          : `Weakest domain: D${domain}${Number.isFinite(pct) ? ` · ${pct}%` : ''}. Solve new training items and update mastery before consuming the next unseen form.`,
+        `${guideHref}#domain-${domain}-material`,
+        ru ? 'Материал' : 'Material',
+      );
+    } else if (!readinessPassed && nextUnusedReadiness) {
+      const [form, , href] = nextUnusedReadiness;
+      setNext(
+        `Held-out readiness · ${form}`,
+        ru
+          ? 'После remediation используйте следующую ранее не показанную форму.'
+          : 'After remediation, use the next previously unseen form.',
+        href,
+        ru ? 'Проверить' : 'Check',
+      );
+    } else if (!readinessPassed) {
+      setNext(
+        ru ? 'Продолжить remediation' : 'Continue remediation',
+        ru
+          ? 'Все подготовленные held-out формы использованы без проходного результата. Продолжайте training/labs; для новой независимой проверки нужен новый form.'
+          : 'All prepared held-out forms were used without a passing result. Continue training/labs; a new independent check requires a new form.',
+        `${practiceHref}?mode=study&length=quick`,
+        ru ? 'Практика' : 'Practice',
+      );
     } else if (checked < 10) {
       setNext(
-        'Readiness',
+        ru ? 'Подтвердить readiness evidence' : 'Complete readiness evidence',
         ru
-          ? `Освоены все task statements и labs. Осталось подтвердить readiness: ${checked} / 10.`
-          : `All task statements and labs are complete. Finish the readiness evidence: ${checked} / 10.`,
+          ? `Held-out пройден. Осталось подтвердить практические критерии: ${checked} / 10.`
+          : `Held-out check passed. Complete the practical evidence: ${checked} / 10.`,
         'preflight/architect-foundations.html',
-        ru ? 'Проверить' : 'Check',
+        ru ? 'Завершить' : 'Complete',
       );
     } else {
       setNext(
         'CCAR-P · Professional',
         ru
-          ? 'Foundation mastery подтверждён. Можно переходить к следующему архитектурному уровню.'
-          : 'Foundation mastery is complete. Move to the next architecture level.',
+          ? 'Foundation mastery, labs, held-out readiness и evidence подтверждены.'
+          : 'Foundation mastery, labs, held-out readiness, and evidence are complete.',
         professionalHref,
         ru ? 'Открыть' : 'Open',
       );
     }
 
-    const professionalReady = checked === 10 && labDone === 4 && masteredCount === 30;
+    const professionalReady = checked === 10 && caseDone === 6 && labDone === 4 && masteredCount === 30 && readinessPassed;
     const professionalStatus = document.getElementById('professional-stage-status');
     if (professionalStatus) {
       professionalStatus.textContent = professionalReady
-        ? (ru ? 'Foundation mastery gate завершён.' : 'Foundation mastery gate complete.')
+        ? (ru ? 'Foundation gate завершён.' : 'Foundation gate complete.')
         : (ru
-          ? `Нужно mastery 30 / 30, labs 4 / 4 и readiness 10 / 10. Сейчас: ${masteredCount} / 30, ${labDone} / 4, ${checked} / 10.`
-          : `Requires mastery 30 / 30, labs 4 / 4, and readiness 10 / 10. Current: ${masteredCount} / 30, ${labDone} / 4, ${checked} / 10.`);
+          ? `Нужно mastery 30 / 30, cases 6 / 6, labs 4 / 4, held-out ≥720 и evidence 10 / 10. Сейчас: ${masteredCount} / 30, ${caseDone} / 6, ${labDone} / 4, ${readinessPassed ? 'held-out PASS' : 'held-out —'}, ${checked} / 10.`
+          : `Requires mastery 30 / 30, cases 6 / 6, labs 4 / 4, held-out ≥720, and evidence 10 / 10. Current: ${masteredCount} / 30, ${caseDone} / 6, ${labDone} / 4, ${readinessPassed ? 'held-out PASS' : 'held-out —'}, ${checked} / 10.`);
     }
-    for (const id of ['professional-guide-link', 'professional-practice-link']) {
+    for (const id of ['professional-workspace-link']) {
       const link = document.getElementById(id);
       if (!link) continue;
       link.classList.toggle('disabled', !professionalReady);
@@ -486,6 +586,274 @@
   }
 
 
+
+  // Professional workspace: the same task-first mechanics as Foundation, but
+  // against the seven-domain / 38-objective Professional blueprint.
+  const professionalDashboard = document.querySelector('[data-prof-training-dashboard]');
+  if (professionalDashboard) {
+    const ru = professionalDashboard.dataset.trainingLang === 'ru';
+    const practiceHref = ru ? 'practical/professional-ru.html' : 'practical/professional-en.html';
+    const guideHref = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
+    const capstoneHref = ru ? 'professional/capstone-ru.html' : 'professional/capstone-en.html';
+    const readinessAHref = ru ? 'practical/readiness-a-professional-ru.html' : 'practical/readiness-a-professional-en.html';
+    const readinessBHref = ru ? 'practical/readiness-b-professional-ru.html' : 'practical/readiness-b-professional-en.html';
+    const readJson = key => {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const attempt = readJson('ccarp-exam-en');
+    const missRecord = readJson('ccarp-exam-en:misses');
+    const missItems = missRecord && (missRecord.v === 1 || missRecord.v === 2) &&
+      missRecord.items && typeof missRecord.items === 'object' ? missRecord.items : {};
+    const now = Date.now();
+    const missCount = Object.values(missItems).filter(item => {
+      if (!item || Number(item.n) <= 0) return false;
+      if (missRecord && missRecord.v === 1) return true;
+      return !item.mastered && (Number(item.due) || 0) <= now;
+    }).length;
+    const misses = document.getElementById('professional-misses');
+    if (misses) misses.textContent = String(missCount);
+    const missesCopy = document.getElementById('professional-misses-copy');
+    if (missesCopy) missesCopy.textContent = missCount
+      ? (ru ? `Сейчас к повторению: ${missCount}.` : `${missCount} spaced review${missCount === 1 ? '' : 's'} due now.`)
+      : (ru ? 'Сейчас повторений нет.' : 'No spaced reviews due now.');
+
+    const masteryState = readJson('ccarp-exam-en:mastery');
+    const masteryItems = masteryState && masteryState.v === 1 &&
+      masteryState.items && typeof masteryState.items === 'object' ? masteryState.items : {};
+    const masteredItems = Object.values(masteryItems).filter(item => item && item.mastered);
+    const masteredCount = masteredItems.length;
+    const masteredEl = document.getElementById('professional-mastered');
+    if (masteredEl) masteredEl.textContent = `${masteredCount} / 38`;
+
+    const domainTotals = [6, 5, 8, 6, 5, 5, 3];
+    const domainMastered = [0, 0, 0, 0, 0, 0, 0];
+    const domainAttempts = [0, 0, 0, 0, 0, 0, 0];
+    Object.values(masteryItems).forEach(item => {
+      if (!item) return;
+      const index = Number(item.domain) - 1;
+      if (index < 0 || index >= domainTotals.length) return;
+      if (item.mastered) domainMastered[index] += 1;
+      domainAttempts[index] += Number(item.attempts || 0);
+    });
+
+    for (let domain = 1; domain <= 7; domain += 1) {
+      const el = document.getElementById(`professional-domain-mastered-${domain}`);
+      if (!el) continue;
+      el.textContent = ru
+        ? `${domainMastered[domain - 1]} / ${domainTotals[domain - 1]} освоено`
+        : `${domainMastered[domain - 1]} / ${domainTotals[domain - 1]} mastered`;
+    }
+
+    document.querySelectorAll('[data-prof-objective-key]').forEach(row => {
+      const item = masteryItems[row.dataset.profObjectiveKey];
+      const status = row.querySelector('.objective-status');
+      row.classList.remove('is-new', 'is-learning', 'is-mastered');
+      if (item && item.mastered) {
+        row.classList.add('is-mastered');
+        if (status) status.textContent = ru ? 'освоено' : 'mastered';
+      } else if (item && Number(item.attempts || 0) > 0) {
+        row.classList.add('is-learning');
+        const attempts = Number(item.attempts || 0);
+        const correct = Number(item.correct || 0);
+        if (status) status.textContent = ru
+          ? `в работе · ${correct}/${attempts}`
+          : `learning · ${correct}/${attempts}`;
+      } else {
+        row.classList.add('is-new');
+        if (status) status.textContent = ru ? 'не начато' : 'not started';
+      }
+    });
+    const fill = document.getElementById('professional-progress-fill');
+    if (fill) fill.style.width = `${Math.round(masteredCount / 38 * 100)}%`;
+
+    const capstoneState = readJson('ccarp-capstone:state');
+    const capstoneEvidenced = capstoneState && capstoneState.evidenced &&
+      typeof capstoneState.evidenced === 'object'
+      ? Object.values(capstoneState.evidenced).filter(Boolean).length : 0;
+    const capstoneStat = document.getElementById('professional-capstone-stat');
+    if (capstoneStat) capstoneStat.textContent = `${capstoneEvidenced} / 14`;
+    const capstoneCopy = document.getElementById('professional-capstone-copy');
+    if (capstoneCopy) capstoneCopy.textContent = `${capstoneEvidenced} / 14`;
+
+    const readinessAResult = readJson('ccarp-readiness-a-en:result');
+    const readinessBResult = readJson('ccarp-readiness-b-en:result');
+    const readinessPassed = Boolean(
+      (readinessAResult && readinessAResult.passed) ||
+      (readinessBResult && readinessBResult.passed)
+    );
+    const readinessCopy = document.getElementById('professional-readiness-copy');
+    if (readinessCopy) {
+      const fmt = result => result ? `${result.score} / 1000` : '—';
+      readinessCopy.textContent = `A ${fmt(readinessAResult)} · B ${fmt(readinessBResult)}`;
+    }
+
+    const evidence = readJson('ccarp-preflight:state');
+    const evidenceCount = Array.isArray(evidence && evidence.checked)
+      ? new Set(evidence.checked).size : 0;
+    const evidenceCopy = document.getElementById('professional-evidence-copy');
+    if (evidenceCopy) evidenceCopy.textContent = `${evidenceCount} / 10`;
+
+    const weakestDomain = domainTotals
+      .map((total, index) => ({
+        index,
+        mastered: domainMastered[index],
+        total,
+        attempts: domainAttempts[index],
+        ratio: domainMastered[index] / total,
+      }))
+      .filter(item => item.mastered < item.total)
+      .sort((a, b) => a.ratio - b.ratio || b.attempts - a.attempts || a.index - b.index)[0];
+
+    const nextTitle = document.getElementById('professional-next-title');
+    const nextCopy = document.getElementById('professional-next-copy');
+    const primary = document.getElementById('professional-primary');
+    const setNext = (title, copy, href, action) => {
+      if (nextTitle) nextTitle.textContent = title;
+      if (nextCopy) nextCopy.textContent = copy;
+      if (primary) {
+        primary.href = href;
+        primary.textContent = action;
+      }
+    };
+
+    if (missCount > 0) {
+      setNext(
+        ru ? 'Интервальное повторение' : 'Spaced review',
+        ru
+          ? `Сейчас к повторению ${missCount} вопрос(ов). Сначала восстановите решение, затем сравните rationale.`
+          : `${missCount} review item${missCount === 1 ? '' : 's'} are due. Retrieve the decision first, then compare the rationale.`,
+        `${practiceHref}?mode=study&focus=misses`,
+        ru ? 'Повторить' : 'Review',
+      );
+    } else if (!Object.keys(masteryItems).length) {
+      setNext(
+        'Diagnostic',
+        ru
+          ? 'Короткая смешанная попытка без подсказок. Результат нужен для маршрутизации, а не как readiness score.'
+          : 'Short mixed no-reveal attempt. Use it to route study, not as a readiness score.',
+        `${practiceHref}?mode=exam&length=quick`,
+        ru ? 'Начать' : 'Start',
+      );
+    } else if (weakestDomain) {
+      const domain = weakestDomain.index + 1;
+      setNext(
+        ru ? `D${domain}: материал → retrieval` : `D${domain}: material → retrieval`,
+        ru
+          ? `Освоено ${weakestDomain.mastered} из ${weakestDomain.total} objectives. Закройте decision rules и решите новые сценарные задачи.`
+          : `${weakestDomain.mastered} of ${weakestDomain.total} objectives mastered. Close the decision-rule gaps, then solve new scenario tasks.`,
+        `${guideHref}#domain-${domain}-material`,
+        ru ? 'Материал' : 'Material',
+      );
+    } else if (capstoneEvidenced < 14) {
+      setNext(
+        'Professional capstone',
+        ru
+          ? `Подтверждено ${capstoneEvidenced} из 14 artifacts/stress tests. Продолжайте одну end-to-end архитектуру.`
+          : `${capstoneEvidenced} of 14 artifacts/stress tests evidenced. Continue the same end-to-end architecture.`,
+        capstoneHref,
+        ru ? 'Продолжить' : 'Continue',
+      );
+    } else if (!readinessAResult) {
+      setNext(
+        'Held-out readiness A',
+        ru
+          ? 'Первая независимая форма: 63 ранее не показанных вопроса. Ответы откроются только после завершения.'
+          : 'First independent form: 63 previously unseen questions. Answers reveal only after completion.',
+        readinessAHref,
+        ru ? 'Проверить' : 'Check',
+      );
+    } else if (!readinessAResult.passed && !readinessBResult) {
+      setNext(
+        'Held-out readiness B',
+        ru
+          ? 'После remediation используйте вторую непересекающуюся форму. Вопросы из A больше не используются как readiness evidence.'
+          : 'After remediation, use the second non-overlapping form. Form A is now exposed and no longer counts as unseen evidence.',
+        readinessBHref,
+        ru ? 'Проверить' : 'Check',
+      );
+    } else if (!readinessPassed) {
+      const latest = readinessBResult || readinessAResult;
+      const domains = (latest && latest.domains) || {};
+      const weakest = Object.entries(domains)
+        .sort((a, b) => Number(a[1].pct || 0) - Number(b[1].pct || 0))[0];
+      const domain = weakest ? weakest[0] : '1';
+      const pct = weakest ? weakest[1].pct : null;
+      setNext(
+        ru ? 'Дополнительная remediation' : 'Further remediation',
+        ru
+          ? `Обе независимые формы использованы. Слабейший домен: D${domain}${Number.isFinite(pct) ? ` · ${pct}%` : ''}. Возвращайтесь к новым training-задачам; held-out формы не переиспользуются.`
+          : `Both independent forms are now exposed. Weakest domain: D${domain}${Number.isFinite(pct) ? ` · ${pct}%` : ''}. Return to new training items; held-out forms are not recycled.`,
+        `${guideHref}#domain-${domain}-material`,
+        ru ? 'Материал' : 'Material',
+      );
+    } else if (evidenceCount < 10) {
+      setNext(
+        ru ? 'Подтвердить readiness evidence' : 'Complete readiness evidence',
+        ru
+          ? `Held-out пройден. Осталось подтвердить практические критерии: ${evidenceCount} / 10.`
+          : `Held-out passed. Complete the practical evidence: ${evidenceCount} / 10.`,
+        'preflight/architect-professional.html',
+        ru ? 'Завершить' : 'Complete',
+      );
+    } else {
+      setNext(
+        ru ? 'Готовность подтверждена' : 'Readiness demonstrated',
+        ru
+          ? '38/38 mastery, capstone 14/14, held-out pass и evidence 10/10.'
+          : '38/38 mastery, capstone 14/14, held-out pass, and evidence 10/10.',
+        (readinessBResult && readinessBResult.passed) ? readinessBHref : readinessAHref,
+        ru ? 'Результат' : 'Result',
+      );
+    }
+
+    const ready = masteredCount === 38 && capstoneEvidenced === 14 &&
+      readinessPassed && evidenceCount === 10;
+    const readyStatus = document.getElementById('professional-ready-status');
+    const readyDetail = document.getElementById('professional-ready-detail');
+    if (readyStatus) readyStatus.textContent = ready
+      ? (ru ? 'Подтверждена' : 'Demonstrated')
+      : (ru ? 'Не подтверждена' : 'Not demonstrated');
+    if (readyDetail) readyDetail.textContent = ready
+      ? (ru ? 'Все четыре независимых сигнала закрыты.' : 'All four independent evidence signals are complete.')
+      : (ru
+        ? `Mastery ${masteredCount}/38 · capstone ${capstoneEvidenced}/14 · held-out ${readinessPassed ? 'PASS' : '—'} · evidence ${evidenceCount}/10`
+        : `Mastery ${masteredCount}/38 · capstone ${capstoneEvidenced}/14 · held-out ${readinessPassed ? 'PASS' : '—'} · evidence ${evidenceCount}/10`);
+
+    const order = Array.isArray(attempt && attempt.order) ? attempt.order : [];
+    if (order.length) {
+      const answers = attempt.answers && typeof attempt.answers === 'object' ? attempt.answers : {};
+      const answered = order.filter(id => {
+        const answer = answers[id];
+        return Array.isArray(answer) ? answer.length > 0 : (typeof answer === 'string' && answer.length > 0);
+      }).length;
+      const detail = document.getElementById('professional-progress-detail');
+      if (answered < order.length) {
+        if (detail) detail.textContent = ru
+          ? `Активная попытка · ${answered} / ${order.length} отвечено.`
+          : `Active attempt · ${answered} / ${order.length} answered.`;
+        setNext(
+          ru ? 'Продолжить попытку' : 'Resume attempt',
+          ru
+            ? `Не начинайте новый сет поверх незавершённого: ${answered} / ${order.length}.`
+            : `Finish the current set before starting another: ${answered} / ${order.length}.`,
+          practiceHref,
+          ru ? 'Продолжить' : 'Resume',
+        );
+      } else if (detail) {
+        detail.textContent = ru
+          ? `Последняя попытка завершена · mastery ${masteredCount} / 38.`
+          : `Last attempt complete · mastery ${masteredCount} / 38.`;
+      }
+    }
+  }
+
+
   // Foundation hands-on labs: completion means the learner checked the
   // deliverable against every acceptance criterion, not merely opened the page.
   const labsPage = document.querySelector('[data-labs]');
@@ -524,6 +892,171 @@
       });
     });
     render();
+  }
+
+
+  // Foundation scenario transfer: a case counts only after the learner wrote a
+  // substantive response for every prompt and opened each rubric afterward.
+  const casesPage = document.querySelector('[data-cases]');
+  const CASES_KEY = 'ccaf-cases:state';
+  const readCaseState = () => {
+    try {
+      const raw = localStorage.getItem(CASES_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && parsed.v === 1
+        ? {
+            answers: parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {},
+            reviewed: parsed.reviewed && typeof parsed.reviewed === 'object' ? parsed.reviewed : {},
+            done: parsed.done && typeof parsed.done === 'object' ? parsed.done : {},
+          }
+        : { answers: {}, reviewed: {}, done: {} };
+    } catch {
+      return { answers: {}, reviewed: {}, done: {} };
+    }
+  };
+  const writeCaseState = state => {
+    try {
+      localStorage.setItem(CASES_KEY, JSON.stringify({ v: 1, ...state, updatedAt: Date.now() }));
+    } catch {
+      // The exercises remain usable without persistence.
+    }
+  };
+  if (casesPage) {
+    const state = readCaseState();
+    const cards = [...casesPage.querySelectorAll('[data-scenario-id]')];
+    const progress = document.getElementById('cases-progress');
+
+    const renderCase = card => {
+      const scenario = card.dataset.scenarioId;
+      const prompts = [...card.querySelectorAll('[data-case-prompt]')];
+      const complete = card.querySelector('[data-case-id]');
+      const ready = prompts.every(prompt => {
+        const id = prompt.dataset.casePrompt;
+        const answer = String(state.answers[id] || '').trim();
+        return answer.length >= 40 && Boolean(state.reviewed[id]);
+      });
+      complete.disabled = !ready;
+      complete.checked = Boolean(state.done[scenario]) && ready;
+      if (!ready && state.done[scenario]) {
+        delete state.done[scenario];
+        writeCaseState(state);
+      }
+    };
+
+    const renderProgress = () => {
+      const count = cards.filter(card => {
+        const box = card.querySelector('[data-case-id]');
+        return box && box.checked;
+      }).length;
+      if (progress) progress.textContent = `${count} / ${cards.length}`;
+    };
+
+    cards.forEach(card => {
+      card.querySelectorAll('[data-case-answer]').forEach(field => {
+        const id = field.dataset.caseAnswer;
+        field.value = state.answers[id] || '';
+        field.addEventListener('input', () => {
+          state.answers[id] = field.value;
+          writeCaseState(state);
+          renderCase(card);
+          renderProgress();
+        });
+      });
+      card.querySelectorAll('[data-case-rubric]').forEach(details => {
+        const id = details.dataset.caseRubric;
+        details.addEventListener('toggle', () => {
+          if (details.open) state.reviewed[id] = true;
+          writeCaseState(state);
+          renderCase(card);
+          renderProgress();
+        });
+      });
+      const box = card.querySelector('[data-case-id]');
+      if (box) {
+        box.addEventListener('change', () => {
+          state.done[box.dataset.caseId] = box.checked;
+          writeCaseState(state);
+          renderProgress();
+        });
+      }
+      renderCase(card);
+    });
+    renderProgress();
+  }
+
+
+  // Professional capstone: progress is evidence-based. Artifacts require a
+  // substantive written note plus rubric review; injected failures require a
+  // substantive diagnostic response. No AI judge assigns correctness.
+  const capstonePage = document.querySelector('[data-capstone]');
+  const CAPSTONE_KEY = 'ccarp-capstone:state';
+  const readCapstoneState = () => {
+    try {
+      const raw = localStorage.getItem(CAPSTONE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && parsed.v === 1
+        ? {
+            answers: parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {},
+            reviewed: parsed.reviewed && typeof parsed.reviewed === 'object' ? parsed.reviewed : {},
+            evidenced: parsed.evidenced && typeof parsed.evidenced === 'object' ? parsed.evidenced : {},
+          }
+        : { answers: {}, reviewed: {}, evidenced: {} };
+    } catch {
+      return { answers: {}, reviewed: {}, evidenced: {} };
+    }
+  };
+  const writeCapstoneState = state => {
+    try {
+      localStorage.setItem(CAPSTONE_KEY, JSON.stringify({ v: 1, ...state, updatedAt: Date.now() }));
+    } catch {
+      // The capstone remains usable without persistence.
+    }
+  };
+  if (capstonePage) {
+    const state = readCapstoneState();
+    const items = [...capstonePage.querySelectorAll('[data-capstone-item]')];
+    const progress = document.getElementById('capstone-progress');
+
+    const renderItem = item => {
+      const id = item.dataset.capstoneItem;
+      const kind = item.dataset.capstoneKind;
+      const answer = String(state.answers[id] || '').trim();
+      const ready = answer.length >= 80 && (kind === 'stress' || Boolean(state.reviewed[id]));
+      state.evidenced[id] = ready;
+      item.classList.toggle('is-evidenced', ready);
+      const label = item.querySelector(`[data-capstone-state="${id}"]`);
+      if (label) label.textContent = ready
+        ? (capstonePage.dataset.trainingLang === 'ru' ? 'подтверждено' : 'evidenced')
+        : (capstonePage.dataset.trainingLang === 'ru' ? 'не подтверждено' : 'not evidenced');
+    };
+
+    const renderProgress = () => {
+      items.forEach(renderItem);
+      const count = items.filter(item => state.evidenced[item.dataset.capstoneItem]).length;
+      if (progress) progress.textContent = `${count} / ${items.length}`;
+      writeCapstoneState(state);
+    };
+
+    items.forEach(item => {
+      const field = item.querySelector('[data-capstone-answer]');
+      if (field) {
+        const id = field.dataset.capstoneAnswer;
+        field.value = state.answers[id] || '';
+        field.addEventListener('input', () => {
+          state.answers[id] = field.value;
+          renderProgress();
+        });
+      }
+      const details = item.querySelector('[data-capstone-rubric]');
+      if (details) {
+        const id = details.dataset.capstoneRubric;
+        details.addEventListener('toggle', () => {
+          if (details.open) state.reviewed[id] = true;
+          renderProgress();
+        });
+      }
+    });
+    renderProgress();
   }
 
   // Heading anchors: copy the section URL on click. Hash navigation still

@@ -1,0 +1,13 @@
+{
+  "validator": "05-distractor-plausibility",
+  "status": "PASS",
+  "summary": "Stress-sample review of plausible alternatives on the same decision axis.",
+  "findings": [],
+  "metrics": {
+    "reviewed": 29,
+    "strong": 29,
+    "mixed": 0,
+    "poor": 0,
+    "flagged": []
+  }
+}
