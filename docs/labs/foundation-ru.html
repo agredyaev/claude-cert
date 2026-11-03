@@ -1,1 +1,131 @@
-<!doctype html><html data-theme="dark" lang="ru"><head><meta charset="utf-8"><meta content="width=device-width,initial-scale=1" name="viewport"><title>CCAR-F Practical Labs · RU</title><base href="/claude-cert/"><link href="assets/Inter-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/JetBrainsMono-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/fonts.css" rel="stylesheet"><link href="styles.css" rel="stylesheet"><link href="assets/favicon.png" rel="icon" type="image/png"><script id="bank-map" type="application/json">{"practical/en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json"}</script><script>(()=>{const e=localStorage.getItem("theme");document.documentElement.dataset.theme=e||"dark"})()</script></head><body><header class="topbar"><a href="ru.html" aria-label="CCAR" class="brand trainer-brand"><span>CCAR</span></a><nav aria-label="Управление страницей" class="topbar-actions"><div class="site-language-toggle" aria-label="Язык интерфейса" role="group"><a href="labs/foundation-en.html">EN</a> <span aria-current="page">RU</span></div><button class="icon-btn" type="button" aria-label="Поиск" id="search-toggle">⌕</button> <button class="icon-btn" type="button" aria-label="Переключить тему" id="theme-toggle">◐</button></nav></header><dialog aria-labelledby="search-title" id="search-dialog"><h2 class="visually-hidden" id="search-title">Поиск по учебным материалам</h2><div class="search-filter" aria-label="Фильтр по языку интерфейса" role="group"><button class="search-lang active" type="button" aria-pressed="true" data-lang="all">Все</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="en">EN</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="ru">RU</button></div><label class="visually-hidden" for="search-input">Поисковый запрос</label> <input type="search" autocomplete="off" id="search-input" placeholder="Поиск по гайду…"><p class="search-status" aria-live="polite" id="search-status" role="status"></p><ul aria-label="Результаты поиска" id="search-results"></ul></dialog><main class="labs-page training-dashboard" data-labs data-training-lang="ru"><section class="labs-head"><div><p class="training-panel-label">CCAR-F · Hands-on</p><h1>Практические лабораторные</h1></div><div class="labs-progress"><span>Выполнено</span> <strong id="labs-progress">0 / 4</strong></div></section><p class="labs-note">Отмечайте лабораторную только после проверки deliverable по всем критериям. Чтение примера не считается выполнением.</p><div class="labs-grid"><article class="lab-card"><div class="lab-card-head"><span class="training-path-number">01</span> <span class="training-domain-id">D1 · D2 · D5</span></div><h2>Multi-Tool Agent</h2><p>Соберите agent loop с 3–4 инструментами, минимум двумя похожими по назначению, structured errors и обязательной эскалацией.</p><h3>Результат</h3><p>Код agent loop + tool schemas + два failure cases + журнал решения об эскалации.</p><h3>Критерии</h3><ul><li>tool_use/end_turn обрабатываются явно</li><li>обязательный business invariant enforced программно</li><li>ошибка несёт category/retryability/context</li><li>неоднозначный запрос приводит к корректной clarification/escalation</li></ul><label class="lab-complete"><input type="checkbox" data-lab-id="agent"> <span>Выполнено и проверено по критериям</span></label></article><article class="lab-card"><div class="lab-card-head"><span class="training-path-number">02</span> <span class="training-domain-id">D3 · D2</span></div><h2>Claude Code Team Workflow</h2><p>Настройте реальный репозиторий: CLAUDE.md, conditional rules, reusable skill/command и MCP integration.</p><h3>Результат</h3><p>Минимальный repo diff с конфигурацией + два примера задач, где разные правила загружаются по scope.</p><h3>Критерии</h3><ul><li>общие правила не дублируются по подпапкам</li><li>path-specific conventions грузятся только где нужны</li><li>shared workflow version-controlled</li><li>сложная задача сначала исследуется/планируется</li></ul><label class="lab-complete"><input type="checkbox" data-lab-id="claude-code"> <span>Выполнено и проверено по критериям</span></label></article><article class="lab-card"><div class="lab-card-head"><span class="training-path-number">03</span> <span class="training-domain-id">D4 · D5</span></div><h2>Structured Data Extraction</h2><p>Постройте extraction pipeline со schema-constrained output, semantic validation, retry-with-feedback и обработкой partial failures.</p><h3>Результат</h3><p>Schema + 10 тестовых документов + validator + failure report по каждому неуспешному документу.</p><h3>Критерии</h3><ul><li>required/optional/null semantics различаются</li><li>semantic validation отделена от JSON syntax</li><li>retry получает конкретную validation error</li><li>успешные документы не перерабатываются из-за одного failure</li></ul><label class="lab-complete"><input type="checkbox" data-lab-id="extraction"> <span>Выполнено и проверено по критериям</span></label></article><article class="lab-card"><div class="lab-card-head"><span class="training-path-number">04</span> <span class="training-domain-id">D1 · D5</span></div><h2>Multi-Agent Research</h2><p>Спроектируйте coordinator + 2–3 subagents для исследования, где coverage, error propagation и provenance проверяются явно.</p><h3>Результат</h3><p>Task decomposition + subagent contracts + synthesis output с source attribution и отмеченными gaps.</p><h3>Критерии</h3><ul><li>decomposition покрывает все requested dimensions</li><li>subagent получает достаточный context</li><li>partial failure возвращает usable results + gap</li><li>synthesis не скрывает missing coverage</li></ul><label class="lab-complete"><input type="checkbox" data-lab-id="research"> <span>Выполнено и проверено по критериям</span></label></article></div><p class="labs-reference"><a href="guides/ru.html#practical-exercises">Материал и примеры в Foundation guide</a></p></main><script defer="defer" src="vendor/minisearch.js"></script><script defer="defer" src="app.js?v=e7f6cacf46ee"></script></body></html>
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CCAR-F Practical Labs · RU</title>
+<base href="/claude-cert/">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/Inter-variable.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/JetBrainsMono-variable.woff2">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<script type="application/json" id="bank-map">{"practical/en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json"}</script>
+<script>
+  // Theme bootstrap avoids a flash of the wrong theme; dark is the default training view.
+  (() => {
+    const t = localStorage.getItem('theme');
+    document.documentElement.dataset.theme = t || 'dark';
+  })();
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand trainer-brand" href="ru.html" aria-label="CCAR">
+    <span>CCAR</span>
+  </a>
+  <nav class="topbar-actions" aria-label="Управление страницей">
+    <div class="site-language-toggle" role="group" aria-label="Язык интерфейса">
+      <a href="labs/foundation-en.html">EN</a>
+      <span aria-current="page">RU</span>
+    </div>
+    <button type="button" id="search-toggle" class="icon-btn" aria-label="Поиск">⌕</button>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Переключить тему">◐</button>
+  </nav>
+</header>
+<dialog id="search-dialog" aria-labelledby="search-title">
+  <h2 id="search-title" class="visually-hidden">Поиск по учебным материалам</h2>
+  <div class="search-filter" role="group" aria-label="Фильтр по языку интерфейса">
+    <button type="button" class="search-lang active" data-lang="all" aria-pressed="true">Все</button>
+    <button type="button" class="search-lang" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" class="search-lang" data-lang="ru" aria-pressed="false">RU</button>
+  </div>
+  <label class="visually-hidden" for="search-input">Поисковый запрос</label>
+  <input id="search-input" type="search" placeholder="Поиск по гайду…" autocomplete="off">
+  <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+  <ul id="search-results" aria-label="Результаты поиска"></ul>
+</dialog><main class="training-dashboard labs-page" data-labs data-training-lang="ru">
+    <section class="labs-head">
+      <div>
+        <p class="training-panel-label">CCAR-F · Hands-on</p>
+        <h1>Практические лабораторные</h1>
+      </div>
+      <div class="labs-progress">
+        <span>Выполнено</span>
+        <strong id="labs-progress">0 / 4</strong>
+      </div>
+    </section>
+    <p class="labs-note">Отмечайте лабораторную только после проверки deliverable по всем критериям. Чтение примера не считается выполнением.</p>
+    <div class="labs-grid">
+    <article class="lab-card">
+      <div class="lab-card-head">
+        <span class="training-path-number">01</span>
+        <span class="training-domain-id">D1 · D2 · D5</span>
+      </div>
+      <h2>Multi-Tool Agent</h2>
+      <p>Соберите agent loop с 3–4 инструментами, минимум двумя похожими по назначению, structured errors и обязательной эскалацией.</p>
+      <h3>Результат</h3>
+      <p>Код agent loop + tool schemas + два failure cases + журнал решения об эскалации.</p>
+      <h3>Критерии</h3>
+      <ul><li>tool_use/end_turn обрабатываются явно</li><li>обязательный business invariant enforced программно</li><li>ошибка несёт category/retryability/context</li><li>неоднозначный запрос приводит к корректной clarification/escalation</li></ul>
+      <label class="lab-complete">
+        <input type="checkbox" data-lab-id="agent">
+        <span>Выполнено и проверено по критериям</span>
+      </label>
+    </article>
+    <article class="lab-card">
+      <div class="lab-card-head">
+        <span class="training-path-number">02</span>
+        <span class="training-domain-id">D3 · D2</span>
+      </div>
+      <h2>Claude Code Team Workflow</h2>
+      <p>Настройте реальный репозиторий: CLAUDE.md, conditional rules, reusable skill/command и MCP integration.</p>
+      <h3>Результат</h3>
+      <p>Минимальный repo diff с конфигурацией + два примера задач, где разные правила загружаются по scope.</p>
+      <h3>Критерии</h3>
+      <ul><li>общие правила не дублируются по подпапкам</li><li>path-specific conventions грузятся только где нужны</li><li>shared workflow version-controlled</li><li>сложная задача сначала исследуется/планируется</li></ul>
+      <label class="lab-complete">
+        <input type="checkbox" data-lab-id="claude-code">
+        <span>Выполнено и проверено по критериям</span>
+      </label>
+    </article>
+    <article class="lab-card">
+      <div class="lab-card-head">
+        <span class="training-path-number">03</span>
+        <span class="training-domain-id">D4 · D5</span>
+      </div>
+      <h2>Structured Data Extraction</h2>
+      <p>Постройте extraction pipeline со schema-constrained output, semantic validation, retry-with-feedback и обработкой partial failures.</p>
+      <h3>Результат</h3>
+      <p>Schema + 10 тестовых документов + validator + failure report по каждому неуспешному документу.</p>
+      <h3>Критерии</h3>
+      <ul><li>required/optional/null semantics различаются</li><li>semantic validation отделена от JSON syntax</li><li>retry получает конкретную validation error</li><li>успешные документы не перерабатываются из-за одного failure</li></ul>
+      <label class="lab-complete">
+        <input type="checkbox" data-lab-id="extraction">
+        <span>Выполнено и проверено по критериям</span>
+      </label>
+    </article>
+    <article class="lab-card">
+      <div class="lab-card-head">
+        <span class="training-path-number">04</span>
+        <span class="training-domain-id">D1 · D5</span>
+      </div>
+      <h2>Multi-Agent Research</h2>
+      <p>Спроектируйте coordinator + 2–3 subagents для исследования, где coverage, error propagation и provenance проверяются явно.</p>
+      <h3>Результат</h3>
+      <p>Task decomposition + subagent contracts + synthesis output с source attribution и отмеченными gaps.</p>
+      <h3>Критерии</h3>
+      <ul><li>decomposition покрывает все requested dimensions</li><li>subagent получает достаточный context</li><li>partial failure возвращает usable results + gap</li><li>synthesis не скрывает missing coverage</li></ul>
+      <label class="lab-complete">
+        <input type="checkbox" data-lab-id="research">
+        <span>Выполнено и проверено по критериям</span>
+      </label>
+    </article></div>
+    <p class="labs-reference"><a href="guides/ru.html#practical-exercises">Материал и примеры в Foundation guide</a></p>
+  </main>
+
+<script src="vendor/minisearch.js" defer></script>
+<script src="app.js?v=e7f6cacf46ee" defer></script>
+
+</body>
+</html>

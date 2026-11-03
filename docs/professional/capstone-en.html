@@ -1,1 +1,239 @@
-<!doctype html><html data-theme="dark" lang="en"><head><meta charset="utf-8"><meta content="width=device-width,initial-scale=1" name="viewport"><title>CCAR-P · Capstone</title><base href="/claude-cert/"><link href="assets/Inter-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/JetBrainsMono-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/fonts.css" rel="stylesheet"><link href="styles.css" rel="stylesheet"><link href="assets/favicon.png" rel="icon" type="image/png"><script id="bank-map" type="application/json">{"practical/en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json"}</script><script>(()=>{const e=localStorage.getItem("theme");document.documentElement.dataset.theme=e||"dark"})()</script></head><body><header class="topbar"><a href="index.html" aria-label="CCAR" class="brand trainer-brand"><span>CCAR</span></a><nav aria-label="Page controls" class="topbar-actions"><div class="site-language-toggle" aria-label="Interface language" role="group"><span aria-current="page">EN</span> <a href="professional/capstone-ru.html">RU</a></div><button class="icon-btn" type="button" aria-label="Search" id="search-toggle">⌕</button> <button class="icon-btn" type="button" aria-label="Toggle theme" id="theme-toggle">◐</button></nav></header><dialog aria-labelledby="search-title" id="search-dialog"><h2 class="visually-hidden" id="search-title">Search the study guides</h2><div class="search-filter" aria-label="Filter by interface language" role="group"><button class="search-lang active" type="button" aria-pressed="true" data-lang="all">All</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="en">EN</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="ru">RU</button></div><label for="search-input" class="visually-hidden">Search terms</label> <input autocomplete="off" id="search-input" placeholder="Search the guide…" type="search"><p class="search-status" aria-live="polite" id="search-status" role="status"></p><ul aria-label="Search results" id="search-results"></ul></dialog><main class="capstone-page cases-page training-dashboard" data-capstone data-training-lang="en"><section class="labs-head"><div><p class="training-panel-label">CCAR-P · Capstone</p><h1>End-to-end architecture evidence</h1></div><div class="labs-progress"><span>Evidenced</span> <strong id="capstone-progress">0 / 14</strong></div></section><p class="labs-note">Use one realistic system. The point is not a toy implementation; it is evidence that one architecture survives design, integration, evaluation, governance, operations, and handoff.</p><section class="training-section"><div class="training-section-head"><div><span class="training-panel-label">Artifacts</span><h2>9 architecture artifacts</h2></div></div><div class="scenario-list"><article class="capstone-item scenario-card" data-capstone-item="problem-frame" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">01</span><h2>Problem frame & constraints</h2></div></header><p class="scenario-brief">Define the user/business outcome, explicit non-goals, prohibited behavior, quality target, latency/availability target, cost envelope, data sensitivity, reversibility, and decisions that remain human-owned.</p><label for="capstone-problem-frame">Evidence / decision</label> <textarea data-capstone-answer="problem-frame" id="capstone-problem-frame" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="problem-frame"><summary>Check acceptance criteria</summary><ul><li>Measurable success criteria exist.</li><li>Hard constraints are separated from preferences.</li><li>Irreversible/high-consequence decisions have an owner.</li><li>Non-goals prevent architecture creep.</li></ul></details><span class="capstone-state" data-capstone-state="problem-frame">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="adr" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">02</span><h2>Architecture decision record</h2></div></header><p class="scenario-brief">Choose workflow vs agentic vs augmented-LLM architecture, model tier, context strategy, and orchestration pattern. Record at least two rejected alternatives.</p><label for="capstone-adr">Evidence / decision</label> <textarea data-capstone-answer="adr" id="capstone-adr" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="adr"><summary>Check acceptance criteria</summary><ul><li>Decision is tied to stated constraints.</li><li>At least two plausible alternatives are rejected for explicit trade-offs.</li><li>Complexity is justified rather than assumed.</li><li>Revisit triggers are defined.</li></ul></details><span class="capstone-state" data-capstone-state="adr">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="integration" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">03</span><h2>Integration & trust-boundary map</h2></div></header><p class="scenario-brief">Map APIs, MCP servers, retrieval/data stores, credentials, authorization, tool capabilities, trust boundaries, and failure propagation.</p><label for="capstone-integration">Evidence / decision</label> <textarea data-capstone-answer="integration" id="capstone-integration" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="integration"><summary>Check acceptance criteria</summary><ul><li>Every external capability has an auth boundary.</li><li>Least privilege is explicit.</li><li>Failure paths are visible, not only happy paths.</li><li>Sensitive data movement is traceable.</li></ul></details><span class="capstone-state" data-capstone-state="integration">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="evaluation" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">04</span><h2>Evaluation & release gates</h2></div></header><p class="scenario-brief">Define representative evaluation data, metrics, deterministic checks, model/human graders where needed, slice-level regressions, and release-blocking thresholds.</p><label for="capstone-evaluation">Evidence / decision</label> <textarea data-capstone-answer="evaluation" id="capstone-evaluation" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="evaluation"><summary>Check acceptance criteria</summary><ul><li>Metrics correspond to user/business risk.</li><li>Critical slices cannot be hidden by aggregate scores.</li><li>Release gates are defined before the test result is known.</li><li>Regression runs are repeatable.</li></ul></details><span class="capstone-state" data-capstone-state="evaluation">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="governance" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">05</span><h2>Safety & governance matrix</h2></div></header><p class="scenario-brief">For each material risk, define preventive control, detective control, corrective action, owner, evidence artifact, and residual risk.</p><label for="capstone-governance">Evidence / decision</label> <textarea data-capstone-answer="governance" id="capstone-governance" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="governance"><summary>Check acceptance criteria</summary><ul><li>Controls are placed before irreversible actions when possible.</li><li>Human review follows a risk rule, not blanket review.</li><li>Each risk has an accountable owner.</li><li>Evidence can be audited later.</li></ul></details><span class="capstone-state" data-capstone-state="governance">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="cost-latency" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">06</span><h2>Cost & latency budget</h2></div></header><p class="scenario-brief">Model call/token assumptions, cacheable prefixes, routing, batching, throughput, tail latency, and the thresholds that trigger architecture changes.</p><label for="capstone-cost-latency">Evidence / decision</label> <textarea data-capstone-answer="cost-latency" id="capstone-cost-latency" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="cost-latency"><summary>Check acceptance criteria</summary><ul><li>Budget assumptions are explicit.</li><li>Optimization preserves the evaluated quality/safety floor.</li><li>Tail latency is considered, not only averages.</li><li>Caching/routing choices have invalidation or fallback rules.</li></ul></details><span class="capstone-state" data-capstone-state="cost-latency">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="operations" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">07</span><h2>Observability & operations</h2></div></header><p class="scenario-brief">Define traces, metrics, alerts, slow-drift reviews, incident ownership, and first diagnostic actions for retrieval, prompt, model, tool, and permission failures.</p><label for="capstone-operations">Evidence / decision</label> <textarea data-capstone-answer="operations" id="capstone-operations" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="operations"><summary>Check acceptance criteria</summary><ul><li>Signals map to specific failure layers.</li><li>First diagnostic action is stated for each major failure class.</li><li>Ownership and escalation are explicit.</li><li>Slow quality drift is covered in addition to outages.</li></ul></details><span class="capstone-state" data-capstone-state="operations">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="stakeholder" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">08</span><h2>Stakeholder brief</h2></div></header><p class="scenario-brief">Explain the same architecture for executive/security/legal stakeholders in terms of value, trade-offs, residual risk, reversibility, ownership, and evidence.</p><label for="capstone-stakeholder">Evidence / decision</label> <textarea data-capstone-answer="stakeholder" id="capstone-stakeholder" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="stakeholder"><summary>Check acceptance criteria</summary><ul><li>Technical details are translated into business consequence.</li><li>Residual risks are not hidden.</li><li>Trade-offs are presented with alternatives.</li><li>Decision/approval owners are clear.</li></ul></details><span class="capstone-state" data-capstone-state="stakeholder">not evidenced</span></article><article class="capstone-item scenario-card" data-capstone-item="handoff" data-capstone-kind="artifact"><header class="scenario-card-head"><div><span class="training-path-number">09</span><h2>Handoff package</h2></div></header><p class="scenario-brief">Create the runbook, architecture rationale, open assumptions, owner map, change criteria, known failure modes, and enough evidence that another architect can safely modify the system.</p><label for="capstone-handoff">Evidence / decision</label> <textarea data-capstone-answer="handoff" id="capstone-handoff" placeholder="Decision → evidence → rejected alternatives → operational consequence" rows="6"></textarea><details data-capstone-rubric="handoff"><summary>Check acceptance criteria</summary><ul><li>Another team can operate and change the system.</li><li>Assumptions and unknowns are explicit.</li><li>Decision rationale survives team handoff.</li><li>Change/revalidation triggers are documented.</li></ul></details><span class="capstone-state" data-capstone-state="handoff">not evidenced</span></article></div></section><section class="training-section"><div class="training-section-head"><div><span class="training-panel-label">Failure injection</span><h2>5 stress tests</h2></div></div><div class="scenario-list"><article class="capstone-stress case-prompt" data-capstone-item="stale-retrieval" data-capstone-kind="stress"><h3>1. Stale retrieval after refresh</h3><p>A content refresh completes, but answers still cite old facts. State where you investigate first, what evidence confirms the failure layer, and the structural fix.</p><label for="capstone-stale-retrieval">Diagnostic response</label> <textarea data-capstone-answer="stale-retrieval" id="capstone-stale-retrieval" placeholder="Evidence → failing boundary → structural fix → prevention" rows="5"></textarea> <span class="capstone-state" data-capstone-state="stale-retrieval">not evidenced</span></article><article class="capstone-stress case-prompt" data-capstone-item="overprivileged-tool" data-capstone-kind="stress"><h3>2. Over-privileged tool</h3><p>A tool can mutate resources outside the task scope. Redesign the control boundary without relying on prompt instructions.</p><label for="capstone-overprivileged-tool">Diagnostic response</label> <textarea data-capstone-answer="overprivileged-tool" id="capstone-overprivileged-tool" placeholder="Evidence → failing boundary → structural fix → prevention" rows="5"></textarea> <span class="capstone-state" data-capstone-state="overprivileged-tool">not evidenced</span></article><article class="capstone-stress case-prompt" data-capstone-item="slice-regression" data-capstone-kind="stress"><h3>3. Hidden evaluation regression</h3><p>Aggregate quality improves after a model/prompt change while one regulated user slice degrades. Decide the release outcome and diagnostic path.</p><label for="capstone-slice-regression">Diagnostic response</label> <textarea data-capstone-answer="slice-regression" id="capstone-slice-regression" placeholder="Evidence → failing boundary → structural fix → prevention" rows="5"></textarea> <span class="capstone-state" data-capstone-state="slice-regression">not evidenced</span></article><article class="capstone-stress case-prompt" data-capstone-item="cost-latency-drift" data-capstone-kind="stress"><h3>4. Cost / latency drift</h3><p>Tail latency and cost rise after context/caching behavior changes. Identify evidence needed before changing the model or architecture.</p><label for="capstone-cost-latency-drift">Diagnostic response</label> <textarea data-capstone-answer="cost-latency-drift" id="capstone-cost-latency-drift" placeholder="Evidence → failing boundary → structural fix → prevention" rows="5"></textarea> <span class="capstone-state" data-capstone-state="cost-latency-drift">not evidenced</span></article><article class="capstone-stress case-prompt" data-capstone-item="irreversible-request" data-capstone-kind="stress"><h3>5. Irreversible stakeholder request</h3><p>A stakeholder requests an action the agent can execute autonomously but that cannot be safely reversed. Place the approval/control boundary and justify it.</p><label for="capstone-irreversible-request">Diagnostic response</label> <textarea data-capstone-answer="irreversible-request" id="capstone-irreversible-request" placeholder="Evidence → failing boundary → structural fix → prevention" rows="5"></textarea> <span class="capstone-state" data-capstone-state="irreversible-request">not evidenced</span></article></div></section></main><script defer="defer" src="vendor/minisearch.js"></script><script defer="defer" src="app.js?v=e7f6cacf46ee"></script></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CCAR-P · Capstone</title>
+<base href="/claude-cert/">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/Inter-variable.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/JetBrainsMono-variable.woff2">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<script type="application/json" id="bank-map">{"practical/en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json"}</script>
+<script>
+  // Theme bootstrap avoids a flash of the wrong theme; dark is the default training view.
+  (() => {
+    const t = localStorage.getItem('theme');
+    document.documentElement.dataset.theme = t || 'dark';
+  })();
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand trainer-brand" href="index.html" aria-label="CCAR">
+    <span>CCAR</span>
+  </a>
+  <nav class="topbar-actions" aria-label="Page controls">
+    <div class="site-language-toggle" role="group" aria-label="Interface language">
+      <span aria-current="page">EN</span>
+      <a href="professional/capstone-ru.html">RU</a>
+    </div>
+    <button type="button" id="search-toggle" class="icon-btn" aria-label="Search">⌕</button>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle theme">◐</button>
+  </nav>
+</header>
+<dialog id="search-dialog" aria-labelledby="search-title">
+  <h2 id="search-title" class="visually-hidden">Search the study guides</h2>
+  <div class="search-filter" role="group" aria-label="Filter by interface language">
+    <button type="button" class="search-lang active" data-lang="all" aria-pressed="true">All</button>
+    <button type="button" class="search-lang" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" class="search-lang" data-lang="ru" aria-pressed="false">RU</button>
+  </div>
+  <label class="visually-hidden" for="search-input">Search terms</label>
+  <input id="search-input" type="search" placeholder="Search the guide…" autocomplete="off">
+  <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+  <ul id="search-results" aria-label="Search results"></ul>
+</dialog><main class="training-dashboard cases-page capstone-page" data-capstone data-training-lang="en">
+    <section class="labs-head">
+      <div>
+        <p class="training-panel-label">CCAR-P · Capstone</p>
+        <h1>End-to-end architecture evidence</h1>
+      </div>
+      <div class="labs-progress">
+        <span>Evidenced</span>
+        <strong id="capstone-progress">0 / 14</strong>
+      </div>
+    </section>
+    <p class="labs-note">Use one realistic system. The point is not a toy implementation; it is evidence that one architecture survives design, integration, evaluation, governance, operations, and handoff.</p>
+    <section class="training-section">
+      <div class="training-section-head"><div><span class="training-panel-label">Artifacts</span><h2>9 architecture artifacts</h2></div></div>
+      <div class="scenario-list">
+    <article class="scenario-card capstone-item" data-capstone-item="problem-frame" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">01</span><h2>Problem frame & constraints</h2></div>
+      </header>
+      <p class="scenario-brief">Define the user/business outcome, explicit non-goals, prohibited behavior, quality target, latency/availability target, cost envelope, data sensitivity, reversibility, and decisions that remain human-owned.</p>
+      <label for="capstone-problem-frame">Evidence / decision</label>
+      <textarea id="capstone-problem-frame" data-capstone-answer="problem-frame" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="problem-frame">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Measurable success criteria exist.</li><li>Hard constraints are separated from preferences.</li><li>Irreversible/high-consequence decisions have an owner.</li><li>Non-goals prevent architecture creep.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="problem-frame">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="adr" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">02</span><h2>Architecture decision record</h2></div>
+      </header>
+      <p class="scenario-brief">Choose workflow vs agentic vs augmented-LLM architecture, model tier, context strategy, and orchestration pattern. Record at least two rejected alternatives.</p>
+      <label for="capstone-adr">Evidence / decision</label>
+      <textarea id="capstone-adr" data-capstone-answer="adr" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="adr">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Decision is tied to stated constraints.</li><li>At least two plausible alternatives are rejected for explicit trade-offs.</li><li>Complexity is justified rather than assumed.</li><li>Revisit triggers are defined.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="adr">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="integration" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">03</span><h2>Integration & trust-boundary map</h2></div>
+      </header>
+      <p class="scenario-brief">Map APIs, MCP servers, retrieval/data stores, credentials, authorization, tool capabilities, trust boundaries, and failure propagation.</p>
+      <label for="capstone-integration">Evidence / decision</label>
+      <textarea id="capstone-integration" data-capstone-answer="integration" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="integration">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Every external capability has an auth boundary.</li><li>Least privilege is explicit.</li><li>Failure paths are visible, not only happy paths.</li><li>Sensitive data movement is traceable.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="integration">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="evaluation" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">04</span><h2>Evaluation & release gates</h2></div>
+      </header>
+      <p class="scenario-brief">Define representative evaluation data, metrics, deterministic checks, model/human graders where needed, slice-level regressions, and release-blocking thresholds.</p>
+      <label for="capstone-evaluation">Evidence / decision</label>
+      <textarea id="capstone-evaluation" data-capstone-answer="evaluation" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="evaluation">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Metrics correspond to user/business risk.</li><li>Critical slices cannot be hidden by aggregate scores.</li><li>Release gates are defined before the test result is known.</li><li>Regression runs are repeatable.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="evaluation">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="governance" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">05</span><h2>Safety & governance matrix</h2></div>
+      </header>
+      <p class="scenario-brief">For each material risk, define preventive control, detective control, corrective action, owner, evidence artifact, and residual risk.</p>
+      <label for="capstone-governance">Evidence / decision</label>
+      <textarea id="capstone-governance" data-capstone-answer="governance" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="governance">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Controls are placed before irreversible actions when possible.</li><li>Human review follows a risk rule, not blanket review.</li><li>Each risk has an accountable owner.</li><li>Evidence can be audited later.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="governance">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="cost-latency" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">06</span><h2>Cost & latency budget</h2></div>
+      </header>
+      <p class="scenario-brief">Model call/token assumptions, cacheable prefixes, routing, batching, throughput, tail latency, and the thresholds that trigger architecture changes.</p>
+      <label for="capstone-cost-latency">Evidence / decision</label>
+      <textarea id="capstone-cost-latency" data-capstone-answer="cost-latency" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="cost-latency">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Budget assumptions are explicit.</li><li>Optimization preserves the evaluated quality/safety floor.</li><li>Tail latency is considered, not only averages.</li><li>Caching/routing choices have invalidation or fallback rules.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="cost-latency">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="operations" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">07</span><h2>Observability & operations</h2></div>
+      </header>
+      <p class="scenario-brief">Define traces, metrics, alerts, slow-drift reviews, incident ownership, and first diagnostic actions for retrieval, prompt, model, tool, and permission failures.</p>
+      <label for="capstone-operations">Evidence / decision</label>
+      <textarea id="capstone-operations" data-capstone-answer="operations" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="operations">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Signals map to specific failure layers.</li><li>First diagnostic action is stated for each major failure class.</li><li>Ownership and escalation are explicit.</li><li>Slow quality drift is covered in addition to outages.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="operations">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="stakeholder" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">08</span><h2>Stakeholder brief</h2></div>
+      </header>
+      <p class="scenario-brief">Explain the same architecture for executive/security/legal stakeholders in terms of value, trade-offs, residual risk, reversibility, ownership, and evidence.</p>
+      <label for="capstone-stakeholder">Evidence / decision</label>
+      <textarea id="capstone-stakeholder" data-capstone-answer="stakeholder" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="stakeholder">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Technical details are translated into business consequence.</li><li>Residual risks are not hidden.</li><li>Trade-offs are presented with alternatives.</li><li>Decision/approval owners are clear.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="stakeholder">not evidenced</span>
+    </article>
+    <article class="scenario-card capstone-item" data-capstone-item="handoff" data-capstone-kind="artifact">
+      <header class="scenario-card-head">
+        <div><span class="training-path-number">09</span><h2>Handoff package</h2></div>
+      </header>
+      <p class="scenario-brief">Create the runbook, architecture rationale, open assumptions, owner map, change criteria, known failure modes, and enough evidence that another architect can safely modify the system.</p>
+      <label for="capstone-handoff">Evidence / decision</label>
+      <textarea id="capstone-handoff" data-capstone-answer="handoff" rows="6"
+        placeholder="Decision → evidence → rejected alternatives → operational consequence"></textarea>
+      <details data-capstone-rubric="handoff">
+        <summary>Check acceptance criteria</summary>
+        <ul><li>Another team can operate and change the system.</li><li>Assumptions and unknowns are explicit.</li><li>Decision rationale survives team handoff.</li><li>Change/revalidation triggers are documented.</li></ul>
+      </details>
+      <span class="capstone-state" data-capstone-state="handoff">not evidenced</span>
+    </article></div>
+    </section>
+    <section class="training-section">
+      <div class="training-section-head"><div><span class="training-panel-label">Failure injection</span><h2>5 stress tests</h2></div></div>
+      <div class="scenario-list">
+    <article class="case-prompt capstone-stress" data-capstone-item="stale-retrieval" data-capstone-kind="stress">
+      <h3>1. Stale retrieval after refresh</h3>
+      <p>A content refresh completes, but answers still cite old facts. State where you investigate first, what evidence confirms the failure layer, and the structural fix.</p>
+      <label for="capstone-stale-retrieval">Diagnostic response</label>
+      <textarea id="capstone-stale-retrieval" data-capstone-answer="stale-retrieval" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="stale-retrieval">not evidenced</span>
+    </article>
+    <article class="case-prompt capstone-stress" data-capstone-item="overprivileged-tool" data-capstone-kind="stress">
+      <h3>2. Over-privileged tool</h3>
+      <p>A tool can mutate resources outside the task scope. Redesign the control boundary without relying on prompt instructions.</p>
+      <label for="capstone-overprivileged-tool">Diagnostic response</label>
+      <textarea id="capstone-overprivileged-tool" data-capstone-answer="overprivileged-tool" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="overprivileged-tool">not evidenced</span>
+    </article>
+    <article class="case-prompt capstone-stress" data-capstone-item="slice-regression" data-capstone-kind="stress">
+      <h3>3. Hidden evaluation regression</h3>
+      <p>Aggregate quality improves after a model/prompt change while one regulated user slice degrades. Decide the release outcome and diagnostic path.</p>
+      <label for="capstone-slice-regression">Diagnostic response</label>
+      <textarea id="capstone-slice-regression" data-capstone-answer="slice-regression" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="slice-regression">not evidenced</span>
+    </article>
+    <article class="case-prompt capstone-stress" data-capstone-item="cost-latency-drift" data-capstone-kind="stress">
+      <h3>4. Cost / latency drift</h3>
+      <p>Tail latency and cost rise after context/caching behavior changes. Identify evidence needed before changing the model or architecture.</p>
+      <label for="capstone-cost-latency-drift">Diagnostic response</label>
+      <textarea id="capstone-cost-latency-drift" data-capstone-answer="cost-latency-drift" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="cost-latency-drift">not evidenced</span>
+    </article>
+    <article class="case-prompt capstone-stress" data-capstone-item="irreversible-request" data-capstone-kind="stress">
+      <h3>5. Irreversible stakeholder request</h3>
+      <p>A stakeholder requests an action the agent can execute autonomously but that cannot be safely reversed. Place the approval/control boundary and justify it.</p>
+      <label for="capstone-irreversible-request">Diagnostic response</label>
+      <textarea id="capstone-irreversible-request" data-capstone-answer="irreversible-request" rows="5"
+        placeholder="Evidence → failing boundary → structural fix → prevention"></textarea>
+      <span class="capstone-state" data-capstone-state="irreversible-request">not evidenced</span>
+    </article></div>
+    </section>
+  </main>
+
+<script src="vendor/minisearch.js" defer></script>
+<script src="app.js?v=e7f6cacf46ee" defer></script>
+
+</body>
+</html>

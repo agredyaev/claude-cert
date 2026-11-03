@@ -1,1 +1,354 @@
-<!doctype html><html data-theme="dark" lang="en"><head><meta charset="utf-8"><meta content="width=device-width,initial-scale=1" name="viewport"><title>CCAR-F · Scenario cases</title><base href="/claude-cert/"><link href="assets/Inter-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/JetBrainsMono-variable.woff2" rel="preload" type="font/woff2" as="font" crossorigin><link href="assets/fonts.css" rel="stylesheet"><link href="styles.css" rel="stylesheet"><link href="assets/favicon.png" rel="icon" type="image/png"><script id="bank-map" type="application/json">{"practical/en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-en.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-3ffa566fb36b.json","practical/professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-75d108701978.json"}</script><script>(()=>{const e=localStorage.getItem("theme");document.documentElement.dataset.theme=e||"dark"})()</script></head><body><header class="topbar"><a href="index.html" aria-label="CCAR" class="brand trainer-brand"><span>CCAR</span></a><nav aria-label="Page controls" class="topbar-actions"><div class="site-language-toggle" aria-label="Interface language" role="group"><span aria-current="page">EN</span> <a href="cases/foundation-ru.html">RU</a></div><button class="icon-btn" type="button" aria-label="Search" id="search-toggle">⌕</button> <button class="icon-btn" type="button" aria-label="Toggle theme" id="theme-toggle">◐</button></nav></header><dialog aria-labelledby="search-title" id="search-dialog"><h2 class="visually-hidden" id="search-title">Search the study guides</h2><div class="search-filter" aria-label="Filter by interface language" role="group"><button class="search-lang active" type="button" aria-pressed="true" data-lang="all">All</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="en">EN</button> <button class="search-lang" type="button" aria-pressed="false" data-lang="ru">RU</button></div><label for="search-input" class="visually-hidden">Search terms</label> <input type="search" autocomplete="off" id="search-input" placeholder="Search the guide…"><p class="search-status" aria-live="polite" id="search-status" role="status"></p><ul aria-label="Search results" id="search-results"></ul></dialog><main class="cases-page training-dashboard" data-cases data-training-lang="en"><section class="labs-head"><div><p class="training-panel-label">CCAR-F · Scenario transfer</p><h1>6 official scenario families</h1></div><div class="labs-progress"><span>Completed</span> <strong id="cases-progress">0 / 6</strong></div></section><p class="labs-note">Write your decision before opening the rubric. Exact wording is irrelevant; check the constraint, owning boundary, trade-off, and rejected alternatives.</p><div class="scenario-list"><article class="scenario-card" data-scenario-id="s1"><header class="scenario-card-head"><div><span class="training-path-number">S1</span><h2>Customer Support Resolution Agent</h2></div><span class="training-domain-id">D1 · D2 · D5</span></header><p class="scenario-brief">A support agent resolves ambiguous returns, billing disputes, and account issues through backend tools. It must maximize first-contact resolution without taking unsafe or irreversible actions when escalation is required.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s1-p1"><h3>1. Refund boundary</h3><p>A refund tool can issue money immediately. Define the tool and orchestration boundary so routine refunds remain efficient but high-value or ambiguous refunds cannot be executed solely because the model says they look reasonable.</p><label for="answer-s1-p1">Your reasoning</label> <textarea data-case-answer="s1-p1" id="answer-s1-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s1-p1"><summary>Reveal rubric after answering</summary><ul><li>Separate eligibility/lookup from the irreversible refund action.</li><li>Use deterministic preconditions or approval policy for the high-consequence boundary.</li><li>Keep the model responsible for reasoning and routing, not for overriding the control.</li><li>Return typed failure/escalation information instead of silently retrying.</li></ul></details></section><section class="case-prompt" data-case-prompt="s1-p2"><h3>2. Escalation decision</h3><p>The customer’s account history conflicts with the current order record. Decide what the agent should preserve in context, what it should verify, and when it should escalate.</p><label for="answer-s1-p2">Your reasoning</label> <textarea data-case-answer="s1-p2" id="answer-s1-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s1-p2"><summary>Reveal rubric after answering</summary><ul><li>Preserve the conflicting facts and provenance rather than summarizing away the disagreement.</li><li>Verify the authoritative source before acting.</li><li>Escalate when the ambiguity affects an irreversible or policy-sensitive action.</li><li>Do not convert uncertainty into a confident final answer.</li></ul></details></section><section class="case-prompt" data-case-prompt="s1-p3"><h3>3. Tool surface</h3><p>The agent currently receives twelve customer-service tools, but most requests need only lookup_order, get_customer, process_refund, and escalate_to_human. Redesign the capability surface.</p><label for="answer-s1-p3">Your reasoning</label> <textarea data-case-answer="s1-p3" id="answer-s1-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s1-p3"><summary>Reveal rubric after answering</summary><ul><li>Prefer the smallest tool set needed for the task.</li><li>Use narrow descriptions and non-overlapping responsibilities.</li><li>Do not treat logging/monitoring as a substitute for removing unnecessary capability.</li><li>Keep least privilege at the tool/permission boundary.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s1" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article><article class="scenario-card" data-scenario-id="s2"><header class="scenario-card-head"><div><span class="training-path-number">S2</span><h2>Code Generation with Claude Code</h2></div><span class="training-domain-id">D3 · D5</span></header><p class="scenario-brief">A software team uses Claude Code for generation, refactoring, debugging, and documentation and needs repeatable project instructions plus a safe choice between planning and direct execution.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s2-p1"><h3>1. Plan or execute</h3><p>A developer asks for a cross-module refactor that changes a public API used by several teams. Decide whether to use plan mode or direct execution and state what evidence must exist before code changes begin.</p><label for="answer-s2-p1">Your reasoning</label> <textarea data-case-answer="s2-p1" id="answer-s2-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s2-p1"><summary>Reveal rubric after answering</summary><ul><li>Choose planning/review before implementation because scope and reversibility are uncertain.</li><li>Identify affected interfaces, tests, owners, and migration constraints first.</li><li>Do not equate a large prompt with an approved plan.</li><li>Move to execution only after the decision boundaries are clear.</li></ul></details></section><section class="case-prompt" data-case-prompt="s2-p2"><h3>2. Instruction scope</h3><p>The repository has organization-wide security rules, project conventions, and one directory with a special build command. Decide where each instruction belongs.</p><label for="answer-s2-p2">Your reasoning</label> <textarea data-case-answer="s2-p2" id="answer-s2-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s2-p2"><summary>Reveal rubric after answering</summary><ul><li>Keep stable broad rules at the broadest appropriate scope.</li><li>Keep project-specific conventions in project instructions.</li><li>Keep directory/local behavior close to the code it governs.</li><li>Avoid one giant instruction file with unrelated or contradictory rules.</li></ul></details></section><section class="case-prompt" data-case-prompt="s2-p3"><h3>3. Context reset</h3><p>A long debugging session has accumulated failed hypotheses and stale file details. Decide what to preserve and what to discard before continuing.</p><label for="answer-s2-p3">Your reasoning</label> <textarea data-case-answer="s2-p3" id="answer-s2-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s2-p3"><summary>Reveal rubric after answering</summary><ul><li>Preserve confirmed facts, decisions, unresolved hypotheses, and exact error evidence.</li><li>Discard recoverable bulk and invalidated exploration.</li><li>Do not compress away identifiers, versions, or constraints needed for the next decision.</li><li>Treat context management as reliability work, not just token reduction.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s2" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article><article class="scenario-card" data-scenario-id="s3"><header class="scenario-card-head"><div><span class="training-path-number">S3</span><h2>Multi-Agent Research System</h2></div><span class="training-domain-id">D1 · D2 · D5</span></header><p class="scenario-brief">A coordinator delegates web search, document analysis, synthesis, and reporting to specialized subagents and must produce a complete, cited result.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s3-p1"><h3>1. Decomposition contract</h3><p>Design the handoff contract between search, document-analysis, synthesis, and report agents so missing evidence cannot silently disappear.</p><label for="answer-s3-p1">Your reasoning</label> <textarea data-case-answer="s3-p1" id="answer-s3-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s3-p1"><summary>Reveal rubric after answering</summary><ul><li>Give each subagent a bounded responsibility and explicit output contract.</li><li>Carry provenance and uncertainty with the result.</li><li>Have the coordinator check coverage/completeness before synthesis.</li><li>Propagate failures or missing evidence instead of treating them as empty success.</li></ul></details></section><section class="case-prompt" data-case-prompt="s3-p2"><h3>2. Parallelism</h3><p>Some research questions are independent, while synthesis depends on all evidence. Decide which work should run in parallel and which must wait.</p><label for="answer-s3-p2">Your reasoning</label> <textarea data-case-answer="s3-p2" id="answer-s3-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s3-p2"><summary>Reveal rubric after answering</summary><ul><li>Parallelize independent evidence-gathering tasks.</li><li>Keep dependent synthesis after required inputs are available.</li><li>Do not add agents where sequential deterministic processing is sufficient.</li><li>Account for duplicate work and reconciliation cost.</li></ul></details></section><section class="case-prompt" data-case-prompt="s3-p3"><h3>3. Conflicting sources</h3><p>Two authoritative sources disagree on a key number. Decide what the system should send to the report agent.</p><label for="answer-s3-p3">Your reasoning</label> <textarea data-case-answer="s3-p3" id="answer-s3-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s3-p3"><summary>Reveal rubric after answering</summary><ul><li>Preserve both values and their sources.</li><li>Represent disagreement explicitly instead of averaging or picking one silently.</li><li>Allow the report layer to communicate uncertainty or request adjudication.</li><li>Maintain traceability from claim to evidence.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s3" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article><article class="scenario-card" data-scenario-id="s4"><header class="scenario-card-head"><div><span class="training-path-number">S4</span><h2>Developer Productivity with Claude</h2></div><span class="training-domain-id">D2 · D3 · D1</span></header><p class="scenario-brief">An engineering assistant explores unfamiliar codebases, explains legacy systems, generates boilerplate, and automates repetitive work using built-in tools and MCP integrations.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s4-p1"><h3>1. Built-in tool or MCP</h3><p>The assistant needs to search local source files and also query an internal ownership service. Choose the boundary between built-in tools and MCP.</p><label for="answer-s4-p1">Your reasoning</label> <textarea data-case-answer="s4-p1" id="answer-s4-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s4-p1"><summary>Reveal rubric after answering</summary><ul><li>Use local file/search capabilities for local codebase work.</li><li>Use an integration boundary for the external/internal service.</li><li>Do not wrap every local operation in a custom MCP tool.</li><li>Keep external credentials and authorization at the integration boundary.</li></ul></details></section><section class="case-prompt" data-case-prompt="s4-p2"><h3>2. Exploration before modification</h3><p>The user asks for a change in a legacy subsystem with poor documentation. Define the first sequence of actions.</p><label for="answer-s4-p2">Your reasoning</label> <textarea data-case-answer="s4-p2" id="answer-s4-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s4-p2"><summary>Reveal rubric after answering</summary><ul><li>Map relevant files, callers, tests, and conventions before editing.</li><li>Use evidence from the repository rather than assumptions from naming alone.</li><li>Keep the initial exploration reversible/read-only.</li><li>Only broaden the search when the current evidence is insufficient.</li></ul></details></section><section class="case-prompt" data-case-prompt="s4-p3"><h3>3. Automation boundary</h3><p>A repetitive migration can be automated, but one step deletes old configuration after validation. Decide how autonomy should change at that step.</p><label for="answer-s4-p3">Your reasoning</label> <textarea data-case-answer="s4-p3" id="answer-s4-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s4-p3"><summary>Reveal rubric after answering</summary><ul><li>Automate reversible/repeatable steps freely when validated.</li><li>Place an approval or deterministic gate before destructive cleanup.</li><li>Make validation evidence explicit before deletion.</li><li>Do not rely on a model-generated confidence statement as the safety control.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s4" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article><article class="scenario-card" data-scenario-id="s5"><header class="scenario-card-head"><div><span class="training-path-number">S5</span><h2>Claude Code for Continuous Integration</h2></div><span class="training-domain-id">D3 · D4</span></header><p class="scenario-brief">Claude Code runs automated review and test-generation work in CI/CD and must produce actionable feedback while controlling false positives and permissions.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s5-p1"><h3>1. Actionable review output</h3><p>The CI reviewer produces long prose with many speculative warnings. Redesign the prompt/output contract to reduce false positives and make findings machine-consumable.</p><label for="answer-s5-p1">Your reasoning</label> <textarea data-case-answer="s5-p1" id="answer-s5-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s5-p1"><summary>Reveal rubric after answering</summary><ul><li>Define explicit review criteria and severity thresholds.</li><li>Require evidence/location for each finding.</li><li>Use structured output when downstream CI logic consumes the result.</li><li>Prefer abstention/no-finding over unsupported speculation.</li></ul></details></section><section class="case-prompt" data-case-prompt="s5-p2"><h3>2. CI permissions</h3><p>The review job only needs repository read access but currently runs with credentials that can modify pull requests and deployment settings. Redesign the permissions.</p><label for="answer-s5-p2">Your reasoning</label> <textarea data-case-answer="s5-p2" id="answer-s5-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s5-p2"><summary>Reveal rubric after answering</summary><ul><li>Reduce credentials to the minimum capabilities required.</li><li>Separate review from mutating/deployment actions.</li><li>Do not justify broad credentials because the prompt says not to use them.</li><li>Make the permission boundary deterministic.</li></ul></details></section><section class="case-prompt" data-case-prompt="s5-p3"><h3>3. Regression gate</h3><p>A prompt change improves average review usefulness but doubles false positives on generated files. Decide whether to release it and what evaluation should control the decision.</p><label for="answer-s5-p3">Your reasoning</label> <textarea data-case-answer="s5-p3" id="answer-s5-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s5-p3"><summary>Reveal rubric after answering</summary><ul><li>Do not accept aggregate improvement when a critical slice regresses beyond its threshold.</li><li>Keep representative slice-level evaluation.</li><li>Define the release gate before interpreting the result.</li><li>Diagnose whether prompt criteria, file filtering, or context selection caused the regression.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s5" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article><article class="scenario-card" data-scenario-id="s6"><header class="scenario-card-head"><div><span class="training-path-number">S6</span><h2>Structured Data Extraction</h2></div><span class="training-domain-id">D4 · D5</span></header><p class="scenario-brief">A document pipeline extracts structured records, validates them against schemas, handles edge cases, and feeds downstream systems that require reliable shape and provenance.</p><div class="scenario-prompts"><section class="case-prompt" data-case-prompt="s6-p1"><h3>1. Schema enforcement</h3><p>Downstream code fails when the model returns syntactically valid JSON with missing required fields. Redesign the extraction boundary.</p><label for="answer-s6-p1">Your reasoning</label> <textarea data-case-answer="s6-p1" id="answer-s6-p1" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s6-p1"><summary>Reveal rubric after answering</summary><ul><li>Use schema/tool-based structure rather than parsing free-form prose.</li><li>Validate required fields and semantic constraints after generation.</li><li>Retry or escalate based on typed validation failure.</li><li>Do not treat JSON syntax alone as correctness.</li></ul></details></section><section class="case-prompt" data-case-prompt="s6-p2"><h3>2. Ambiguous document</h3><p>A document contains two possible invoice dates and no clear label. Decide how extraction should represent the ambiguity.</p><label for="answer-s6-p2">Your reasoning</label> <textarea data-case-answer="s6-p2" id="answer-s6-p2" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s6-p2"><summary>Reveal rubric after answering</summary><ul><li>Do not invent a single confident value.</li><li>Preserve the evidence/provenance needed to resolve the ambiguity.</li><li>Use an explicit uncertainty/error representation supported by the downstream contract.</li><li>Escalate when downstream consequences require a single authoritative value.</li></ul></details></section><section class="case-prompt" data-case-prompt="s6-p3"><h3>3. Batch throughput</h3><p>Thousands of independent documents need extraction overnight. Decide when batching is appropriate and what must remain outside the batch boundary.</p><label for="answer-s6-p3">Your reasoning</label> <textarea data-case-answer="s6-p3" id="answer-s6-p3" placeholder="Constraint → decision → rejected alternatives → consequence" rows="5"></textarea><details data-case-rubric="s6-p3"><summary>Reveal rubric after answering</summary><ul><li>Batch independent requests when latency is not interactive and throughput/cost benefit matters.</li><li>Keep validation, failure accounting, and downstream reconciliation explicit.</li><li>Do not assume batch processing itself performs an interactive external tool loop.</li><li>Preserve a stable request-to-result correlation.</li></ul></details></section></div><label class="lab-complete scenario-complete"><input type="checkbox" data-case-id="s6" disabled="disabled"> <span>All responses written and checked against the rubric</span></label></article></div></main><script defer="defer" src="vendor/minisearch.js"></script><script defer="defer" src="app.js?v=e7f6cacf46ee"></script></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CCAR-F · Scenario cases</title>
+<base href="/claude-cert/">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/Inter-variable.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="assets/JetBrainsMono-variable.woff2">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<script type="application/json" id="bank-map">{"practical/en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-en.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/bank-ru.html":"practical/data/ccaf-exam-en-7029b45e2ba1.json","practical/professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-en.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json","practical/bank-professional-ru.html":"practical/data/ccarp-exam-en-505f5c6f5d7f.json"}</script>
+<script>
+  // Theme bootstrap avoids a flash of the wrong theme; dark is the default training view.
+  (() => {
+    const t = localStorage.getItem('theme');
+    document.documentElement.dataset.theme = t || 'dark';
+  })();
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand trainer-brand" href="index.html" aria-label="CCAR">
+    <span>CCAR</span>
+  </a>
+  <nav class="topbar-actions" aria-label="Page controls">
+    <div class="site-language-toggle" role="group" aria-label="Interface language">
+      <span aria-current="page">EN</span>
+      <a href="cases/foundation-ru.html">RU</a>
+    </div>
+    <button type="button" id="search-toggle" class="icon-btn" aria-label="Search">⌕</button>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle theme">◐</button>
+  </nav>
+</header>
+<dialog id="search-dialog" aria-labelledby="search-title">
+  <h2 id="search-title" class="visually-hidden">Search the study guides</h2>
+  <div class="search-filter" role="group" aria-label="Filter by interface language">
+    <button type="button" class="search-lang active" data-lang="all" aria-pressed="true">All</button>
+    <button type="button" class="search-lang" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" class="search-lang" data-lang="ru" aria-pressed="false">RU</button>
+  </div>
+  <label class="visually-hidden" for="search-input">Search terms</label>
+  <input id="search-input" type="search" placeholder="Search the guide…" autocomplete="off">
+  <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+  <ul id="search-results" aria-label="Search results"></ul>
+</dialog><main class="training-dashboard cases-page" data-cases data-training-lang="en">
+    <section class="labs-head">
+      <div>
+        <p class="training-panel-label">CCAR-F · Scenario transfer</p>
+        <h1>6 official scenario families</h1>
+      </div>
+      <div class="labs-progress">
+        <span>Completed</span>
+        <strong id="cases-progress">0 / 6</strong>
+      </div>
+    </section>
+    <p class="labs-note">Write your decision before opening the rubric. Exact wording is irrelevant; check the constraint, owning boundary, trade-off, and rejected alternatives.</p>
+    <div class="scenario-list">
+      <article class="scenario-card" data-scenario-id="s1">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S1</span>
+            <h2>Customer Support Resolution Agent</h2>
+          </div>
+          <span class="training-domain-id">D1 · D2 · D5</span>
+        </header>
+        <p class="scenario-brief">A support agent resolves ambiguous returns, billing disputes, and account issues through backend tools. It must maximize first-contact resolution without taking unsafe or irreversible actions when escalation is required.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s1-p1">
+          <h3>1. Refund boundary</h3>
+          <p>A refund tool can issue money immediately. Define the tool and orchestration boundary so routine refunds remain efficient but high-value or ambiguous refunds cannot be executed solely because the model says they look reasonable.</p>
+          <label for="answer-s1-p1">Your reasoning</label>
+          <textarea id="answer-s1-p1" data-case-answer="s1-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s1-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Separate eligibility/lookup from the irreversible refund action.</li><li>Use deterministic preconditions or approval policy for the high-consequence boundary.</li><li>Keep the model responsible for reasoning and routing, not for overriding the control.</li><li>Return typed failure/escalation information instead of silently retrying.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s1-p2">
+          <h3>2. Escalation decision</h3>
+          <p>The customer’s account history conflicts with the current order record. Decide what the agent should preserve in context, what it should verify, and when it should escalate.</p>
+          <label for="answer-s1-p2">Your reasoning</label>
+          <textarea id="answer-s1-p2" data-case-answer="s1-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s1-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Preserve the conflicting facts and provenance rather than summarizing away the disagreement.</li><li>Verify the authoritative source before acting.</li><li>Escalate when the ambiguity affects an irreversible or policy-sensitive action.</li><li>Do not convert uncertainty into a confident final answer.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s1-p3">
+          <h3>3. Tool surface</h3>
+          <p>The agent currently receives twelve customer-service tools, but most requests need only lookup_order, get_customer, process_refund, and escalate_to_human. Redesign the capability surface.</p>
+          <label for="answer-s1-p3">Your reasoning</label>
+          <textarea id="answer-s1-p3" data-case-answer="s1-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s1-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Prefer the smallest tool set needed for the task.</li><li>Use narrow descriptions and non-overlapping responsibilities.</li><li>Do not treat logging/monitoring as a substitute for removing unnecessary capability.</li><li>Keep least privilege at the tool/permission boundary.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s1" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article>
+      <article class="scenario-card" data-scenario-id="s2">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S2</span>
+            <h2>Code Generation with Claude Code</h2>
+          </div>
+          <span class="training-domain-id">D3 · D5</span>
+        </header>
+        <p class="scenario-brief">A software team uses Claude Code for generation, refactoring, debugging, and documentation and needs repeatable project instructions plus a safe choice between planning and direct execution.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s2-p1">
+          <h3>1. Plan or execute</h3>
+          <p>A developer asks for a cross-module refactor that changes a public API used by several teams. Decide whether to use plan mode or direct execution and state what evidence must exist before code changes begin.</p>
+          <label for="answer-s2-p1">Your reasoning</label>
+          <textarea id="answer-s2-p1" data-case-answer="s2-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s2-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Choose planning/review before implementation because scope and reversibility are uncertain.</li><li>Identify affected interfaces, tests, owners, and migration constraints first.</li><li>Do not equate a large prompt with an approved plan.</li><li>Move to execution only after the decision boundaries are clear.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s2-p2">
+          <h3>2. Instruction scope</h3>
+          <p>The repository has organization-wide security rules, project conventions, and one directory with a special build command. Decide where each instruction belongs.</p>
+          <label for="answer-s2-p2">Your reasoning</label>
+          <textarea id="answer-s2-p2" data-case-answer="s2-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s2-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Keep stable broad rules at the broadest appropriate scope.</li><li>Keep project-specific conventions in project instructions.</li><li>Keep directory/local behavior close to the code it governs.</li><li>Avoid one giant instruction file with unrelated or contradictory rules.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s2-p3">
+          <h3>3. Context reset</h3>
+          <p>A long debugging session has accumulated failed hypotheses and stale file details. Decide what to preserve and what to discard before continuing.</p>
+          <label for="answer-s2-p3">Your reasoning</label>
+          <textarea id="answer-s2-p3" data-case-answer="s2-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s2-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Preserve confirmed facts, decisions, unresolved hypotheses, and exact error evidence.</li><li>Discard recoverable bulk and invalidated exploration.</li><li>Do not compress away identifiers, versions, or constraints needed for the next decision.</li><li>Treat context management as reliability work, not just token reduction.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s2" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article>
+      <article class="scenario-card" data-scenario-id="s3">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S3</span>
+            <h2>Multi-Agent Research System</h2>
+          </div>
+          <span class="training-domain-id">D1 · D2 · D5</span>
+        </header>
+        <p class="scenario-brief">A coordinator delegates web search, document analysis, synthesis, and reporting to specialized subagents and must produce a complete, cited result.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s3-p1">
+          <h3>1. Decomposition contract</h3>
+          <p>Design the handoff contract between search, document-analysis, synthesis, and report agents so missing evidence cannot silently disappear.</p>
+          <label for="answer-s3-p1">Your reasoning</label>
+          <textarea id="answer-s3-p1" data-case-answer="s3-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s3-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Give each subagent a bounded responsibility and explicit output contract.</li><li>Carry provenance and uncertainty with the result.</li><li>Have the coordinator check coverage/completeness before synthesis.</li><li>Propagate failures or missing evidence instead of treating them as empty success.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s3-p2">
+          <h3>2. Parallelism</h3>
+          <p>Some research questions are independent, while synthesis depends on all evidence. Decide which work should run in parallel and which must wait.</p>
+          <label for="answer-s3-p2">Your reasoning</label>
+          <textarea id="answer-s3-p2" data-case-answer="s3-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s3-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Parallelize independent evidence-gathering tasks.</li><li>Keep dependent synthesis after required inputs are available.</li><li>Do not add agents where sequential deterministic processing is sufficient.</li><li>Account for duplicate work and reconciliation cost.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s3-p3">
+          <h3>3. Conflicting sources</h3>
+          <p>Two authoritative sources disagree on a key number. Decide what the system should send to the report agent.</p>
+          <label for="answer-s3-p3">Your reasoning</label>
+          <textarea id="answer-s3-p3" data-case-answer="s3-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s3-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Preserve both values and their sources.</li><li>Represent disagreement explicitly instead of averaging or picking one silently.</li><li>Allow the report layer to communicate uncertainty or request adjudication.</li><li>Maintain traceability from claim to evidence.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s3" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article>
+      <article class="scenario-card" data-scenario-id="s4">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S4</span>
+            <h2>Developer Productivity with Claude</h2>
+          </div>
+          <span class="training-domain-id">D2 · D3 · D1</span>
+        </header>
+        <p class="scenario-brief">An engineering assistant explores unfamiliar codebases, explains legacy systems, generates boilerplate, and automates repetitive work using built-in tools and MCP integrations.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s4-p1">
+          <h3>1. Built-in tool or MCP</h3>
+          <p>The assistant needs to search local source files and also query an internal ownership service. Choose the boundary between built-in tools and MCP.</p>
+          <label for="answer-s4-p1">Your reasoning</label>
+          <textarea id="answer-s4-p1" data-case-answer="s4-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s4-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Use local file/search capabilities for local codebase work.</li><li>Use an integration boundary for the external/internal service.</li><li>Do not wrap every local operation in a custom MCP tool.</li><li>Keep external credentials and authorization at the integration boundary.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s4-p2">
+          <h3>2. Exploration before modification</h3>
+          <p>The user asks for a change in a legacy subsystem with poor documentation. Define the first sequence of actions.</p>
+          <label for="answer-s4-p2">Your reasoning</label>
+          <textarea id="answer-s4-p2" data-case-answer="s4-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s4-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Map relevant files, callers, tests, and conventions before editing.</li><li>Use evidence from the repository rather than assumptions from naming alone.</li><li>Keep the initial exploration reversible/read-only.</li><li>Only broaden the search when the current evidence is insufficient.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s4-p3">
+          <h3>3. Automation boundary</h3>
+          <p>A repetitive migration can be automated, but one step deletes old configuration after validation. Decide how autonomy should change at that step.</p>
+          <label for="answer-s4-p3">Your reasoning</label>
+          <textarea id="answer-s4-p3" data-case-answer="s4-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s4-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Automate reversible/repeatable steps freely when validated.</li><li>Place an approval or deterministic gate before destructive cleanup.</li><li>Make validation evidence explicit before deletion.</li><li>Do not rely on a model-generated confidence statement as the safety control.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s4" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article>
+      <article class="scenario-card" data-scenario-id="s5">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S5</span>
+            <h2>Claude Code for Continuous Integration</h2>
+          </div>
+          <span class="training-domain-id">D3 · D4</span>
+        </header>
+        <p class="scenario-brief">Claude Code runs automated review and test-generation work in CI/CD and must produce actionable feedback while controlling false positives and permissions.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s5-p1">
+          <h3>1. Actionable review output</h3>
+          <p>The CI reviewer produces long prose with many speculative warnings. Redesign the prompt/output contract to reduce false positives and make findings machine-consumable.</p>
+          <label for="answer-s5-p1">Your reasoning</label>
+          <textarea id="answer-s5-p1" data-case-answer="s5-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s5-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Define explicit review criteria and severity thresholds.</li><li>Require evidence/location for each finding.</li><li>Use structured output when downstream CI logic consumes the result.</li><li>Prefer abstention/no-finding over unsupported speculation.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s5-p2">
+          <h3>2. CI permissions</h3>
+          <p>The review job only needs repository read access but currently runs with credentials that can modify pull requests and deployment settings. Redesign the permissions.</p>
+          <label for="answer-s5-p2">Your reasoning</label>
+          <textarea id="answer-s5-p2" data-case-answer="s5-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s5-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Reduce credentials to the minimum capabilities required.</li><li>Separate review from mutating/deployment actions.</li><li>Do not justify broad credentials because the prompt says not to use them.</li><li>Make the permission boundary deterministic.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s5-p3">
+          <h3>3. Regression gate</h3>
+          <p>A prompt change improves average review usefulness but doubles false positives on generated files. Decide whether to release it and what evaluation should control the decision.</p>
+          <label for="answer-s5-p3">Your reasoning</label>
+          <textarea id="answer-s5-p3" data-case-answer="s5-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s5-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Do not accept aggregate improvement when a critical slice regresses beyond its threshold.</li><li>Keep representative slice-level evaluation.</li><li>Define the release gate before interpreting the result.</li><li>Diagnose whether prompt criteria, file filtering, or context selection caused the regression.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s5" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article>
+      <article class="scenario-card" data-scenario-id="s6">
+        <header class="scenario-card-head">
+          <div>
+            <span class="training-path-number">S6</span>
+            <h2>Structured Data Extraction</h2>
+          </div>
+          <span class="training-domain-id">D4 · D5</span>
+        </header>
+        <p class="scenario-brief">A document pipeline extracts structured records, validates them against schemas, handles edge cases, and feeds downstream systems that require reliable shape and provenance.</p>
+        <div class="scenario-prompts">
+        <section class="case-prompt" data-case-prompt="s6-p1">
+          <h3>1. Schema enforcement</h3>
+          <p>Downstream code fails when the model returns syntactically valid JSON with missing required fields. Redesign the extraction boundary.</p>
+          <label for="answer-s6-p1">Your reasoning</label>
+          <textarea id="answer-s6-p1" data-case-answer="s6-p1" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s6-p1">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Use schema/tool-based structure rather than parsing free-form prose.</li><li>Validate required fields and semantic constraints after generation.</li><li>Retry or escalate based on typed validation failure.</li><li>Do not treat JSON syntax alone as correctness.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s6-p2">
+          <h3>2. Ambiguous document</h3>
+          <p>A document contains two possible invoice dates and no clear label. Decide how extraction should represent the ambiguity.</p>
+          <label for="answer-s6-p2">Your reasoning</label>
+          <textarea id="answer-s6-p2" data-case-answer="s6-p2" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s6-p2">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Do not invent a single confident value.</li><li>Preserve the evidence/provenance needed to resolve the ambiguity.</li><li>Use an explicit uncertainty/error representation supported by the downstream contract.</li><li>Escalate when downstream consequences require a single authoritative value.</li></ul>
+          </details>
+        </section>
+        <section class="case-prompt" data-case-prompt="s6-p3">
+          <h3>3. Batch throughput</h3>
+          <p>Thousands of independent documents need extraction overnight. Decide when batching is appropriate and what must remain outside the batch boundary.</p>
+          <label for="answer-s6-p3">Your reasoning</label>
+          <textarea id="answer-s6-p3" data-case-answer="s6-p3" rows="5"
+            placeholder="Constraint → decision → rejected alternatives → consequence"></textarea>
+          <details data-case-rubric="s6-p3">
+            <summary>Reveal rubric after answering</summary>
+            <ul><li>Batch independent requests when latency is not interactive and throughput/cost benefit matters.</li><li>Keep validation, failure accounting, and downstream reconciliation explicit.</li><li>Do not assume batch processing itself performs an interactive external tool loop.</li><li>Preserve a stable request-to-result correlation.</li></ul>
+          </details>
+        </section></div>
+        <label class="lab-complete scenario-complete">
+          <input type="checkbox" data-case-id="s6" disabled>
+          <span>All responses written and checked against the rubric</span>
+        </label>
+      </article></div>
+  </main>
+
+<script src="vendor/minisearch.js" defer></script>
+<script src="app.js?v=e7f6cacf46ee" defer></script>
+
+</body>
+</html>

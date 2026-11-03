@@ -137,7 +137,7 @@ ${siteFooter(lang)}
 <script src="${appHref}" defer></script>
 ${extraScripts}
 </body>
-</html>`;
+</html>`.replace(/[ \t]+$/gm, '');
 }
 
 function siteFooter() {
