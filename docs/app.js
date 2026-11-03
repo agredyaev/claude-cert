@@ -1,0 +1,311 @@
+(() => {
+  const topbar = document.querySelector('.topbar');
+  if (topbar && 'ResizeObserver' in window) {
+    const setH = () => document.documentElement.style.setProperty('--topbar-h', `${topbar.offsetHeight}px`);
+    setH();
+    new ResizeObserver(setH).observe(topbar);
+  }
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const searchToggle = document.getElementById('search-toggle');
+  const dialog = document.getElementById('search-dialog');
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+  const status = document.getElementById('search-status');
+  const filterButtons = document.querySelectorAll('.search-lang');
+
+  // Theme toggle
+  themeToggle?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+  });
+
+  // Search
+  let mini = null;
+  let indexPromise = null;
+  let searchLang = 'all';
+
+  async function loadIndex() {
+    if (mini) return mini;
+    if (!indexPromise) {
+      indexPromise = (async () => {
+        const res = await fetch('search-index.json');
+        if (!res.ok) throw new Error(`Search index request failed: ${res.status}`);
+        // loadJSON takes the raw text: res.json() would parse the 531 KB index
+        // only for it to be re-serialized and parsed a second time here.
+        const raw = await res.text();
+        if (!window.MiniSearch) throw new Error('Search library did not load');
+        mini = window.MiniSearch.loadJSON(raw, {
+          fields: ['heading', 'body'],
+          storeFields: ['heading', 'lang', 'url'],
+        });
+        return mini;
+      })().catch(error => {
+        indexPromise = null;
+        throw error;
+      });
+    }
+    return indexPromise;
+  }
+
+  function runSearch() {
+    if (!mini || !input) return;
+    const q = input.value.trim();
+    if (!q) {
+      results.innerHTML = '';
+      status.textContent = '';
+      return;
+    }
+    let hits = mini.search(q, { prefix: true, fuzzy: 0.2 });
+    if (searchLang !== 'all') hits = hits.filter(h => h.lang === searchLang);
+    hits = hits.slice(0, 20);
+    results.innerHTML = hits.map(h =>
+      `<li><a href="${h.url}"><span class="lang-tag">${h.lang}</span>${h.heading}</a></li>`
+    ).join('') || '<li style="padding:8px 16px;color:var(--muted)">No results</li>';
+    status.textContent = hits.length === 1 ? '1 result' : `${hits.length} results`;
+  }
+
+  searchToggle?.addEventListener('click', async () => {
+    dialog.showModal();
+    input.focus();
+    status.textContent = 'Loading search…';
+    try {
+      await loadIndex();
+      status.textContent = '';
+      runSearch();
+    } catch (error) {
+      results.innerHTML = '';
+      status.textContent = 'Search could not be loaded. Try again.';
+      console.error('Search failed to load', error);
+    }
+  });
+  dialog?.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      searchLang = btn.dataset.lang;
+      filterButtons.forEach(b => {
+        const selected = b === btn;
+        b.classList.toggle('active', selected);
+        b.setAttribute('aria-pressed', String(selected));
+      });
+      runSearch();
+    });
+  });
+
+  let timer;
+  input?.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(runSearch, 80);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchToggle?.click(); }
+    if (e.key === 'Escape' && dialog?.open) dialog.close();
+  });
+
+  // Guide TOC: open by default when it floats beside the prose (wide
+  // viewports), collapsed inline otherwise; highlight the section in view.
+  const toc = document.querySelector('.guide-toc');
+  if (toc) {
+    const wide = matchMedia('(min-width: 1160px)');
+    const syncOpen = () => { toc.open = wide.matches; };
+    syncOpen();
+    wide.addEventListener('change', syncOpen);
+
+    const links = new Map();
+    toc.querySelectorAll('a[href*="#"]').forEach(a => {
+      const id = decodeURIComponent(a.hash.slice(1));
+      if (id) links.set(id, a);
+    });
+    const headings = [...links.keys()].map(id => document.getElementById(id)).filter(Boolean);
+    let active = null;
+    const setActive = id => {
+      if (id === active) return;
+      links.get(active)?.classList.remove('active');
+      active = id;
+      const link = links.get(id);
+      link?.classList.add('active');
+      if (link && toc.open) {
+        // Keep the active row visible inside the outline without moving the
+        // document. scrollIntoView() also scrolls ancestor containers, which
+        // pulled phone layouts back to the inline outline immediately after a
+        // fragment link had jumped to its heading.
+        const nav = link.closest('nav');
+        if (nav) {
+          const row = link.getBoundingClientRect();
+          const pane = nav.getBoundingClientRect();
+          if (row.top < pane.top) nav.scrollTop -= pane.top - row.top;
+          else if (row.bottom > pane.bottom) nav.scrollTop += row.bottom - pane.bottom;
+        }
+      }
+    };
+    // Measuring 267 headings on every scroll tick forced a full synchronous
+    // layout each time. The heading offsets only move when the page reflows, so
+    // they are cached and the hot path does a binary search over them — one
+    // cheap scrollY read per frame and no layout at all.
+    //
+    // An IntersectionObserver was the other candidate and is wrong here: a
+    // heading that crosses the line between two frames (an anchor jump, a
+    // restored scroll position, a fast fling) is non-intersecting before and
+    // after, so no entry is ever delivered for it and the TOC sticks.
+    if (headings.length) {
+      let offsets = [];
+      let line = 80;
+      const measure = () => {
+        line = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 80) + 8;
+        const top = scrollY;
+        offsets = headings.map(h => h.getBoundingClientRect().top + top);
+      };
+      const update = () => {
+        // The last heading at or above the line; index 0 before any has passed.
+        const y = scrollY + line;
+        let lo = 0;
+        let hi = offsets.length - 1;
+        let found = 0;
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1;
+          if (offsets[mid] <= y) { found = mid; lo = mid + 1; } else hi = mid - 1;
+        }
+        setActive(headings[found].id);
+      };
+      let queued = false;
+      const onScroll = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; update(); });
+      };
+      measure();
+      update();
+      addEventListener('scroll', onScroll, { passive: true });
+      // Opening the inline outline on a phone moves the entire guide body even
+      // though the body's own dimensions do not change, so ResizeObserver does
+      // not report it. Refresh the cached document offsets after that shift.
+      toc.addEventListener('toggle', () => {
+        requestAnimationFrame(() => { measure(); update(); });
+      });
+      // Anything that reflows the prose moves the offsets: a resize, the web
+      // fonts swapping in, a <details> in the guide opening. The observer fires
+      // after layout, so re-measuring there costs nothing extra.
+      if ('ResizeObserver' in window) {
+        const body = document.querySelector('.guide-body') || document.body;
+        let first = true;
+        new ResizeObserver(() => {
+          if (first) { first = false; return; }
+          measure();
+          update();
+        }).observe(body);
+      } else {
+        addEventListener('resize', () => { measure(); update(); });
+      }
+    }
+  }
+
+  // Warm an exam's question bank before the click. The landing page and the
+  // score report each link into three different exams, so a static prefetch
+  // would pull megabytes for two banks the visitor will not open; hovering or
+  // tab-focusing one link names which bank to fetch. The guide pages, which
+  // have exactly one matching exam, carry a plain <link rel=prefetch> instead.
+  const bankMap = (() => {
+    try { return JSON.parse(document.getElementById('bank-map')?.textContent || '{}'); }
+    catch { return {}; }
+  })();
+  const warmed = new Set();
+  const warmBank = e => {
+    const a = e.target.closest?.('a[href]');
+    if (!a) return;
+    // Match on the shell's own key space (base-relative "practical/en.html"),
+    // which is how the map is written.
+    const href = a.getAttribute('href')?.split(/[?#]/)[0];
+    const bank = href && bankMap[href];
+    if (!bank || warmed.has(bank)) return;
+    warmed.add(bank);
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'fetch';
+    // No crossorigin: the engine's fetch() is same-origin with credentials, and
+    // an anonymous prefetch would sit under a different cache key and be redone.
+    link.href = bank;
+    document.head.appendChild(link);
+  };
+  if (Object.keys(bankMap).length) {
+    document.addEventListener('pointerenter', warmBank, { capture: true, passive: true });
+    document.addEventListener('focusin', warmBank, { passive: true });
+  }
+
+
+  // Foundations dashboard: summarize the practice engine's durable browser state
+  // without duplicating scoring logic. The exam page remains the source of truth;
+  // this view only answers "where was I?" and "what should I open?".
+  const trainingDashboard = document.querySelector('[data-training-dashboard]');
+  if (trainingDashboard) {
+    const readJson = key => {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    };
+    const attempt = readJson('ccaf-exam-en');
+    const missRecord = readJson('ccaf-exam-en:misses');
+    const missItems = missRecord && missRecord.v === 1 && missRecord.items && typeof missRecord.items === 'object'
+      ? missRecord.items : {};
+    const missCount = Object.values(missItems).filter(item => item && Number(item.n) > 0).length;
+
+    const misses = document.getElementById('training-misses');
+    if (misses) misses.textContent = String(missCount);
+    const missesLink = document.getElementById('training-misses-link');
+    const missesCopy = document.getElementById('training-misses-copy');
+    if (missesLink) {
+      missesLink.setAttribute('aria-disabled', String(missCount === 0));
+      missesLink.classList.toggle('disabled', missCount === 0);
+      if (missCount === 0) missesLink.addEventListener('click', e => e.preventDefault());
+    }
+    if (missesCopy && missCount) {
+      missesCopy.textContent = `Review ${missCount} question${missCount === 1 ? '' : 's'} you have missed before, most-missed first.`;
+    }
+
+    const order = Array.isArray(attempt && attempt.order) ? attempt.order : [];
+    if (order.length) {
+      const answers = attempt.answers && typeof attempt.answers === 'object' ? attempt.answers : {};
+      const answered = order.filter(id => {
+        const answer = answers[id];
+        return Array.isArray(answer) ? answer.length > 0 : (typeof answer === 'string' && answer.length > 0);
+      }).length;
+      const pct = Math.round(answered / order.length * 100);
+      const mode = attempt.mode === 'exam' ? 'Exam' : 'Study';
+      const scope = attempt.focus && attempt.focus !== 'all'
+        ? (attempt.focus === 'misses' ? 'Weak-spot drill' : attempt.focus === 'report' ? 'Targeted drill' : `Domain ${attempt.focus} drill`)
+        : (attempt.length === 'quick' ? 'Quick set' : 'Full set');
+      const value = document.getElementById('training-progress-value');
+      const detail = document.getElementById('training-progress-detail');
+      const answeredEl = document.getElementById('training-answered');
+      const modeEl = document.getElementById('training-mode');
+      const fill = document.getElementById('training-progress-fill');
+      const primary = document.getElementById('training-primary');
+      if (value) value.textContent = `${pct}% complete`;
+      if (detail) detail.textContent = `${scope} · question ${Math.min(Number(attempt.current) + 1 || 1, order.length)} of ${order.length}`;
+      if (answeredEl) answeredEl.textContent = `${answered} / ${order.length}`;
+      if (modeEl) modeEl.textContent = mode;
+      if (fill) fill.style.width = `${pct}%`;
+      if (primary) {
+        primary.href = 'practical/en.html';
+        primary.textContent = 'Resume practice';
+      }
+    }
+  }
+
+  // Heading anchors: copy the section URL on click. Hash navigation still
+  // happens, so the address bar matches what was copied.
+  document.addEventListener('click', (e) => {
+    const anchor = e.target.closest?.('.heading-anchor');
+    if (!anchor || !navigator.clipboard) return;
+    // anchor.href is resolved against the page's <base href>
+    navigator.clipboard.writeText(anchor.href).then(() => {
+      anchor.classList.add('copied');
+      setTimeout(() => anchor.classList.remove('copied'), 1200);
+    }).catch(() => {});
+  });
+})();

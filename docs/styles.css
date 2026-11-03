@@ -1,0 +1,1300 @@
+/* Base visual system adapted from the upstream project; see DESIGN.md. */
+
+:root {
+  --bg:          #0E0E0E;
+  --bg-elev:     #141414;
+  --fg:          #FFFFFF;
+  --muted:       #A3A3A3;
+  --subtle:      #949494;
+  --border:      #292929;
+  --border-strong: #333333;
+  --accent:      #F8E3A0;
+  --accent-fg:   #0E0E0E;
+  --code-bg:     #1C1C1C;
+  --code-fg:     #F8E3A0;
+  --report-focus: #C16B57;
+  --report-next: #F8E3A0;
+  --report-maintain: #6FA97C;
+
+  --max:       980px;
+  --max-prose: 70ch;
+  --radius:    18px;
+  --radius-sm: 4px;     /* chips */
+  --radius-md: 8px;     /* buttons */
+  --ease:      cubic-bezier(.2, .8, .2, 1);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  /* Reading-mode adaptation; the source website is dark. */
+  --bg:          #FFFFFF;
+  --bg-elev:     #F4F4F4;
+  --fg:          #0E0E0E;
+  --muted:       #6C757D;
+  --subtle:      #6C757D;
+  --border:      #E5E5E5;
+  --border-strong: #CFCFCF;
+  --accent:      #725B1A;
+  --accent-fg:   #FFFFFF;
+  --code-bg:     #F4F4F4;
+  --code-fg:     #8A6D3B;
+  --report-focus: #A44836;
+  --report-next: #725B1A;
+  --report-maintain: #39734A;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  font-synthesis: none;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent); color: var(--accent-fg); }
+
+a {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  transition: color .15s var(--ease), border-color .15s var(--ease);
+}
+a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* offset anchor scrolling so headings clear the sticky topbar.
+   --topbar-h is set from JS to match the live topbar height (it can wrap on narrow screens). */
+html { scroll-padding-top: calc(var(--topbar-h, 64px) + 16px); }
+/* Without this, a trackpad flick past the top rubber-bands the document and the
+   sticky header rides down with it, detaching from the top of the window. */
+html, body { overscroll-behavior-y: none; }
+
+/* ---------- topbar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 32px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 16px;
+  color: var(--fg);
+  border-bottom: 0;
+  font-weight: 600;
+}
+.brand:hover { color: var(--accent); }
+.brand svg {
+  height: 20px; width: auto;
+  fill: currentColor;
+  transition: color .15s var(--ease);
+}
+.brand span {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.167em;
+  font-weight: 600;
+}
+.brand span em {
+  font-style: normal;
+  color: var(--subtle);
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.search-filter {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 0;
+}
+.search-lang {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .15s var(--ease), background .15s var(--ease), border-color .15s var(--ease);
+}
+.search-lang:hover { color: var(--fg); border-color: var(--accent); }
+.search-lang.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  width: 44px; height: 44px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color .15s var(--ease), border-color .15s var(--ease);
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---------- landing ---------- */
+.landing {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: clamp(64px, 12vw, 128px) 32px 96px;
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  gap: 28px;
+  padding-bottom: 72px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 64px;
+}
+.hero .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.167em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.hero h1 {
+  font-size: clamp(2rem, 4.2vw, 3.25rem);
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  margin: 0;
+  max-width: 24ch;
+}
+.hero h1 .accent { color: var(--fg); }
+.hero .lede {
+  color: var(--muted);
+  margin: 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+.track + .track { margin-top: 64px; }
+.track-heading {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+  max-width: 64ch;
+}
+.track-heading h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  line-height: 1.15;
+}
+.track-heading p { margin: 0; color: var(--muted); }
+.track-heading .track-label {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.167em;
+  text-transform: uppercase;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-elev);
+  padding: 32px 28px;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  transition: background .2s var(--ease);
+}
+.card:hover { background: var(--bg-elev); }
+.card h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.167em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.card .lang-name {
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--fg);
+}
+.card .card-summary {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.55;
+}
+.cards-single {
+  grid-template-columns: minmax(260px, 520px);
+  max-width: 520px;
+}
+.card ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.card li { margin: 0; }
+.card li a {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 0.95rem;
+}
+.card li:last-child a { border-bottom: 0; }
+.card li a::after {
+  content: "→";
+  color: var(--subtle);
+  transition: transform .2s var(--ease), color .15s var(--ease);
+}
+.card li a:hover { color: var(--accent); }
+.card li a:hover::after { color: var(--accent); transform: translateX(4px); }
+
+/* ---------- track chooser ---------- */
+.track-chooser { margin-bottom: 72px; }
+/* align-items: start keeps an opened disclosure from stretching its siblings.
+   The 340px floor fits two cards in the content column, so four tracks sit
+   2 × 2 instead of three plus one stranded on its own row. */
+.chooser-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+  margin-top: 20px;
+}
+.chooser-card { gap: 14px; }
+.card.chooser-card h2 {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  color: var(--fg);
+}
+/* Fixed two-column grid, not flex-wrap: a tri-language track and a
+   single-language track then align row for row across the three cards. */
+.chooser-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin: 4px 0 0;
+}
+.chooser-fact { display: grid; gap: 3px; }
+/* "EN · ES · PT" needs the full card width; giving it its own row keeps the
+   facts block the same height on every card. */
+.chooser-fact:last-child { grid-column: 1 / -1; }
+.chooser-fact-k {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.chooser-fact-v {
+  margin: 0;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  color: var(--fg);
+  font-weight: 600;
+}
+.chooser-includes {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.chooser-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 12px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.chooser-link::after {
+  content: "→";
+  color: var(--subtle);
+  transition: transform .2s var(--ease), color .15s var(--ease);
+}
+.chooser-link:hover { color: var(--accent); border-color: var(--accent); }
+.chooser-link:hover::after { color: var(--accent); transform: translateX(4px); }
+
+/* ---------- score report review ---------- */
+.report-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 28px;
+  align-items: center;
+  padding: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.report-entry h2 { margin: 0 0 10px; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.15; letter-spacing: -0.025em; text-wrap: balance; }
+.report-entry p { margin: 0; color: var(--muted); max-width: 62ch; }
+.report-entry .chooser-link { margin: 0; }
+.report-page { max-width: 1100px; margin: 0 auto; padding: 72px 32px 120px; }
+.report-hero { display: grid; gap: 16px; max-width: 660px; margin-bottom: 28px; }
+.hero-eyebrow, .report-plan-heading .track-label {
+  margin: 0;
+  color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.report-hero h1, .report-plan-heading h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.16; letter-spacing: -0.025em; text-wrap: balance; }
+.report-lede { margin: 0; max-width: 64ch; color: var(--muted); font-size: 1.15rem; line-height: 1.55; }
+.privacy-note { margin: 0; padding: 14px 16px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+.privacy-note strong { color: var(--fg); }
+.report-panel { padding: 28px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+.report-panel + .report-panel, .report-plan { margin-top: 24px; }
+.report-panel-heading { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
+.report-panel-heading h2, .report-plan-heading h2 { margin: 0; font-size: clamp(1.4rem, 2.5vw, 2rem); line-height: 1.15; letter-spacing: -0.025em; text-wrap: balance; }
+.report-panel-heading p, .report-plan-heading p { margin: 6px 0 0; color: var(--muted); }
+.report-step { flex: 0 0 auto; padding-top: 3px; color: var(--accent); font: 600 0.72rem/1.5 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.14em; }
+.file-picker { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 18px; border: 1px solid var(--fg); border-radius: var(--radius-md); background: var(--fg); color: var(--bg); font-weight: 600; cursor: pointer; }
+.file-picker:hover { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+.file-picker input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.report-status { min-height: 1.5em; margin: 16px 0 0; color: var(--muted); font-size: 0.9rem; }
+.report-status.busy { color: var(--accent); }
+.report-status.success { color: var(--report-maintain); }
+.report-status.error { color: var(--report-focus); }
+.review-summary { margin: 0 0 20px; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); color: var(--muted); font-size: 0.9rem; }
+.review-list { display: grid; gap: 10px; }
+.report-row { display: grid; grid-template-columns: minmax(0, 1fr) 116px minmax(220px, 1.1fr); gap: 16px; align-items: end; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); }
+.report-row.focus .report-row-meta { color: var(--report-focus); }
+.report-row.next .report-row-meta { color: var(--report-next); }
+.report-row.maintain .report-row-meta { color: var(--report-maintain); }
+.report-row-copy { min-width: 0; }
+.report-row-copy p { margin: 5px 0 0; line-height: 1.45; }
+.report-row-copy small { display: block; margin-top: 8px; color: var(--subtle); font-size: 0.78rem; line-height: 1.4; }
+.report-row-meta, .study-theme { color: var(--accent); font: 600 0.7rem/1.4 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.report-unknown { color: var(--report-focus) !important; }
+.report-score-field, .report-objective-field { display: grid; gap: 6px; color: var(--subtle); font: 600 0.7rem/1.4 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.06em; text-transform: uppercase; }
+.report-score-field input, .report-objective-field select { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--bg-elev); color: var(--fg); font: 500 0.9rem/1.3 "JetBrains Mono", ui-monospace, monospace; }
+.report-score-field input:focus, .report-objective-field select:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.report-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.report-primary, .report-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border-radius: var(--radius-md); font: 600 0.9rem/1.3 Inter, system-ui, sans-serif; cursor: pointer; }
+.report-primary { border: 1px solid var(--fg); background: var(--fg); color: var(--bg); }
+.report-primary:hover:not(:disabled) { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+.report-primary:disabled { cursor: not-allowed; opacity: 0.45; }
+.report-secondary { border: 1px solid var(--border-strong); background: transparent; color: var(--fg); }
+.report-secondary:hover:not(.disabled):not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.report-secondary.disabled { cursor: not-allowed; opacity: 0.45; pointer-events: none; }
+.report-secondary:disabled { cursor: not-allowed; opacity: 0.45; }
+.report-plan { padding: 0; }
+.report-plan-heading { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 24px; }
+.report-plan-heading > div { max-width: 760px; }
+.plan-count { flex: 0 0 auto; color: var(--muted); font: 600 0.72rem/1.5 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.study-list { display: grid; gap: 12px; }
+
+/* The plan groups by exam domain, ordered by how much of the score sits in
+   each, so reading top to bottom is the study order. */
+.plan-lede { margin: 0 0 28px; max-width: 62ch; color: var(--muted); line-height: 1.6; }
+.plan-lede strong { color: var(--fg); }
+.plan-domain { display: grid; gap: 12px; }
+.plan-domain + .plan-domain { margin-top: 40px; }
+.plan-domain-name {
+  margin: 0; font-size: clamp(1.15rem, 2.2vw, 1.5rem); line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.plan-domain-meta {
+  margin: -4px 0 4px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--subtle);
+}
+.plan-strong { margin-top: 40px; }
+.plan-strong > summary {
+  min-height: 44px; display: flex; align-items: center; cursor: pointer;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--subtle);
+}
+.plan-strong > summary:hover { color: var(--fg); }
+/* The score is what happened; the points are what studying is worth. The
+   second is the one the candidate acts on, so it carries the weight. */
+.study-score {
+  margin-left: auto;
+  font: 600 1rem/1 "JetBrains Mono", ui-monospace, monospace;
+  color: var(--fg); font-variant-numeric: tabular-nums;
+}
+.study-score-note { color: var(--subtle); font-size: 0.78rem; }
+.plan-estimate-note {
+  margin: 28px 0 0; max-width: 62ch; color: var(--subtle);
+  font-size: 0.82rem; line-height: 1.55;
+}
+.study-card { padding: 22px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-elev); }
+.study-card.focus .study-priority { color: var(--report-focus); }
+.study-card.next .study-priority { color: var(--report-next); }
+.study-card.maintain .study-priority { color: var(--report-maintain); }
+.study-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.study-card-head { flex-wrap: wrap; }
+.study-priority { color: var(--muted); font: 600 0.7rem/1.4 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.1em; text-transform: uppercase; }
+.study-card h3 { margin: 7px 0 16px; max-width: 70ch; font-size: 1.1rem; line-height: 1.4; }
+.study-card p { margin: 8px 0; color: var(--muted); line-height: 1.5; }
+.study-card strong { color: var(--fg); }
+.study-guidance { margin-top: 16px; border-top: 1px solid var(--border); }
+.study-guidance > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; list-style: none;
+}
+.study-guidance > summary::-webkit-details-marker { display: none; }
+.study-guidance > summary::after { content: "+"; font-size: 0.95rem; line-height: 1; }
+.study-guidance[open] > summary::after { content: "\2212"; }
+.study-guidance > summary:hover { color: var(--fg); }
+.study-guidance > summary:hover::after { color: var(--accent); }
+.study-guidance[open] > summary { margin-bottom: 12px; }
+.study-guidance > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.study-guidance h4 { margin: 18px 0 6px; font-size: 0.9rem; }
+.study-guidance p { max-width: 72ch; }
+.study-links a { color: var(--accent); border-bottom-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.study-links a:hover { border-bottom-color: var(--accent); }
+.report-disclaimer { margin: 24px 0 0; color: var(--subtle); font-size: 0.82rem; }
+.report-file-note { margin: 12px 0 0; color: var(--muted); font-size: 0.82rem; }
+.report-result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 28px 0; }
+.report-result-actions > span { color: var(--muted); font-size: 0.9rem; }
+.report-share-actions { margin-top: 4px; }
+/* .report-result-actions sets display:flex, which outranks the UA rule that
+   hides a closed details' children, so the buttons need hiding explicitly. */
+.report-share:not([open]) .report-share-actions { display: none; }
+.report-share { margin: 4px 0 8px; }
+.report-share-summary {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; cursor: pointer; list-style: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--subtle); transition: color .15s var(--ease);
+}
+.report-share-summary::-webkit-details-marker { display: none; }
+.report-share-summary::after { content: "+"; font-size: 0.95rem; line-height: 1; }
+.report-share[open] .report-share-summary::after { content: "\2212"; }
+.report-share-summary:hover,
+.report-share[open] .report-share-summary { color: var(--fg); }
+.report-share-summary:hover::after { color: var(--accent); }
+.report-share-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.report-file-label { cursor: pointer; }
+.report-file-label input { display: none; }
+/* The dialog button shares the label's line rather than sitting under the
+   select: that keeps the objective column the same two rows as the score
+   column beside it, so the two inputs land on one line. */
+.report-objective-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.report-objective-head .report-text-button { padding: 0 0 2px; font-size: 0.7rem; }
+.report-row-copy .report-text-button { margin-top: 8px; text-align: left; white-space: normal; }
+.report-text-button { padding: 6px 0; border: 0; border-bottom: 1px solid var(--border-strong); background: transparent; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+.report-text-button:hover { color: var(--fg); }
+.report-review { margin-top: 36px; border-top: 1px solid var(--border); padding-top: 20px; }
+.report-review > summary, .study-list details > summary { cursor: pointer; color: var(--muted); font-weight: 600; padding: 8px 0; }
+.report-review[open] > summary { margin-bottom: 16px; }
+.report-primary.disabled { opacity: 0.45; pointer-events: none; }
+.report-status:empty { display: none; }
+#plan-count { font: inherit; text-transform: none; letter-spacing: normal; }
+#plan-status:not(:empty) { margin-bottom: 24px; }
+.study-list details > .study-card { margin-top: 12px; }
+
+.site-footer {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 28px 32px 36px;
+  border-top: 1px solid var(--border);
+  color: var(--subtle);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex; flex-wrap: wrap; gap: 8px 24px;
+  justify-content: space-between; align-items: center;
+}
+.site-footer p { margin: 0; }
+.site-footer a { color: var(--muted); border-bottom-color: var(--border); }
+.site-footer a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ---------- guide content ---------- */
+.guide {
+  max-width: var(--max-prose);
+  margin: 0 auto;
+  padding: 64px 32px 120px;
+  font-size: 1.02rem;
+}
+.guide h1, .guide h2, .guide h3, .guide h4 {
+  line-height: 1.19;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.guide h1 { font-size: 2.4rem; margin-top: 0; margin-bottom: 1rem; }
+.guide h2 { font-size: 1.7rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.guide h3 { font-size: 1.25rem; margin-top: 2rem; }
+.guide h4 { font-size: 1.05rem; margin-top: 1.6rem; color: var(--muted); }
+.guide p { margin: 1em 0; }
+.guide a { color: var(--accent); border-bottom-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.guide a:hover { border-bottom-color: var(--accent); }
+.guide ul, .guide ol { padding-left: 1.4em; }
+.guide li { margin: 0.4em 0; }
+.guide pre {
+  background: var(--code-bg);
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.875;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Most fenced blocks in the guides are prose-like transcripts and JSON, not
+     column-aligned code. Wrap them (as the PDF stylesheet already does) so a
+     long line does not turn every block into a horizontal scroller, even on
+     desktop where the 70ch column is narrower than several blocks. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.guide code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--code-fg);
+}
+.guide pre code { background: transparent; padding: 0; border: 0; color: inherit; }
+.guide blockquote {
+  margin: 1.75em 0;
+  padding: 1.1em 1.4em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  color: var(--secondary);
+}
+.guide blockquote p { margin: 0.4em 0; }
+.guide table {
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  width: 100%;
+  font-size: 0.95em;
+}
+.guide th, .guide td {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: top;
+}
+.guide tbody tr:last-child td { border-bottom: 0; }
+.guide table { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.guide thead th { background: var(--bg-elev); border-bottom-color: var(--border-strong); }
+/* Bare URLs in the documentation tables set the table's minimum width (630px
+   on a 320px phone). Let link text break anywhere; ordinary cell text keeps
+   whole words, and a dense table still falls back to the scroller below. */
+.guide td a { overflow-wrap: anywhere; }
+/* Chrome then hands that column only its min-content width and the rest to
+   the label column, so a URL wraps into seven lines beside empty space. Give
+   link-only cells (the URL column of the documentation tables) a fixed share. */
+.guide td:has(> a:only-child) { width: 60%; }
+.guide th { font-weight: 600; color: var(--accent); font-size: 0.78em; letter-spacing: 0.12em; text-transform: uppercase; }
+.guide hr { border: 0; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+/* heading anchors — revealed on hover/focus; clicking copies a shareable URL */
+.guide .heading-anchor {
+  margin-left: 0.1em;
+  color: var(--subtle);
+  border-bottom: none;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease);
+}
+.guide h1:hover .heading-anchor, .guide h2:hover .heading-anchor,
+.guide h3:hover .heading-anchor, .guide h4:hover .heading-anchor,
+.guide .heading-anchor:focus-visible { opacity: 1; }
+.guide .heading-anchor:hover { color: var(--accent); border-bottom: none; }
+.guide .heading-anchor.copied { color: var(--accent); opacity: 1; }
+.guide .heading-anchor.copied::after { content: " ✓"; }
+@media (hover: none) { .guide .heading-anchor { opacity: 0.45; } }
+
+/* table of contents — collapsed inline block by default, scrolls internally */
+.guide-toc {
+  margin: 2rem 0 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+}
+.guide-toc summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; cursor: pointer; list-style: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--subtle); transition: color .15s var(--ease);
+}
+.guide-toc summary::-webkit-details-marker { display: none; }
+.guide-toc summary::after { content: "+"; font-size: 0.95rem; line-height: 1; }
+.guide-toc[open] summary::after { content: "\2212"; }
+.guide-toc summary:hover, .guide-toc[open] summary { color: var(--fg); }
+.guide-toc summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.guide-toc nav {
+  max-height: min(60vh, 520px); overflow-y: auto; padding: 2px 18px 16px;
+  scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+}
+.guide-toc nav::-webkit-scrollbar { width: 6px; }
+.guide-toc nav::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.guide-toc nav::-webkit-scrollbar-track { background: transparent; }
+.guide .guide-toc ol { list-style: none; margin: 0; padding-left: 0; }
+.guide .guide-toc ol ol { padding-left: 0; }
+.guide-toc li { margin: 0; }
+/* The active marker is a nav indicator, so every row reserves its width and the
+   list never shifts sideways as you read. */
+.guide .guide-toc a {
+  display: block; position: relative;
+  padding: 6px 0 6px 14px;
+  color: var(--secondary); border-bottom: none; line-height: 1.45;
+  transition: color .15s var(--ease);
+}
+.guide .guide-toc ol ol a { padding-left: 28px; color: var(--muted); font-size: 0.93em; }
+.guide .guide-toc a::before {
+  content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px;
+  border-radius: 1px; background: transparent;
+  transition: background .15s var(--ease);
+}
+.guide .guide-toc ol ol a::before { left: 14px; }
+.guide .guide-toc a:hover { color: var(--fg); }
+.guide .guide-toc a:hover::before { background: var(--border-strong); }
+.guide .guide-toc a.active { color: var(--accent); }
+.guide .guide-toc a.active::before { background: var(--accent); }
+
+/* Wide viewports lay the guide out as two real columns — a sticky contents rail
+   and the reading column — centred as one composition, instead of a narrow
+   centred measure with the contents floating loose in the left margin. The
+   reading column runs wider than the prose measure so tables and code blocks,
+   which genuinely want the room, can use it while paragraphs stay at 70ch. */
+@media (min-width: 1160px) {
+  .guide {
+    display: grid;
+    grid-template-columns: 252px minmax(0, 1fr);
+    column-gap: clamp(64px, 6.5vw, 120px);
+    align-items: start;
+    max-width: calc(252px + 120px + 880px);
+    padding: 72px 40px 140px;
+  }
+  .guide-body {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .guide-body > p, .guide-body > ul, .guide-body > ol, .guide-body > blockquote,
+  .guide-body > h1, .guide-body > h2, .guide-body > h3, .guide-body > h4 { max-width: var(--max-prose); }
+  .guide-body > table, .guide-body > pre { max-width: 100%; }
+
+  .guide-toc {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: calc(var(--topbar-h, 64px) + 40px);
+    align-self: start;
+    margin: 0;
+    border: 0;
+    background: none;
+    font-size: 0.875rem;
+  }
+  .guide-toc summary { padding: 0 0 14px; }
+  /* 40px top offset + 40px breathing room at the bottom + the summary row. */
+  .guide-toc nav {
+    max-height: calc(100vh - var(--topbar-h, 64px) - 80px - 34px);
+    padding: 0 8px 4px 0;
+  }
+}
+
+.guide img { max-width: 100%; }
+.guide { overflow-wrap: break-word; }
+.guide-body { min-width: 0; overflow-wrap: break-word; }
+
+/* ---------- placeholder pages ---------- */
+.placeholder {
+  max-width: var(--max-prose);
+  margin: 0 auto;
+  padding: 120px 32px;
+  text-align: center;
+  color: var(--muted);
+}
+.placeholder h1 {
+  font-size: 2rem;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 1rem;
+}
+
+/* ---------- search ---------- */
+#search-dialog,
+#objective-picker {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--bg-elev);
+  color: var(--fg);
+  width: min(640px, 92vw);
+}
+#search-dialog::backdrop,
+#objective-picker::backdrop {
+  background: rgba(0, 0, 0, .55);
+}
+#search-input,
+#objective-picker-search {
+  width: 100%;
+  padding: 18px 20px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  font-size: 1.05rem;
+  outline: none;
+  font-family: inherit;
+}
+#search-input::placeholder,
+#objective-picker-search::placeholder { color: var(--subtle); }
+.search-status {
+  min-height: 1.5em;
+  margin: 0;
+  padding: 6px 20px 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+#search-results { list-style: none; margin: 0; padding: 8px; max-height: 56vh; overflow-y: auto; }
+#objective-picker-results { list-style: none; margin: 0; padding: 8px; max-height: 56vh; overflow-y: auto; }
+#search-results li { padding: 0; }
+#objective-picker-results li { padding: 0; }
+#search-results a {
+  display: block;
+  padding: 10px 14px;
+  color: var(--fg);
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+}
+#search-results a:hover { background: var(--bg); color: var(--accent); }
+#objective-picker-results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+#objective-picker-results button:hover { background: var(--bg); color: var(--accent); }
+#objective-picker .report-actions { padding: 12px 20px 20px; }
+#objective-picker-title { padding: 20px 20px 0; margin: 0; }
+#search-results .lang-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-right: 10px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  /* Phones give the screen back to the content, matching the exam pages, which
+     already release their header below 760px. */
+  .topbar { position: static; padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+  .brand span { display: none; }
+  .landing { padding: 48px 20px 64px; }
+  .hero { padding-bottom: 48px; margin-bottom: 40px; }
+  .guide { padding: 40px 20px 80px; }
+  /* At 2.4rem a single word such as "Documentation" is wider than a 320px
+     column and breaks mid-word; scale the title with the viewport instead. */
+  .guide h1 { font-size: clamp(1.75rem, 9vw, 2.4rem); }
+  /* A wide table used to widen main/body/html; let it scroll on its own. */
+  .guide table { display: block; width: 100%; max-width: 100%; overflow-x: auto; }
+  .report-entry { grid-template-columns: 1fr; padding: 24px; }
+  .report-page { padding: 48px 16px 80px; }
+  .report-panel { padding: 20px 16px; }
+  .report-row { grid-template-columns: 1fr 1fr; }
+  .report-row-copy { grid-column: 1 / -1; }
+  .report-objective-field { grid-column: 1 / -1; }
+  .report-plan-heading { display: block; }
+  .plan-count { display: block; margin-top: 12px; }
+  /* Language chips are the phone-drill entry point; give them a real target. */
+  .chooser-card .chooser-res .cr-langs a,
+  .chooser-card .chooser-res .cr-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; padding: 3px 9px;
+  }
+  .chooser-card .chooser-res li { padding: 4px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Track cards: one resource per row, with the languages it exists in. Keeps a
+   tri-language track and a single-language track on the same card template.
+   These override .card li a, which lays links out as full-width rows. */
+.chooser-res { list-style: none; margin: 14px 0 0; padding: 0; display: block; }
+/* The core three sit directly on the card; the disclosure list is already
+   spaced by its summary. */
+.chooser-res-core { margin-top: 18px; }
+.chooser-card .chooser-res li { display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; margin: 0; padding: 9px 0;
+  border-bottom: 1px solid var(--border); }
+.chooser-card .chooser-res li:first-child { border-top: 1px solid var(--border); }
+.chooser-card .cr-label { font-size: 0.88rem; color: var(--fg); }
+.chooser-card .cr-langs { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.chooser-card .chooser-res .cr-langs a,
+.chooser-card .chooser-res .cr-chip { display: inline-block; width: auto; padding: 3px 9px;
+  border: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.06em; color: var(--accent); }
+.chooser-card .chooser-res li a::after { content: none; }
+.chooser-card .chooser-res .cr-langs a:hover { border-color: var(--accent); background: var(--bg-elev); }
+
+/* Single-destination row: the label and its chip are one target. Overrides the
+   .card li a base rule, whose own border and arrow would double the row's. */
+.chooser-card .chooser-res li .cr-row {
+  flex: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0; border-bottom: 0; color: var(--fg); font-size: 0.88rem;
+}
+.chooser-card .chooser-res li .cr-row:hover { color: var(--accent); }
+.chooser-card .chooser-res li .cr-row:hover .cr-chip {
+  border-color: var(--accent); background: var(--bg-elev);
+}
+
+/* Whole-card tap target. The title link stretches over the card, so tapping
+   anywhere opens the English study guide; the language chips and the register
+   link sit above it and keep their own destinations. */
+.chooser-card { position: relative; transition: border-color .18s var(--ease), background .18s var(--ease); }
+.chooser-card:hover { border-color: var(--border-strong); background: var(--bg-elev); }
+.chooser-card:focus-within { border-color: var(--accent); }
+.chooser-name .chooser-primary { color: inherit; text-decoration: none; }
+.chooser-name .chooser-primary::after { content: ""; position: absolute; inset: 0; z-index: 0; }
+.chooser-card:hover .chooser-name .chooser-primary { color: var(--accent); }
+.chooser-card .chooser-res,
+.chooser-card .chooser-more,
+.chooser-card .chooser-reg,
+.chooser-card .chooser-link { position: relative; z-index: 1; }
+
+/* Materials disclosure. Collapsed by default so a four-material track and a
+   six-material track present the same height in the grid. */
+.chooser-more { margin-top: 2px; }
+.chooser-more-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  transition: color .15s var(--ease);
+}
+.chooser-more-summary::-webkit-details-marker { display: none; }
+.chooser-more-summary::after {
+  content: "+";
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: color .15s var(--ease);
+}
+.chooser-more[open] .chooser-more-summary::after { content: "\2212"; }
+.chooser-more-summary:hover,
+.chooser-more[open] .chooser-more-summary { color: var(--fg); }
+.chooser-more-summary:hover::after { color: var(--accent); }
+.chooser-more-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Cards size to their own content (align-items: start), so the summary — the
+   only block whose length varies — is reserved four lines above the single-
+   column breakpoint. Without it the shortest summary lifts one card's facts,
+   CTA, and disclosure a line above its neighbours'. */
+@media (min-width: 721px) {
+  .chooser-card .card-summary { min-height: 6.2em; }
+}
+
+/* Register leaves the site and costs money; it stays reachable but quiet,
+   under the free material this site actually ships. */
+.chooser-reg {
+  justify-self: start;
+  font-size: 0.85rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-strong);
+}
+.chooser-reg:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.chooser-reg-note { margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+
+.hero .eyebrow, .track-label, .card h2, .guide .eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 500; letter-spacing: .06em; }
+.hero { background: radial-gradient(ellipse at 65% 35%, rgba(148,163,184,.09), transparent 70%); }
+h1, h2, h3 { text-wrap: balance; }
+
+/* Section rules that sit directly before a heading duplicate the spacing the
+   heading already carries. Part breaks (hr before h1) keep their rule. */
+.guide hr:has(+ h2) { display: none; }
+
+/* ---------- training dashboard ---------- */
+.trainer-brand { gap: 12px; }
+.trainer-brand .trainer-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--accent);
+  font: 700 11px/1 "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.trainer-brand > span:last-child {
+  color: var(--fg);
+  font-size: 12px;
+  letter-spacing: .12em;
+}
+.topbar-link {
+  padding: 9px 12px;
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.topbar-link:hover { color: var(--accent); }
+
+.training-dashboard {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 92px) 32px 96px;
+}
+.training-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+  gap: clamp(32px, 7vw, 84px);
+  align-items: center;
+  padding-bottom: 64px;
+  border-bottom: 1px solid var(--border);
+}
+.training-hero-copy { display: grid; gap: 22px; }
+.training-hero .eyebrow,
+.training-panel-label {
+  margin: 0;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .167em;
+  text-transform: uppercase;
+}
+.training-hero h1 {
+  margin: 0;
+  max-width: 15ch;
+  font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+  font-weight: 620;
+}
+.training-hero h1 .accent { color: var(--muted); }
+.training-lede {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.6;
+}
+.training-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.training-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  font-size: .88rem;
+  font-weight: 650;
+}
+.training-btn:hover { border-color: var(--accent); }
+.training-btn-primary {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+.training-btn-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.training-calibration {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--subtle);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+
+.training-progress-card {
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.training-progress-main {
+  display: grid;
+  gap: 6px;
+  margin: 28px 0 18px;
+}
+.training-progress-main strong {
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+.training-progress-main span { color: var(--muted); font-size: .88rem; }
+.training-progress-track,
+.training-domain-bar {
+  height: 5px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 99px;
+}
+.training-progress-track span,
+.training-domain-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width .3s var(--ease);
+}
+.training-progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 20px 0 0;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.training-progress-stats div {
+  min-width: 0;
+  padding: 12px;
+  background: var(--bg);
+}
+.training-progress-stats dt {
+  color: var(--subtle);
+  font-size: .62rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.training-progress-stats dd {
+  margin: 3px 0 0;
+  font: 650 .88rem/1.35 "JetBrains Mono", ui-monospace, monospace;
+}
+
+.training-section { padding: 62px 0 0; }
+.training-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+.training-section-head h2,
+.training-next-stage h2 {
+  margin: 8px 0 0;
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  line-height: 1.12;
+  letter-spacing: -.025em;
+}
+.training-section-head > a {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: .86rem;
+}
+.training-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.training-mode-card {
+  min-height: 220px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.training-mode-card:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+.training-mode-card > strong {
+  margin-top: auto;
+  font-size: 1.3rem;
+  letter-spacing: -.02em;
+}
+.training-mode-card > span:last-child {
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.5;
+}
+.training-mode-kicker {
+  color: var(--accent);
+  font: 600 .68rem/1.4 "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.training-mode-card.disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+.training-mode-card.disabled:hover { border-color: var(--border); }
+
+.training-domain-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.training-domain-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 12px;
+  min-height: 236px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.training-domain-head { display: flex; justify-content: space-between; gap: 12px; }
+.training-domain-id,
+.training-domain-weight {
+  font: 650 .7rem/1.4 "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.training-domain-id { color: var(--subtle); }
+.training-domain-weight { color: var(--accent); }
+.training-domain-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.training-domain-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+}
+.training-domain-card a {
+  width: fit-content;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.training-resource-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 62px;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+.training-resource-strip a {
+  display: grid;
+  gap: 4px;
+  padding: 20px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.training-resource-strip a span {
+  color: var(--subtle);
+  font-size: .64rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.training-resource-strip a strong { font-size: .92rem; }
+
+.training-next-stage {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 36px;
+  margin-top: 62px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.training-next-stage p:not(.training-panel-label) {
+  max-width: 68ch;
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .training-hero { grid-template-columns: 1fr; }
+  .training-mode-grid { grid-template-columns: repeat(2, 1fr); }
+  .training-domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .training-domain-card:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .training-dashboard { padding: 36px 20px 68px; }
+  .training-hero { padding-bottom: 46px; }
+  .training-hero h1 { font-size: clamp(2.5rem, 14vw, 4rem); }
+  .training-progress-stats { grid-template-columns: 1fr; }
+  .training-section { padding-top: 48px; }
+  .training-section-head { align-items: start; flex-direction: column; gap: 12px; }
+  .training-mode-grid,
+  .training-domain-grid,
+  .training-resource-strip { grid-template-columns: 1fr; }
+  .training-domain-card:last-child { grid-column: auto; }
+  .training-mode-card { min-height: 176px; }
+  .training-resource-strip { border-left: 0; }
+  .training-resource-strip a { border-left: 1px solid var(--border); }
+  .training-next-stage { align-items: stretch; flex-direction: column; padding: 24px; }
+  .training-next-stage .training-btn { width: 100%; }
+  .topbar-link { display: none; }
+}
