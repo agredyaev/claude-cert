@@ -85,7 +85,7 @@ function loadPage(file, { boot = true, store = new Map(), globals = {} } = {}) {
     '\nthis.__api = { state, showSummary, renderQuestion, answer, orderedQuestions,' +
     ' selectCount, isMulti, T, DOMAINS, QUESTIONS, shuffleOrder, qById, restart, setFocus,' +
     ' examSize, GROUPS, gotoSub, gotoGroup, toggleBrowse, renderBrowse, filteredBank, browseBody, setBrowseDomain,' +
-    ' onBrowseSearch, toggleMisses, updateMissesUI, missedIds, saveMisses, MISS_KEY,' +
+    ' onBrowseSearch, toggleMisses, updateMissesUI, missedIds, loadMisses, saveMisses, MISS_KEY,' +
     ' setMode, newDraw, setLength, backToAnswers };', ctx);
   return { api: ctx.__api, el: id => ctx.document.getElementById(id), store, ctx };
 }
@@ -468,8 +468,10 @@ function checkMissesUI(file) {
   // Scoring is a grading moment: the item missed again climbs the ranking,
   // and the two left blank are skipped rather than recorded.
   api.updateMissesUI();
+  const rescored = api.loadMisses()[again.id];
   check('finishing an attempt records the miss it just scored',
-    api.missedIds()[0] === again.id, api.missedIds()[0]);
+    rescored && rescored.n === 4 && api.missedIds().includes(again.id),
+    JSON.stringify(rescored));
   check('finishing does not record the questions left blank',
     el('missesBtn').textContent === api.T.misses_btn.replace('{n}', 3));
 
@@ -593,35 +595,24 @@ function checkLocalePair(enFile, ruFile) {
   check('both pages render the EN/RU language switch', en.includes('class="language-toggle"') && ru.includes('class="language-toggle"'));
 }
 
-// Every shipped public interface page, so a UI string missing from EN or RU cannot pass.
+// Every shipped Architect interface variant.
 checkPage('ccaf/dist/exam_en.html');
 checkPage('ccaf/dist/exam_ru.html');
 checkPage('ccap/dist/exam_en.html');
 checkPage('ccap/dist/exam_ru.html');
-checkPage('ccdf/dist/exam_en.html');
-checkPage('ccaof/dist/exam_en.html');
 checkDrill('ccaf/dist/exam_en.html');
 checkDrill('ccaf/dist/exam_ru.html');
 checkDrill('ccap/dist/exam_en.html');
 checkDrill('ccap/dist/exam_ru.html');
-checkDrill('ccdf/dist/exam_en.html');
-checkDrill('ccaof/dist/exam_en.html');
 checkWideItems('ccap/dist/exam_en.html');
-checkWideItems('ccdf/dist/exam_en.html');
-checkWideItems('ccaof/dist/exam_en.html');
 checkBrowse('ccaf/dist/bank_en.html');
 checkBrowse('ccaf/dist/bank_ru.html');
 checkBrowse('ccap/dist/bank_en.html');
 checkBrowse('ccap/dist/bank_ru.html');
-checkBrowse('ccdf/dist/bank_en.html');
-checkBrowse('ccaof/dist/bank_en.html');
 checkMissesUI('ccaf/dist/exam_ru.html');
 checkMissesUI('ccap/dist/exam_ru.html');
-checkMissesUI('ccdf/dist/exam_en.html');
-checkMissesUI('ccaof/dist/exam_en.html');
 for (const file of ['ccaf/dist/exam_en.html', 'ccaf/dist/exam_ru.html',
-                    'ccap/dist/exam_en.html', 'ccap/dist/exam_ru.html',
-                    'ccdf/dist/exam_en.html', 'ccaof/dist/exam_en.html']) {
+                    'ccap/dist/exam_en.html', 'ccap/dist/exam_ru.html']) {
   checkShell(file);
 }
 checkLocalePair('ccaf/dist/exam_en.html', 'ccaf/dist/exam_ru.html');

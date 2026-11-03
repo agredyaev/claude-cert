@@ -242,6 +242,9 @@
   if (trainingDashboard) {
     const ru = trainingDashboard.dataset.trainingLang === 'ru';
     const practiceHref = ru ? 'practical/ru.html' : 'practical/en.html';
+    const guideHref = ru ? 'guides/ru.html' : 'guides/en.html';
+    const labsHref = ru ? 'labs/foundation-ru.html' : 'labs/foundation-en.html';
+    const professionalHref = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
     const readJson = key => {
       try {
         const raw = localStorage.getItem(key);
@@ -255,9 +258,14 @@
     // so progress and weak spots intentionally share one persistence namespace.
     const attempt = readJson('ccaf-exam-en');
     const missRecord = readJson('ccaf-exam-en:misses');
-    const missItems = missRecord && missRecord.v === 1 && missRecord.items && typeof missRecord.items === 'object'
-      ? missRecord.items : {};
-    const missCount = Object.values(missItems).filter(item => item && Number(item.n) > 0).length;
+    const missItems = missRecord && (missRecord.v === 1 || missRecord.v === 2) &&
+      missRecord.items && typeof missRecord.items === 'object' ? missRecord.items : {};
+    const now = Date.now();
+    const missCount = Object.values(missItems).filter(item => {
+      if (!item || Number(item.n) <= 0) return false;
+      if (missRecord && missRecord.v === 1) return true;
+      return !item.mastered && (Number(item.due) || 0) <= now;
+    }).length;
 
     const misses = document.getElementById('training-misses');
     if (misses) misses.textContent = String(missCount);
@@ -271,18 +279,173 @@
     if (missesCopy) {
       missesCopy.textContent = missCount
         ? (ru
-          ? `Повторить ${missCount} ранее ошибочных вопрос(ов), начиная с самых частых ошибок.`
-          : `Review ${missCount} question${missCount === 1 ? '' : 's'} you have missed before, most-missed first.`)
-        : (ru ? 'Станет доступно после первых ошибок.' : 'Becomes useful after your first misses.');
+          ? `Сейчас к интервальному повторению: ${missCount}.`
+          : `${missCount} spaced review${missCount === 1 ? '' : 's'} due now.`)
+        : (ru ? 'Сейчас повторений нет.' : 'No spaced reviews due now.');
     }
+
+    const masteryState = readJson('ccaf-exam-en:mastery');
+    const masteryItems = masteryState && masteryState.v === 1 &&
+      masteryState.items && typeof masteryState.items === 'object' ? masteryState.items : {};
+    const masteredItems = Object.values(masteryItems).filter(item => item && item.mastered);
+    const masteredCount = masteredItems.length;
+    const masteredEl = document.getElementById('training-mastered');
+    if (masteredEl) masteredEl.textContent = `${masteredCount} / 30`;
+
+    const domainTotals = [7, 5, 6, 6, 6];
+    const domainMastered = [0, 0, 0, 0, 0];
+    const domainAttempts = [0, 0, 0, 0, 0];
+    Object.values(masteryItems).forEach(item => {
+      if (!item) return;
+      const index = Number(item.domain) - 1;
+      if (index < 0 || index >= domainTotals.length) return;
+      if (item.mastered) domainMastered[index] += 1;
+      domainAttempts[index] += Number(item.attempts || 0);
+    });
+
+    for (let domain = 1; domain <= 5; domain += 1) {
+      const el = document.getElementById(`training-domain-mastered-${domain}`);
+      if (el) {
+        const count = domainMastered[domain - 1];
+        const total = domainTotals[domain - 1];
+        el.textContent = ru ? `${count} / ${total} освоено` : `${count} / ${total} mastered`;
+      }
+    }
+
+    document.querySelectorAll('[data-objective-key]').forEach(row => {
+      const item = masteryItems[row.dataset.objectiveKey];
+      const status = row.querySelector('.objective-status');
+      row.classList.remove('is-new', 'is-learning', 'is-mastered');
+      if (item && item.mastered) {
+        row.classList.add('is-mastered');
+        if (status) status.textContent = ru ? 'освоено' : 'mastered';
+        return;
+      }
+      if (item && Number(item.attempts || 0) > 0) {
+        row.classList.add('is-learning');
+        const attempts = Number(item.attempts || 0);
+        const correct = Number(item.correct || 0);
+        if (status) status.textContent = ru
+          ? `в работе · ${correct}/${attempts}`
+          : `learning · ${correct}/${attempts}`;
+        return;
+      }
+      row.classList.add('is-new');
+      if (status) status.textContent = ru ? 'не начато' : 'not started';
+    });
+
+    const masteryPct = Math.round(masteredCount / 30 * 100);
+    const masteryFill = document.getElementById('training-progress-fill');
+    if (masteryFill) masteryFill.style.width = `${masteryPct}%`;
+
+    const labState = readJson('ccaf-labs:state');
+    const labDone = labState && labState.done && typeof labState.done === 'object'
+      ? Object.values(labState.done).filter(Boolean).length : 0;
+    const labsCopy = document.getElementById('training-labs-copy');
+    if (labsCopy) labsCopy.textContent = `${labDone} / 4`;
+    const labsStat = document.getElementById('training-labs-stat');
+    if (labsStat) labsStat.textContent = `${labDone} / 4`;
 
     const preflight = readJson('ccaf-preflight:state');
     const checked = Array.isArray(preflight && preflight.checked) ? new Set(preflight.checked).size : 0;
     const readinessCopy = document.getElementById('training-readiness-copy');
-    if (readinessCopy) {
-      readinessCopy.textContent = ru
-        ? `Preflight: ${checked} / 10 · ${checked === 10 ? 'готов к записи' : 'завершите перед CCAR-F'}`
-        : `Preflight: ${checked} / 10 · ${checked === 10 ? 'ready to book' : 'complete before CCAR-F'}`;
+    if (readinessCopy) readinessCopy.textContent = `${checked} / 10`;
+
+    const nextTitle = document.getElementById('training-next-title');
+    const nextCopy = document.getElementById('training-next-copy');
+    const primary = document.getElementById('training-primary');
+    const setNext = (title, copy, href, action) => {
+      if (nextTitle) nextTitle.textContent = title;
+      if (nextCopy) nextCopy.textContent = copy;
+      if (primary) {
+        primary.href = href;
+        primary.textContent = action;
+      }
+    };
+
+    const weakestDomainIndex = domainTotals
+      .map((total, index) => ({
+        index,
+        mastered: domainMastered[index],
+        total,
+        attempts: domainAttempts[index],
+        ratio: domainMastered[index] / total,
+      }))
+      .filter(item => item.mastered < item.total)
+      .sort((a, b) => a.ratio - b.ratio || b.attempts - a.attempts || a.index - b.index)[0];
+
+    if (missCount > 0) {
+      setNext(
+        ru ? 'Интервальное повторение' : 'Spaced review',
+        ru
+          ? `Сейчас к повторению ${missCount} вопрос(ов). Сначала восстановите ответ из памяти, затем сравните rationale.`
+          : `${missCount} review item${missCount === 1 ? '' : 's'} are due. Retrieve first, then compare the rationale.`,
+        `${practiceHref}?mode=study&focus=misses`,
+        ru ? 'Повторить' : 'Review',
+      );
+    } else if (!Object.keys(masteryItems).length) {
+      setNext(
+        ru ? 'Диагностика' : 'Diagnostic',
+        ru
+          ? '20 смешанных вопросов без подсказок. Результат нужен только для выбора материала, не как оценка готовности.'
+          : '20 mixed questions with no answer reveal. Use the result only to choose material, not as a readiness score.',
+        `${practiceHref}?mode=exam&length=quick`,
+        ru ? 'Начать' : 'Start',
+      );
+    } else if (weakestDomainIndex) {
+      const domain = weakestDomainIndex.index + 1;
+      setNext(
+        ru ? `Домен ${domain}: материал → практика` : `Domain ${domain}: material → practice`,
+        ru
+          ? `Освоено ${weakestDomainIndex.mastered} из ${weakestDomainIndex.total} task statements. Сначала закройте decision rules в материале, затем делайте retrieval drill.`
+          : `${weakestDomainIndex.mastered} of ${weakestDomainIndex.total} task statements mastered. Close the decision-rule gaps in the material, then run a retrieval drill.`,
+        `${guideHref}#domain-${domain}-material`,
+        ru ? 'Материал' : 'Material',
+      );
+    } else if (labDone < 4) {
+      setNext(
+        'Hands-on labs',
+        ru
+          ? `Выполнено ${labDone} из 4. Лабораторная засчитывается только после проверки deliverable по acceptance criteria.`
+          : `${labDone} of 4 complete. A lab counts only after the deliverable is checked against its acceptance criteria.`,
+        labsHref,
+        ru ? 'Продолжить' : 'Continue',
+      );
+    } else if (checked < 10) {
+      setNext(
+        'Readiness',
+        ru
+          ? `Освоены все task statements и labs. Осталось подтвердить readiness: ${checked} / 10.`
+          : `All task statements and labs are complete. Finish the readiness evidence: ${checked} / 10.`,
+        'preflight/architect-foundations.html',
+        ru ? 'Проверить' : 'Check',
+      );
+    } else {
+      setNext(
+        'CCAR-P · Professional',
+        ru
+          ? 'Foundation mastery подтверждён. Можно переходить к следующему архитектурному уровню.'
+          : 'Foundation mastery is complete. Move to the next architecture level.',
+        professionalHref,
+        ru ? 'Открыть' : 'Open',
+      );
+    }
+
+    const professionalReady = checked === 10 && labDone === 4 && masteredCount === 30;
+    const professionalStatus = document.getElementById('professional-stage-status');
+    if (professionalStatus) {
+      professionalStatus.textContent = professionalReady
+        ? (ru ? 'Foundation mastery gate завершён.' : 'Foundation mastery gate complete.')
+        : (ru
+          ? `Нужно mastery 30 / 30, labs 4 / 4 и readiness 10 / 10. Сейчас: ${masteredCount} / 30, ${labDone} / 4, ${checked} / 10.`
+          : `Requires mastery 30 / 30, labs 4 / 4, and readiness 10 / 10. Current: ${masteredCount} / 30, ${labDone} / 4, ${checked} / 10.`);
+    }
+    for (const id of ['professional-guide-link', 'professional-practice-link']) {
+      const link = document.getElementById(id);
+      if (!link) continue;
+      link.classList.toggle('disabled', !professionalReady);
+      link.setAttribute('aria-disabled', String(!professionalReady));
+      if (!professionalReady) link.addEventListener('click', e => e.preventDefault());
     }
 
     const order = Array.isArray(attempt && attempt.order) ? attempt.order : [];
@@ -292,37 +455,75 @@
         const answer = answers[id];
         return Array.isArray(answer) ? answer.length > 0 : (typeof answer === 'string' && answer.length > 0);
       }).length;
-      const pct = Math.round(answered / order.length * 100);
-      const mode = attempt.mode === 'exam'
-        ? (ru ? 'Экзамен' : 'Exam')
-        : (ru ? 'Обучение' : 'Study');
-      const scope = attempt.focus && attempt.focus !== 'all'
-        ? (attempt.focus === 'misses'
-          ? (ru ? 'Работа над ошибками' : 'Weak-spot drill')
-          : attempt.focus === 'report'
-            ? (ru ? 'Целевая тренировка' : 'Targeted drill')
-            : (ru ? `Домен ${attempt.focus}` : `Domain ${attempt.focus} drill`))
-        : (attempt.length === 'quick'
-          ? (ru ? 'Быстрый сет' : 'Quick set')
-          : (ru ? 'Полный сет' : 'Full set'));
-      const value = document.getElementById('training-progress-value');
       const detail = document.getElementById('training-progress-detail');
-      const answeredEl = document.getElementById('training-answered');
-      const modeEl = document.getElementById('training-mode');
-      const fill = document.getElementById('training-progress-fill');
-      const primary = document.getElementById('training-primary');
-      if (value) value.textContent = ru ? `${pct}% завершено` : `${pct}% complete`;
-      if (detail) detail.textContent = ru
-        ? `${scope} · вопрос ${Math.min(Number(attempt.current) + 1 || 1, order.length)} из ${order.length}`
-        : `${scope} · question ${Math.min(Number(attempt.current) + 1 || 1, order.length)} of ${order.length}`;
-      if (answeredEl) answeredEl.textContent = `${answered} / ${order.length}`;
-      if (modeEl) modeEl.textContent = mode;
-      if (fill) fill.style.width = `${pct}%`;
-      if (primary) {
-        primary.href = practiceHref;
-        primary.textContent = ru ? 'Продолжить попытку' : 'Resume practice';
+      if (answered < order.length) {
+        const scope = attempt.focus && attempt.focus !== 'all'
+          ? (attempt.focus === 'misses'
+            ? (ru ? 'Интервальное повторение' : 'Spaced review')
+            : attempt.focus === 'report'
+              ? (ru ? 'Целевая практика' : 'Targeted practice')
+              : (ru ? `Домен ${attempt.focus}` : `Domain ${attempt.focus}`))
+          : (attempt.length === 'quick'
+            ? (ru ? 'Короткая попытка' : 'Quick set')
+            : (ru ? 'Полная попытка' : 'Full set'));
+        if (detail) detail.textContent = ru
+          ? `Активно: ${scope} · ${answered} / ${order.length} отвечено.`
+          : `Active: ${scope} · ${answered} / ${order.length} answered.`;
+        setNext(
+          ru ? 'Продолжить попытку' : 'Resume attempt',
+          ru
+            ? `Вы уже ответили на ${answered} из ${order.length}. Не начинайте новый сет поверх незавершённого.`
+            : `You already answered ${answered} of ${order.length}. Finish the current retrieval set before starting another.`,
+          practiceHref,
+          ru ? 'Продолжить' : 'Resume',
+        );
+      } else if (detail) {
+        detail.textContent = ru
+          ? `Последняя попытка завершена · mastery ${masteredCount} / 30.`
+          : `Last attempt complete · mastery ${masteredCount} / 30.`;
       }
     }
+  }
+
+
+  // Foundation hands-on labs: completion means the learner checked the
+  // deliverable against every acceptance criterion, not merely opened the page.
+  const labsPage = document.querySelector('[data-labs]');
+  const LABS_KEY = 'ccaf-labs:state';
+  const readLabState = () => {
+    try {
+      const raw = localStorage.getItem(LABS_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && parsed.v === 1 && parsed.done && typeof parsed.done === 'object'
+        ? parsed.done : {};
+    } catch {
+      return {};
+    }
+  };
+  const writeLabState = done => {
+    try {
+      localStorage.setItem(LABS_KEY, JSON.stringify({ v: 1, done, updatedAt: Date.now() }));
+    } catch {
+      // Progress persistence is optional; the page remains usable without it.
+    }
+  };
+  if (labsPage) {
+    const done = readLabState();
+    const boxes = [...labsPage.querySelectorAll('[data-lab-id]')];
+    const progress = document.getElementById('labs-progress');
+    const render = () => {
+      const count = boxes.filter(box => box.checked).length;
+      if (progress) progress.textContent = `${count} / ${boxes.length}`;
+    };
+    boxes.forEach(box => {
+      box.checked = Boolean(done[box.dataset.labId]);
+      box.addEventListener('change', () => {
+        done[box.dataset.labId] = box.checked;
+        writeLabState(done);
+        render();
+      });
+    });
+    render();
   }
 
   // Heading anchors: copy the section URL on click. Hash navigation still

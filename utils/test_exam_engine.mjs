@@ -65,7 +65,7 @@ function loadEngine(file) {
   vm.createContext(ctx);
   ctx.__bank = bankFor(file);
   vm.runInContext(src + '\n' + answerFn + '\ninstallBank(this.__bank);' +
-    '\nthis.__api = { QUESTIONS, PER_DOMAIN, DOMAINS, STORE_KEY, STORE_VERSION, state, answer, drawCount, drawPerDomain, examSize, isMulti, selectCount, hasAnswer, isCorrect, isChosenLetter, letterLabel, shuffleOrder, qById, classify, tallyAttempt, esc, md, save, load, localStorage, MISS_KEY, loadMisses, saveMisses, missedIds, noteResult };', ctx);
+    '\nthis.__api = { QUESTIONS, PER_DOMAIN, DOMAINS, STORE_KEY, STORE_VERSION, state, answer, drawCount, drawPerDomain, examSize, isMulti, selectCount, hasAnswer, isCorrect, isChosenLetter, letterLabel, shuffleOrder, qById, classify, tallyAttempt, esc, md, save, load, localStorage, MISS_KEY, loadMisses, saveMisses, missedIds, MASTERY_KEY, loadMastery, noteResult };', ctx);
   return ctx.__api;
 }
 
@@ -269,7 +269,6 @@ function checkMisses(e, file) {
   e.localStorage.removeItem(e.MISS_KEY);
   check('no record means no weak-spot draw', e.missedIds().length === 0);
 
-  // A complete answer of the right shape that is nonetheless wrong.
   const wrongFor = q => Array.isArray(q.correct)
     ? q.options.filter(o => q.correct.indexOf(o.letter) < 0)
         .slice(0, q.correct.length).map(o => o.letter)
@@ -279,41 +278,53 @@ function checkMisses(e, file) {
   e.state.graded = {};
   e.noteResult(a, wrongFor(a));
   e.noteResult(b, b.correct);
-  check('a wrong answer is recorded as a miss', (e.loadMisses()[a.id] || {}).n === 1);
-  check('a first correct answer leaves no record', e.loadMisses()[b.id] === undefined);
-  check('only missed items reach the weak-spot draw',
+  let miss = e.loadMisses()[a.id];
+  check('a wrong answer is recorded as an immediately due weak spot',
+    miss && miss.n === 1 && miss.streak === 0 && !miss.mastered && miss.due <= Date.now());
+  check('a first correct answer leaves no weak-spot record', e.loadMisses()[b.id] === undefined);
+  check('only due weak spots reach the review draw',
     e.missedIds().length === 1 && e.missedIds()[0] === a.id);
 
   e.noteResult(a, wrongFor(a));
   check('one attempt counts an item once', e.loadMisses()[a.id].n === 1);
   e.state.graded = {};
   e.noteResult(a, wrongFor(a));
-  check('a repeated miss in a later attempt increments the count',
+  check('a repeated miss in a later attempt increments the lifetime miss count',
     e.loadMisses()[a.id].n === 2);
-  const beforeT = e.loadMisses()[a.id].t;
+
   e.state.graded = {};
   e.noteResult(a, a.correct);
-  check('getting it right later keeps the miss but refreshes last-seen',
-    e.loadMisses()[a.id].n === 2 && e.loadMisses()[a.id].t >= beforeT);
-  // A question never touched is skipped, not missed: recording blanks would
-  // put every question a candidate ran out of time for into the drill.
+  miss = e.loadMisses()[a.id];
+  check('a corrective success schedules the next review instead of showing it immediately',
+    miss.streak === 1 && !miss.mastered && miss.due > Date.now() &&
+    e.missedIds().indexOf(a.id) < 0);
+
+  e.localStorage.setItem(e.MISS_KEY, JSON.stringify({
+    v: 1, items: { [a.id]: { n: 2, t: 123 } }
+  }));
+  miss = e.loadMisses()[a.id];
+  check('a v1 miss record migrates to the spaced-review shape',
+    miss && miss.n === 2 && miss.streak === 0 && miss.due === 0 && !miss.mastered);
+  check('a migrated legacy miss is due immediately', e.missedIds()[0] === a.id);
+
   const c = e.QUESTIONS[2];
+  e.localStorage.removeItem(e.MISS_KEY);
   e.state.graded = {};
   e.noteResult(c, undefined);
   e.noteResult(c, []);
   check('a question left blank is not recorded as a miss',
     e.loadMisses()[c.id] === undefined && e.missedIds().indexOf(c.id) < 0);
 
-  // Ranking and the cap. Written straight into the store, so the draw is
-  // checked against a record larger than any attempt could produce by hand.
   const seeded = {};
-  e.QUESTIONS.forEach((q, i) => { seeded[q.id] = { n: 1 + (i % 4), t: i }; });
+  e.QUESTIONS.forEach((q, i) => {
+    seeded[q.id] = { n: 1 + (i % 4), streak: 0, t: i, due: 0, mastered: false };
+  });
   e.saveMisses(seeded);
   const drill = e.missedIds();
   const cap = e.examSize('full', 'all');
   check('the weak-spot draw is capped at a full draw',
     drill.length === Math.min(e.QUESTIONS.length, cap), `${drill.length} vs ${cap}`);
-  check('the weak-spot draw is ordered most-missed first',
+  check('equally due weak spots are ordered most-missed first',
     drill.every((id, i) => i === 0 || seeded[drill[i - 1]].n >= seeded[id].n));
   check('the weak-spot draw repeats nothing', new Set(drill).size === drill.length);
   check('a stale miss outranks a fresh one at the same count', (() => {
@@ -321,46 +332,61 @@ function checkMisses(e, file) {
     return tie.every((id, i) => i === 0 || seeded[tie[i - 1]].t <= seeded[id].t);
   })());
 
-  // The scope behaves like the domain drill: it is a focus, it round-trips,
-  // and a payload naming ids this bank does not hold is discarded.
+  const future = e.QUESTIONS[cap + 1] || e.QUESTIONS[e.QUESTIONS.length - 1];
+  const mastered = e.QUESTIONS[cap + 2] || e.QUESTIONS[e.QUESTIONS.length - 2];
+  const filteredSeed = {
+    [a.id]: { n: 2, streak: 0, t: 1, due: 0, mastered: false },
+    [future.id]: { n: 5, streak: 2, t: 2, due: Date.now() + 60000, mastered: false },
+    [mastered.id]: { n: 5, streak: 4, t: 3, due: 0, mastered: true },
+  };
+  e.saveMisses(filteredSeed);
+  check('future reviews stay out of the due draw', e.missedIds().indexOf(future.id) < 0);
+  check('mastered weak spots stay out of the due draw', e.missedIds().indexOf(mastered.id) < 0);
+
+  e.saveMisses(seeded);
+  const due = e.missedIds();
   e.state.focus = 'misses';
   e.state.length = 'full';
   e.state.order = e.shuffleOrder();
   e.state.answers = {};
   e.state.graded = {};
   e.state.current = 0;
-  check('a weak-spot shuffle is the weak-spot draw',
-    JSON.stringify(e.state.order) === JSON.stringify(drill));
-  check('drawPerDomain reports the weak-spot draw by domain',
-    e.examSize(undefined, 'misses') === drill.length);
+  check('a weak-spot shuffle is the current due-review draw',
+    JSON.stringify(e.state.order) === JSON.stringify(due));
+  check('drawPerDomain reports the due-review draw by domain',
+    e.examSize(undefined, 'misses') === due.length);
   e.save();
-  const rawMiss = e.localStorage.getItem(e.STORE_KEY);
+  const rawAttempt = e.localStorage.getItem(e.STORE_KEY);
   const loaded = e.load();
   check('a weak-spot attempt round-trips through storage',
-    !!loaded && loaded.focus === 'misses' && loaded.order.length === drill.length);
+    !!loaded && loaded.focus === 'misses' && loaded.order.length === due.length);
 
-  // The drill grows as the candidate answers, so its order is deliberately not
-  // re-derived on load — but it still has to name real, distinct questions.
-  const bogus = JSON.parse(rawMiss); bogus.order = bogus.order.concat(['no-such-id']);
-  e.localStorage.setItem(e.STORE_KEY, JSON.stringify(bogus));
+  const unknown = JSON.parse(rawAttempt);
+  unknown.order = unknown.order.slice();
+  unknown.order[0] = '__unknown__';
+  e.localStorage.setItem(e.STORE_KEY, JSON.stringify(unknown));
   check('a weak-spot order naming an unknown question is rejected', e.load() === null);
-  const dupes = JSON.parse(rawMiss); dupes.order = [dupes.order[0], dupes.order[0]];
-  e.localStorage.setItem(e.STORE_KEY, JSON.stringify(dupes));
+
+  e.localStorage.setItem(e.STORE_KEY, rawAttempt);
+  const repeated = JSON.parse(rawAttempt);
+  repeated.order[1] = repeated.order[0];
+  e.localStorage.setItem(e.STORE_KEY, JSON.stringify(repeated));
   check('a weak-spot order repeating a question is rejected', e.load() === null);
-  const empty = JSON.parse(rawMiss); empty.order = [];
+
+  e.localStorage.setItem(e.STORE_KEY, rawAttempt);
+  const empty = JSON.parse(rawAttempt);
+  empty.order = [];
   e.localStorage.setItem(e.STORE_KEY, JSON.stringify(empty));
   check('an empty weak-spot order is rejected', e.load() === null);
 
-  // A shorter order than the draw is normal mid-drill and must survive: the
-  // record changes under the attempt every time an answer is graded.
-  const shorter = JSON.parse(rawMiss); shorter.order = shorter.order.slice(1);
-  e.localStorage.setItem(e.STORE_KEY, JSON.stringify(shorter));
-  check('a weak-spot attempt survives the record changing under it', !!e.load());
+  e.localStorage.setItem(e.STORE_KEY, rawAttempt);
+  const shorter = {};
+  due.slice(0, Math.max(1, due.length - 1)).forEach(id => { shorter[id] = seeded[id]; });
+  e.saveMisses(shorter);
+  check('an in-progress weak-spot attempt survives the due set changing under it', !!e.load());
 
-  // The attempt carries what it has already graded, so a reload cannot make
-  // the same mistake count twice.
   check('the graded set is saved with the attempt',
-    Array.isArray(Object.keys(JSON.parse(rawMiss).graded || {})));
+    Array.isArray(Object.keys(JSON.parse(rawAttempt).graded || {})));
 
   e.localStorage.removeItem(e.MISS_KEY);
   e.state.focus = 'all';
@@ -369,6 +395,44 @@ function checkMisses(e, file) {
   e.state.order = e.shuffleOrder();
   e.state.answers = {};
   e.save();
+}
+
+function checkMastery(e, file) {
+  console.log(`Task-statement mastery (${file})`);
+  check('the mastery store is namespaced under the page key',
+    e.MASTERY_KEY.indexOf(e.STORE_KEY) === 0, e.MASTERY_KEY);
+  e.localStorage.removeItem(e.MASTERY_KEY);
+  const first = e.QUESTIONS.find(q => q.objective);
+  const group = e.QUESTIONS.filter(q =>
+    q.objective === first.objective && String(q.domain) === String(first.domain)).slice(0, 4);
+  check('a task statement has at least three distinct items for mastery evidence',
+    group.length >= 3, `${first.objective}: ${group.length}`);
+
+  for (const q of group.slice(0, 2)) {
+    e.state.graded = {};
+    e.noteResult(q, q.correct);
+  }
+  let item = Object.values(e.loadMastery())[0];
+  check('two distinct correct items do not yet master a task statement',
+    item && !item.mastered && item.streakIds.length === 2);
+
+  e.state.graded = {};
+  e.noteResult(group[2], group[2].correct);
+  item = Object.values(e.loadMastery())[0];
+  check('three distinct correct items master the task statement',
+    item && item.mastered && item.streakIds.length === 3);
+
+  e.state.graded = {};
+  const wrong = Array.isArray(group[0].correct)
+    ? group[0].options.filter(o => !group[0].correct.includes(o.letter))
+        .slice(0, group[0].correct.length).map(o => o.letter)
+    : group[0].options.find(o => o.letter !== group[0].correct).letter;
+  e.noteResult(group[0], wrong);
+  item = Object.values(e.loadMastery())[0];
+  check('a later miss removes mastery and resets the correct-item streak',
+    item && !item.mastered && item.streakIds.length === 0);
+
+  e.localStorage.removeItem(e.MASTERY_KEY);
 }
 
 // Imported items carry more options and higher select counts than the
@@ -440,10 +504,14 @@ console.log('Foundations engine (ccaf/dist/exam_en.html)');
   check('a letter counts as answered', e.hasAnswer(q, q.correct));
   check('undefined is not answered', !e.hasAnswer(q, undefined));
   check('an array is not answered on a single-response item', !e.hasAnswer(q, [q.correct]));
-  check('no multi items leaked into Foundations',
-    e.QUESTIONS.every(x => !Array.isArray(x.correct)));
+  const foundationMulti = e.QUESTIONS.filter(x => Array.isArray(x.correct));
+  check('Foundations bank includes multiple-response practice',
+    foundationMulti.length > 0, `${foundationMulti.length} MR items`);
+  check('every Foundations MR item declares the exact select count',
+    foundationMulti.every(x => e.selectCount(x) === x.correct.length));
   checkFocusDrill(e, 'ccaf/dist/exam_en.html');
   checkMisses(e, 'ccaf/dist/exam_en.html');
+  checkMastery(e, 'ccaf/dist/exam_en.html');
   checkSharedEngine(e, 'ccaf/dist/exam_en.html');
 }
 
@@ -547,26 +615,38 @@ console.log('Professional engine (ccap/dist/exam_en.html)');
     e.isChosenLetter(e.state.answers[multi.id], opts[need]) &&
     e.state.answers[multi.id].length === need);
 
-  // Study mode locks a *complete* answer, but must not lock a partial one.
+  // Study mode keeps the selection editable until the learner commits an
+  // explanation. `graded` is the persisted commit/reveal boundary.
   e.state.mode = 'study';
   e.state.answers = {};
+  e.state.graded = {};
   e.answer(multi.id, opts[0]);
   e.answer(multi.id, opts[1]);
   check('study: a partial multi answer stays editable',
     e.state.answers[multi.id].length === Math.min(2, need));
   e.state.answers = {};
   opts.slice(0, need).forEach(L => e.answer(multi.id, L));
-  const lockedSet = e.state.answers[multi.id].slice();
-  e.answer(multi.id, opts[need]);
-  check('study: a complete multi answer is locked',
-    JSON.stringify(e.state.answers[multi.id]) === JSON.stringify(lockedSet));
+  const completeSet = e.state.answers[multi.id].slice();
+  e.answer(multi.id, opts[0]);
+  check('study: a complete multi answer remains editable before explanation commit',
+    JSON.stringify(e.state.answers[multi.id]) !== JSON.stringify(completeSet));
+  e.state.answers[multi.id] = completeSet;
+  e.state.graded[multi.id] = true;
+  e.answer(multi.id, opts[0]);
+  check('study: a committed multi answer is locked',
+    JSON.stringify(e.state.answers[multi.id]) === JSON.stringify(completeSet));
 
   e.state.answers = {};
+  e.state.graded = {};
   const other = single.options.find(o => o.letter !== single.correct).letter;
   e.answer(single.id, single.correct);
   e.answer(single.id, other);
-  check('study: a single answer is locked after one pick',
-    e.state.answers[single.id] === single.correct);
+  check('study: a single answer remains editable before explanation commit',
+    e.state.answers[single.id] === other);
+  e.state.graded[single.id] = true;
+  e.answer(single.id, single.correct);
+  check('study: a committed single answer is locked',
+    e.state.answers[single.id] === other);
   e.state.mode = 'exam';
   e.answer(single.id, other);
   check('exam: a single answer can be changed', e.state.answers[single.id] === other);
@@ -603,48 +683,8 @@ console.log('Professional engine (ccap/dist/exam_en.html)');
   checkWideItems(e, 'ccap/dist/exam_en.html');
   checkFocusDrill(e, 'ccap/dist/exam_en.html');
   checkMisses(e, 'ccap/dist/exam_en.html');
+  checkMastery(e, 'ccap/dist/exam_en.html');
   checkSharedEngine(e, 'ccap/dist/exam_en.html');
-}
-
-// The Developer Foundations page runs the same engine on the widest bank —
-// eight-option items and five-response keys — so it gets the same checks.
-console.log('Developer Foundations engine (ccdf/dist/exam_en.html)');
-{
-  const e = loadEngine('ccdf/dist/exam_en.html');
-  check('the page embeds the whole bank', (() => {
-    const bank = JSON.parse(fs.readFileSync(path.join(ROOT, 'ccdf/data/questions.json'), 'utf8'));
-    return e.QUESTIONS.length === bank.length;
-  })(), `page holds ${e.QUESTIONS.length}`);
-  check('store key does not collide with the other tracks',
-    e.STORE_KEY === 'ccdvf-exam-en', e.STORE_KEY);
-  check('the weighted draw covers every domain',
-    Object.keys(e.drawPerDomain()).length === new Set(e.QUESTIONS.map(q => q.domain)).size);
-  checkWideItems(e, 'ccdf/dist/exam_en.html');
-  checkFocusDrill(e, 'ccdf/dist/exam_en.html');
-  checkMisses(e, 'ccdf/dist/exam_en.html');
-  checkSharedEngine(e, 'ccdf/dist/exam_en.html');
-}
-
-console.log('Associate Foundations engine (ccaof/dist/exam_en.html)');
-{
-  const e = loadEngine('ccaof/dist/exam_en.html');
-  check('Associate page embeds all 758 collected records', (() => {
-    const bank = JSON.parse(fs.readFileSync(path.join(ROOT, 'ccaof/data/questions.json'), 'utf8'));
-    return e.QUESTIONS.length === bank.length && bank.length === 758;
-  })(), `page holds ${e.QUESTIONS.length}`);
-  check('Associate store key is track-scoped', e.STORE_KEY === 'ccaof-exam-en', e.STORE_KEY);
-  check('Associate draw has 60 questions', e.examSize() === 60, `got ${e.examSize()}`);
-  check('Associate draw matches the seven-domain blueprint', (() => {
-    const want = { 1: 8, 2: 13, 3: 7, 4: 10, 5: 7, 6: 9, 7: 6 };
-    const order = e.shuffleOrder();
-    const got = {};
-    order.forEach(id => { const d = e.qById(id).domain; got[d] = (got[d] || 0) + 1; });
-    return order.length === 60 && Object.keys(want).every(d => got[d] === want[d]);
-  })());
-  checkWideItems(e, 'ccaof/dist/exam_en.html');
-  checkFocusDrill(e, 'ccaof/dist/exam_en.html');
-  checkMisses(e, 'ccaof/dist/exam_en.html');
-  checkSharedEngine(e, 'ccaof/dist/exam_en.html');
 }
 
 console.log(failures === 0 ? '\nAll engine checks passed.' : `\n${failures} check(s) FAILED.`);

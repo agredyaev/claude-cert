@@ -92,23 +92,23 @@ PMETA = [
 # --- per-language UI strings ---
 UI = {
 "en": {
-  "title": "English — Cheatsheet · Claude Architect Trainer",
+  "title": "CCAR-F — Decision rules",
   "study": "Study", "exam": "Exam",
-  "eyebrow": "Claude Certified Architect · Study Cheatsheet",
-  "h1": 'Every question has <span class="key">one correct move</span> and three traps.',
-  "lede": "The exam tests the same twelve principles over and over. Learn the principle, not the wording — the scenario changes, the underlying idea does not.",
+  "eyebrow": "CCAR-F · Reference",
+  "h1": 'Decision rules',
+  "lede": "Attempt retrieval first. Use this page afterward to compare the governing decision rule and the rejected alternatives.",
   "s_q": "Questions", "s_d": "Domains", "s_p": "Principles",
   "lg1": "What the correct answer does", "lg2": "What the traps do", "lg3": "The domain it maps to",
-  "sec1h": "The 12 principles",
-  "sec1p": "Each card states the principle, what the correct answer does, the trap to avoid, and the domain(s) it maps to.",
-  "sec2h": "How to read any question",
-  "sec2p": "When two answers both look right, ask these five questions. The correct answer usually passes all five.",
-  "sec3h": "What's on the exam",
-  "sec3p": "How the 136 practice questions break down by domain, and why you shouldn't guess by the answer letter.",
-  "p1h": "Domains · weight = official blueprint; count = items in this bank",
-  "p2h": "Correct-answer letter (of 136)",
-  "note": "Fairly even — so don't guess by letter. A longer option that 'does the work AND preserves the information AND escalates appropriately' is often correct, but confirm it against the five questions above rather than choosing it for its length.",
-  "footer": "Based on the 136-question exam (<span class=\"mono\">exam_en.html</span>) and the official 5-domain blueprint.",
+  "sec1h": "12 recurring decision rules",
+  "sec1p": "Each entry names the decision rule, the behavior it supports, the failure pattern it prevents, and the domains it touches.",
+  "sec2h": "Reasoning checklist",
+  "sec2p": "Use these checks only after identifying the scenario constraint. Do not choose by wording, option length, or answer position.",
+  "sec3h": "Domain coverage",
+  "sec3p": "Allocate practice by the official domain weights and your own mastery gaps.",
+  "p1h": "Official domain weight · current bank coverage",
+  "p2h": "How to use this reference",
+  "note": "Attempt the question first. Then use the rationale to identify the governing constraint, why the correct choice satisfies it, and why each alternative fails.",
+  "footer": "Reference only. Retrieve first; review the rule afterward.",
   "badgeDo": "Correct", "badgeNo": "Trap",
   "scn": {"research": "Multi-agent", "ci": "CI/CD", "codegen": "Claude Code", "support": "Support"},
   "q_label": "exam questions that test this", "q_correct": "Correct",
@@ -333,17 +333,17 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 
 .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px; }
 
-header.hero { position: relative; padding: 60px 0 44px; border-bottom: 1px solid var(--border); overflow: hidden; }
+header.hero { position: relative; padding: 28px 0 24px; border-bottom: 1px solid var(--border); overflow: hidden; }
 .eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; letter-spacing: .167em;
   text-transform: uppercase; font-weight: 600; color: var(--muted); margin-bottom: 18px; }
-h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.16; letter-spacing: -0.025em; font-weight: 600; margin-bottom: 18px; }
+h1 { font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; font-weight: 600; margin-bottom: 10px; }
 h1 .key { color: var(--fg); }
-.lede { font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 62ch; }
-.stats { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
-.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px 20px; min-width: 128px; }
-.stat .n { font-size: 32px; font-weight: 600; color: var(--accent); line-height: 1; }
-.stat .l { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 8px; font-weight: 600; }
-.legend { display: flex; flex-wrap: wrap; gap: 22px; padding-top: 26px; }
+.lede { font-size: 14px; line-height: 1.55; color: var(--muted); max-width: 72ch; }
+.stats { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; }
+.stat { display: flex; align-items: baseline; gap: 6px; padding: 0; min-width: 0; }
+.stat .n { font-size: 14px; font-weight: 650; color: var(--fg); line-height: 1; }
+.stat .l { font-size: 11px; color: var(--muted); margin-top: 0; font-weight: 500; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 16px; }
 .legend span { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); }
 .swatch { width: 13px; height: 13px; border-radius: var(--r-sm); }
 
@@ -457,8 +457,7 @@ RAVN_LOGO_SVG = (
   '<path d="M8.53644 32.9974C11.4172 32.9974 13.7526 30.7402 13.7526 27.9557C13.7526 25.1713 11.4172 22.9141 8.53644 22.9141C5.65565 22.9141 3.32031 25.1713 3.32031 27.9557C3.32031 30.7402 5.65565 32.9974 8.53644 32.9974Z"/></svg>')
 
 TOPBAR = ('<header class="ravn-topbar"><a class="ravn-brand" href="../index.html" '
-  'aria-label="Claude Architect Trainer"><span class="trainer-mark" aria-hidden="true">CA</span>'
-  '<span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
+  'aria-label="CCAR"><span class="ravn-brand-tagline">CCAR</span></a>'
   '<span class="topbar-kicker">{kicker}</span></header>')
 
 
@@ -547,7 +546,7 @@ def build(lang):
     <h1>{h1}</h1>
     <p class="lede">{lede}</p>
     <div class="stats">
-      <div class="stat"><div class="n">136</div><div class="l">{s_q}</div></div>
+      <div class="stat"><div class="n">{q_count}</div><div class="l">{s_q}</div></div>
       <div class="stat"><div class="n">5</div><div class="l">{s_d}</div></div>
       <div class="stat"><div class="n">12</div><div class="l">{s_p}</div></div>
     </div>
@@ -578,7 +577,6 @@ def build(lang):
     </div>
     <div class="panel">
       <h4>{p2h}</h4>
-      <div class="lettr">{letters}</div>
       <p class="note">{note}</p>
     </div>
   </div>
@@ -600,7 +598,7 @@ def build(lang):
 </body>
 </html>
 """.format(
-        lang=lang, title=u["title"], favicon=favicon, css=CSS,
+        lang=lang, title=u["title"], favicon=favicon, css=CSS, q_count=len(QDATA[lang]),
         topbar=TOPBAR.format(kicker=u["eyebrow"].split("·")[-1].strip()),
         eyebrow=u["eyebrow"], h1=u["h1"], lede=u["lede"],
         s_q=u["s_q"], s_d=u["s_d"], s_p=u["s_p"],

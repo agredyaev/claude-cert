@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Build the unified, merged question set for one language.
+"""Build the scored Foundation question set.
 
-Merges two sources into a single schema:
-  * the 76 scenario questions extracted from ccaf/guide_<lang>.md (utils/extract_question.py)
-  * the 60 domain questions parsed from ccaf/sources/mock-exam.txt (utils/parse_mock_exam.py)
+The public English trainer uses two auditable sources:
+  * ccaf/data/imported_en.json — balanced single-response practice items
+  * ccaf/data/multi_en.json — curated multiple-response items
+
+Guide-embedded and legacy mock questions are retained as source/study material
+but are excluded from scored readiness signals because they use a different
+mapping path and do not all contain per-option rationales.
 
 Unified question schema:
   {
@@ -30,18 +34,18 @@ ROOT_DIR = os.path.dirname(UTILS_DIR)
 DATA_DIR = os.path.join(ROOT_DIR, "ccaf", "data")
 
 DOMAINS = {
-    1: ("Agent Architecture and Orchestration", 27),
-    2: ("Tool Design and MCP Integration", 18),
-    3: ("Claude Code Configuration and Workflows", 20),
-    4: ("Prompt Engineering and Structured Output", 20),
-    5: ("Context Management and Reliability", 15),
+    1: ("Agentic Architecture & Orchestration", 27),
+    2: ("Tool Design & MCP Integration", 18),
+    3: ("Claude Code Configuration & Workflows", 20),
+    4: ("Prompt Engineering & Structured Output", 20),
+    5: ("Context Management & Reliability", 15),
 }
 
 # Localized domain names (weights are language-independent).
 DOMAIN_NAMES = {
-    "en": {1: "Agent Architecture and Orchestration", 2: "Tool Design and MCP Integration",
-           3: "Claude Code Configuration and Workflows", 4: "Prompt Engineering and Structured Output",
-           5: "Context Management and Reliability"},
+    "en": {1: "Agentic Architecture & Orchestration", 2: "Tool Design & MCP Integration",
+           3: "Claude Code Configuration & Workflows", 4: "Prompt Engineering & Structured Output",
+           5: "Context Management & Reliability"},
     "es": {1: "Arquitectura y Orquestación de Agentes", 2: "Diseño de Herramientas e Integración MCP",
            3: "Configuración y Flujos de Claude Code", 4: "Ingeniería de Prompts y Salida Estructurada",
            5: "Gestión de Contexto y Confiabilidad"},
@@ -133,12 +137,24 @@ def objective_themes():
 
 
 def _imported_questions(lang):
-    # The collected corpus is English only; other languages keep the hand-authored bank.
+    # The collected corpus is English only.
     return _read_json(os.path.join(DATA_DIR, f"imported_{lang}.json"), [])
 
 
+def _multi_questions(lang):
+    # Curated multiple-response training items are kept separate so format
+    # coverage can be audited independently from the single-response corpus.
+    return _read_json(os.path.join(DATA_DIR, f"multi_{lang}.json"), [])
+
+
 def load(lang):
-    """Return the merged, domain-tagged, deduped question list for `lang`."""
+    """Return the scored question bank for `lang`.
+
+    English certification training uses only fully explained, task-statement
+    tagged items: the balanced imported corpus plus the curated MR set.
+    Guide-embedded and legacy mock questions remain study/source material but
+    are intentionally excluded from scored readiness signals.
+    """
     domain_map = _read_json(os.path.join(DATA_DIR, "domains.json"), {})
     dupes = set(_read_json(os.path.join(DATA_DIR, "duplicates.json"), []))
 
@@ -157,7 +173,12 @@ def load(lang):
             statements[f"{d}.{i}"] = text
     objective_map = _read_json(os.path.join(DATA_DIR, "objective_map.json"), {})
 
-    questions = _guide_questions(lang) + _mock_questions(lang) + _imported_questions(lang)
+    if lang == "en":
+        questions = _imported_questions(lang) + _multi_questions(lang)
+    else:
+        # Legacy non-public translations are retained as source material only.
+        questions = _guide_questions(lang) + _mock_questions(lang)
+
     merged = []
     for q in questions:
         if q["id"] in dupes:

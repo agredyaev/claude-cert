@@ -1,8 +1,8 @@
 {
-  "_source": "CCAR-F task statements as labelled on the collected practice items (Subdomain X.Y), matching the official Foundations exam guide numbering; used by utils/import_practice_bank.py to place imported items.",
+  "_source": "Claude Certified Architect – Foundations Exam Guide v1.0 (effective July 2026), reviewed snapshot SHA-256 9bac07c3e6671e55f6cd0232205340a370e8a13a97e8247237dcb71312bccfc2; practice-item mappings are validated against this blueprint.",
   "domains": {
     "1": {
-      "name": "Agent Architecture and Orchestration",
+      "name": "Agentic Architecture & Orchestration",
       "objectives": [
         "Design and implement agentic loops for autonomous task execution",
         "Orchestrate multi-agent systems with coordinator-subagent patterns",
@@ -15,7 +15,7 @@
       "weight": 27
     },
     "2": {
-      "name": "Tool Design and MCP Integration",
+      "name": "Tool Design & MCP Integration",
       "objectives": [
         "Design effective tool interfaces with clear descriptions and boundaries",
         "Implement structured error responses for MCP tools",
@@ -26,7 +26,7 @@
       "weight": 18
     },
     "3": {
-      "name": "Claude Code Configuration and Workflows",
+      "name": "Claude Code Configuration & Workflows",
       "objectives": [
         "Configure CLAUDE.md files with appropriate hierarchy, scoping, and modular organization",
         "Create and configure custom slash commands and skills",
@@ -38,7 +38,7 @@
       "weight": 20
     },
     "4": {
-      "name": "Prompt Engineering and Structured Output",
+      "name": "Prompt Engineering & Structured Output",
       "objectives": [
         "Design prompts with explicit criteria to improve precision and reduce false positives",
         "Apply few-shot prompting to improve output consistency and quality",
@@ -50,7 +50,7 @@
       "weight": 20
     },
     "5": {
-      "name": "Context Management and Reliability",
+      "name": "Context Management & Reliability",
       "objectives": [
         "Manage conversation context to preserve critical information across long interactions",
         "Design effective escalation and ambiguity resolution patterns",

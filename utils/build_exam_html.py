@@ -42,7 +42,7 @@ LANG_LABELS = {"en": "English", "ru": "Русский интерфейс"}
 UI = {
     "en": {
         "questions": "Questions", "answered": "Answered", "mode_study": "Study",
-        "mode_exam": "Exam", "mode_hint_study": "Answers reveal as you go",
+        "mode_exam": "Exam", "mode_hint_study": "Solve, explain your reasoning, then reveal the rationale",
         "mode_hint_exam": "Answers reveal at the end",
         "prev": "← Prev", "next": "Next →", "finish": "Finish &amp; Review",
         "finish_confirm": ("{n} question(s) are still unanswered and will be "
@@ -52,7 +52,11 @@ UI = {
                                  "for every question you have already answered. "
                                  "Continue?"),
         "time_label": "Time", "skip_to_question": "Skip to the question",
-        "answer_recorded": "Answer recorded.",
+        "answer_recorded": "Answer selected.",
+        "reason_label": "Why is this the best answer?",
+        "reason_placeholder": "State the governing constraint and why the alternatives fail.",
+        "reason_required": "Write a short explanation before revealing the rationale.",
+        "reveal_rationale": "Commit answer & reveal rationale",
         "question": "Question", "your_answer": "Your answer", "correct": "Correct",
         "why": "Why", "complete": "Exam Complete", "answered_of":
         "You answered {a} of {t} questions.", "unanswered":
@@ -101,12 +105,12 @@ UI = {
                                  "domains and scales the score to 1000 the "
                                  "same way; use the full length for a "
                                  "realistic rehearsal."),
-        "misses_btn": "My misses · {n}",
-        "misses_label": "Drill my misses",
-        "misses_empty": "No misses yet",
-        "misses_note": ("Weak-spot drill: the {n} question(s) you have "
-                        "answered wrong before, most-missed first."),
-        "misses_score": "Weak-spot score",
+        "misses_btn": "Due reviews · {n}",
+        "misses_label": "Review due weak spots",
+        "misses_empty": "No reviews due",
+        "misses_note": ("Spaced review: {n} weak-spot question(s) are due now. "
+                        "Correct retrievals schedule the next review later."),
+        "misses_score": "Spaced-review score",
         "misses_clear": "Clear my misses",
         "misses_clear_confirm": ("Clear the record of every question you have "
                                  "missed? This also ends the attempt in "
@@ -129,7 +133,7 @@ UI = {
 
 UI["ru"] = {
     "questions": "Вопросы", "answered": "Отвечено", "mode_study": "Обучение",
-    "mode_exam": "Экзамен", "mode_hint_study": "Ответ и объяснение показываются сразу",
+    "mode_exam": "Экзамен", "mode_hint_study": "Сначала решите и объясните выбор, затем откройте разбор",
     "mode_hint_exam": "Ответы показываются после завершения",
     "prev": "← Назад", "next": "Далее →", "finish": "Завершить и проверить",
     "finish_confirm": ("Осталось {n} вопрос(ов) без ответа; они будут засчитаны как "
@@ -138,7 +142,11 @@ UI["ru"] = {
     "study_switch_confirm": ("Переход в режим обучения покажет правильные ответы "
                              "для уже отвеченных вопросов. Продолжить?"),
     "time_label": "Время", "skip_to_question": "Перейти к вопросу",
-    "answer_recorded": "Ответ сохранён.",
+    "answer_recorded": "Ответ выбран.",
+        "reason_label": "Почему это лучший ответ?",
+        "reason_placeholder": "Сформулируйте ключевое ограничение и почему альтернативы хуже.",
+        "reason_required": "Кратко объясните выбор перед открытием разбора.",
+        "reveal_rationale": "Зафиксировать ответ и открыть разбор",
     "question": "Вопрос", "your_answer": "Ваш ответ", "correct": "Правильно",
     "why": "Почему", "complete": "Попытка завершена",
     "answered_of": "Вы ответили на {a} из {t} вопросов.",
@@ -176,11 +184,11 @@ UI["ru"] = {
     "threshold_note_quick": ("Порог: {p}/1000. Быстрая тренировка использует сокращённую "
                              "взвешенную выборку и масштабирует результат до 1000; "
                              "для реалистичной репетиции используйте полный режим."),
-    "misses_btn": "Мои ошибки · {n}", "misses_label": "Тренировать ошибки",
-    "misses_empty": "Ошибок пока нет",
-    "misses_note": ("Работа над ошибками: {n} вопрос(ов), на которые вы раньше "
-                    "ответили неверно; сначала наиболее часто ошибочные."),
-    "misses_score": "Результат по ошибкам", "misses_clear": "Очистить ошибки",
+    "misses_btn": "Повторить · {n}", "misses_label": "Повторить слабые места",
+    "misses_empty": "Повторений сейчас нет",
+    "misses_note": ("Интервальное повторение: сейчас нужно повторить {n} вопрос(ов). "
+                    "Правильный retrieval переносит следующий review на более поздний срок."),
+    "misses_score": "Результат повторения", "misses_clear": "Очистить ошибки",
     "misses_clear_confirm": ("Удалить историю всех ошибок? Текущая попытка также будет завершена."),
     "bank_link": "Банк вопросов", "exam_link": "Тренировочный экзамен",
     "browse_all": "Все темы", "browse_title": "Банк вопросов",
@@ -441,6 +449,19 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
   color: var(--muted); line-height: 1.65; display: none; }
 .explanation.show { display: block; }
 .explanation strong { color: var(--accent); }
+
+.study-reflection { margin-top: 18px; padding: 16px; border: 1px solid var(--border);
+  border-radius: var(--r-md); background: var(--surface); }
+.study-reflection label, .study-reflection > strong { display: block; margin-bottom: 8px;
+  color: var(--fg); font-size: 13px; font-weight: 650; }
+.study-reflection textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 76px;
+  padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+  background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; line-height: 1.5; }
+.study-reflection textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.study-reflection-actions { display: flex; justify-content: space-between; gap: 12px;
+  align-items: center; margin-top: 10px; }
+.study-reflection-error { color: var(--bad); font-size: 12px; }
+.study-reflection.committed p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
 
 .summary { max-width: 860px; margin: 0 auto; display: none; }
 .summary.show { display: block; }
@@ -823,11 +844,15 @@ const REPORT_CLEARED_KEY = "ccaf-score-report-target:cleared";
 // new field the order validation depends on (the domain focus in version 3).
 // An older payload is dropped, which resets an attempt in progress once.
 const STORE_VERSION = 3;
-// Per-question miss counts, namespaced under the page's own store key so the
-// three tracks never read each other's weak spots. `{ id: { n, t } }`: how
-// many times the item was answered wrong, and when it was last graded.
+// Spaced weak-spot state, namespaced under the page's own store key.
+// n = lifetime misses; the first corrective success schedules a 1-day review,
+// then 3-day and 7-day reviews. A fourth success masters the weak spot.
 const MISS_KEY = STORE_KEY + ":misses";
-const MISS_VERSION = 1;
+const MISS_VERSION = 2;
+const REVIEW_DAY = 24 * 60 * 60 * 1000;
+const REVIEW_INTERVALS = [0, REVIEW_DAY, 3 * REVIEW_DAY, 7 * REVIEW_DAY];
+const MASTERY_KEY = STORE_KEY + ":mastery";
+const MASTERY_VERSION = 1;
 
 let persistenceUnavailable = false;
 
@@ -866,8 +891,23 @@ function loadMisses() {
     const raw = storage("local")?.getItem(MISS_KEY);
     if (!raw) return {};
     const d = JSON.parse(raw);
-    if (!d || d.v !== MISS_VERSION || !d.items || typeof d.items !== "object") return {};
-    return d.items;
+    if (!d || !d.items || typeof d.items !== "object") return {};
+    if (d.v === MISS_VERSION) return d.items;
+    if (d.v === 1) {
+      const migrated = {};
+      Object.entries(d.items).forEach(([id, item]) => {
+        if (!item || !Number(item.n)) return;
+        migrated[id] = {
+          n: Number(item.n),
+          streak: 0,
+          t: Number(item.t) || 0,
+          due: 0,
+          mastered: false,
+        };
+      });
+      return migrated;
+    }
+    return {};
   } catch (e) { return {}; }
 }
 function saveMisses(items) {
@@ -876,6 +916,54 @@ function saveMisses(items) {
     persistenceUnavailable = true;
     updateModeHint();
   }
+}
+
+function loadMastery() {
+  try {
+    const raw = storage("local")?.getItem(MASTERY_KEY);
+    if (!raw) return {};
+    const d = JSON.parse(raw);
+    if (!d || d.v !== MASTERY_VERSION || !d.items || typeof d.items !== "object") return {};
+    return d.items;
+  } catch (e) { return {}; }
+}
+function saveMastery(items) {
+  const raw = JSON.stringify({ v: MASTERY_VERSION, items: items });
+  if (!writeStored("local", MASTERY_KEY, raw)) {
+    persistenceUnavailable = true;
+    updateModeHint();
+  }
+}
+function masteryKey(q) {
+  return q && q.objective ? String(q.domain) + "|" + String(q.objective) : null;
+}
+function noteMastery(q, correct) {
+  const key = masteryKey(q);
+  if (!key) return;
+  const items = loadMastery();
+  const cur = items[key] || {
+    domain: String(q.domain),
+    objective: String(q.objective),
+    attempts: 0,
+    correct: 0,
+    streakIds: [],
+    mastered: false,
+    t: 0,
+  };
+  cur.attempts = Number(cur.attempts || 0) + 1;
+  cur.correct = Number(cur.correct || 0) + (correct ? 1 : 0);
+  cur.t = Date.now();
+  if (correct) {
+    const ids = Array.isArray(cur.streakIds) ? cur.streakIds.slice() : [];
+    if (!ids.includes(q.id)) ids.push(q.id);
+    cur.streakIds = ids.slice(-3);
+    cur.mastered = cur.streakIds.length >= 3;
+  } else {
+    cur.streakIds = [];
+    cur.mastered = false;
+  }
+  items[key] = cur;
+  saveMastery(items);
 }
 
 let reportRecordCache;
@@ -1026,32 +1114,58 @@ function weightedSample(items, count) {
   return picked;
 }
 
-// The weak-spot draw: every question missed at least once, most-missed first,
-// oldest first among ties so a stale miss resurfaces before a fresh one. It is
-// capped at the full draw size — a candidate with 200 misses still gets an
-// attempt the length of a real one.
+// Weak-spot work is scheduled retrieval, not an endless list of every past
+// mistake. A miss is due immediately. A corrective success schedules a 1-day
+// review, then 3-day and 7-day reviews. The next success marks it mastered.
 function missedIds() {
   const m = loadMisses();
-  const ids = Object.keys(m).filter(id => (m[id] && m[id].n > 0) && qById(id));
-  ids.sort((a, b) => (m[b].n - m[a].n) || ((m[a].t || 0) - (m[b].t || 0)) ||
+  const now = Date.now();
+  const ids = Object.keys(m).filter(id => {
+    const item = m[id];
+    return item && item.n > 0 && !item.mastered && (Number(item.due) || 0) <= now && qById(id);
+  });
+  ids.sort((a, b) => ((m[a].due || 0) - (m[b].due || 0)) ||
+                     (m[b].n - m[a].n) ||
+                     ((m[a].t || 0) - (m[b].t || 0)) ||
                      (a < b ? -1 : a > b ? 1 : 0));
   return ids.slice(0, examSize("full", "all"));
 }
 
-// Record one graded item. Called once per question per attempt (state.graded
-// is the guard, and it is saved with the attempt so a reload cannot double
-// count): in study mode the moment the answer completes and reveals, in exam
-// mode when the attempt is scored.
+// Record one graded item. Every graded answer updates task-statement mastery.
+// Weak-spot scheduling begins only after an actual miss.
 function noteResult(q, ans) {
   if (!q || state.graded[q.id]) return;
   const touched = Array.isArray(ans) ? ans.length > 0 : (ans !== undefined && ans !== null);
   if (!touched) return;
   state.graded[q.id] = true;
+
+  const correct = isCorrect(q, ans);
+  noteMastery(q, correct);
+
   const m = loadMisses();
   const cur = m[q.id];
-  if (!isCorrect(q, ans)) m[q.id] = { n: ((cur && cur.n) || 0) + 1, t: Date.now() };
-  else if (cur) cur.t = Date.now();
-  else return;   // a first-time correct answer is not a weak spot to remember
+  const now = Date.now();
+
+  if (!correct) {
+    m[q.id] = {
+      n: ((cur && cur.n) || 0) + 1,
+      streak: 0,
+      t: now,
+      due: now,
+      mastered: false,
+    };
+  } else if (cur) {
+    const streak = Math.min(4, (Number(cur.streak) || 0) + 1);
+    m[q.id] = {
+      n: Number(cur.n) || 1,
+      streak,
+      t: now,
+      due: streak >= 4 ? 0 : now + REVIEW_INTERVALS[streak],
+      mastered: streak >= 4,
+    };
+  } else {
+    return;   // a first-time correct answer is not a weak spot
+  }
   saveMisses(m);
 }
 
@@ -1172,7 +1286,7 @@ function tallyAttempt(active, answers) {
 // `graded` holds the ids already folded into the miss counts for this attempt,
 // so answering in study mode and then finishing cannot count one item twice.
 // `browse` is the bank-browser filter; it is view state, so it is not saved.
-const state = { current: 0, answers: {}, order: [], mode: "study", length: "full",
+const state = { current: 0, answers: {}, reasons: {}, order: [], mode: "study", length: "full",
                 focus: "all", reportSignature: null, graded: {}, elapsed: 0,
                 browse: { domain: "all", q: "", sub: null } };
 // The header controls are live in the markup before the bank arrives. Until
@@ -1187,7 +1301,7 @@ function save() {
   // open. Refusing this stale write prevents it from recreating old study data.
   if (state.focus === "report" && state.reportSignature !== currentSignature) return false;
   const raw = JSON.stringify(
-    { v: STORE_VERSION, answers: state.answers, order: state.order,
+    { v: STORE_VERSION, answers: state.answers, reasons: state.reasons, order: state.order,
       mode: state.mode, length: state.length, focus: state.focus,
       graded: state.graded, current: state.current, elapsed: state.elapsed,
       reportSignature: state.focus === "report" ? state.reportSignature : null });
@@ -1272,6 +1386,7 @@ function resetAfterReportStorageChange() {
   state.focus = signature ? "report" : "all";
   state.reportSignature = signature;
   state.answers = {};
+  state.reasons = {};
   state.graded = {};
   state.current = 0;
   state.order = shuffleOrder();
@@ -1401,9 +1516,10 @@ function renderQuestion(idx) {
   const qs = orderedQuestions();
   const q = qs[idx];
   const chosen = state.answers[q.id];
-  // Study mode reveals only once the answer is complete — for a multi item that
-  // means all N letters are selected, so partial picks stay editable.
-  const reveal = hasAnswer(q, chosen) && state.mode === "study";
+  // Study mode separates retrieval from feedback: selecting an answer is not
+  // enough to reveal the key. The learner first commits a short explanation,
+  // then the engine grades and opens the rationale.
+  const reveal = state.mode === "study" && Boolean(state.graded[q.id]);
 
   document.getElementById("qCounter").textContent = (idx + 1) + " / " + qs.length;
   document.getElementById("qCounterM").textContent = (idx + 1) + " / " + qs.length;
@@ -1412,9 +1528,11 @@ function renderQuestion(idx) {
   const finishBtn = document.getElementById("finishBtn");
   const onLast = idx === qs.length - 1;
   prevBtn.disabled = idx === 0;
-  nextBtn.disabled = onLast;
-  nextBtn.classList.toggle("primary", !onLast);
-  finishBtn.classList.toggle("primary", onLast);
+  const pendingReflection = state.mode === "study" && hasAnswer(q, chosen) && !state.graded[q.id];
+  nextBtn.disabled = onLast || pendingReflection;
+  nextBtn.classList.toggle("primary", !onLast && !pendingReflection);
+  finishBtn.disabled = onLast && pendingReflection;
+  finishBtn.classList.toggle("primary", onLast && !pendingReflection);
   document.getElementById("qNav").classList.toggle("on-last", onLast);
 
   const dm = DOMAINS[q.domain];
@@ -1438,9 +1556,9 @@ function renderQuestion(idx) {
     } else if (atCapacity) {
       cls += " dimmed";
     }
-    // In study mode after answering, show explanation for the correct option
-    // and for the (wrong) one the user picked.
-    const showExpl = reveal && opt.explanation && (opt.correct || isChosen);
+    // Once the learner commits a reason, reveal every option rationale. This
+    // trains discrimination between plausible alternatives, not answer-key recall.
+    const showExpl = reveal && Boolean(opt.explanation);
     // A revealed option is inert for good, so `disabled` fits. An at-capacity
     // option is not: it becomes selectable again as soon as the candidate
     // deselects a letter, so it stays in the tab order and only reports itself
@@ -1459,6 +1577,19 @@ function renderQuestion(idx) {
       "</button>" + expl + "</div>";
   }).join("");
 
+  const reason = (state.reasons && state.reasons[q.id]) || "";
+  const reflectionHtml = state.mode === "study" && hasAnswer(q, chosen)
+    ? (reveal
+        ? "<div class='study-reflection committed'><strong>" + esc(T.reason_label) + "</strong><p>" +
+            esc(reason) + "</p></div>"
+        : "<div class='study-reflection'><label for='reason-" + q.id + "'>" + esc(T.reason_label) +
+            "</label><textarea id='reason-" + q.id + "' rows='3' placeholder='" +
+            esc(T.reason_placeholder) + "'></textarea><div class='study-reflection-actions'>" +
+            "<span class='study-reflection-error' id='reason-error-" + q.id + "'></span>" +
+            "<button type='button' class='nav-btn primary' onclick=\"commitStudy('" + q.id + "')\">" +
+            esc(T.reveal_rationale) + "</button></div></div>")
+    : "";
+
   document.getElementById("qCard").innerHTML =
     "<div class='q-number'>" + T.question + " " + (idx + 1) + "</div>" +
     "<div><span class='q-domain'>" + T.domain + " " + q.domain + " · " + esc(dm.name) + "</span>" +
@@ -1471,13 +1602,33 @@ function renderQuestion(idx) {
           ? "<div class='q-select-hint'>" + T.select_full.replace("{n}", selectCount(q)) + "</div>"
           : "")
       : "") +
-    "<div class='options'>" + optionsHtml + "</div>";
+    "<div class='options'>" + optionsHtml + "</div>" +
+    reflectionHtml;
+}
+
+function commitStudy(id) {
+  const q = qById(id);
+  if (!q || state.mode !== "study" || !hasAnswer(q, state.answers[id]) || state.graded[id]) return;
+  const field = document.getElementById("reason-" + id);
+  const error = document.getElementById("reason-error-" + id);
+  const reason = field ? field.value.trim() : "";
+  if (reason.length < 12) {
+    if (error) error.textContent = T.reason_required;
+    if (field) field.focus();
+    return;
+  }
+  state.reasons[id] = reason;
+  noteResult(q, state.answers[id]);
+  updateMissesUI();
+  save();
+  renderQuestion(state.current);
+  updateSidebar();
 }
 
 function answer(id, letter) {
   const q = qById(id);
   const n = selectCount(q);
-  const locked = state.mode === "study" && hasAnswer(q, state.answers[id]);
+  const locked = state.mode === "study" && Boolean(state.graded[id]);
   if (locked) return;
   if (typeof announce === "function") announce(T.answer_recorded);
 
@@ -1495,13 +1646,9 @@ function answer(id, letter) {
     else return;
     state.answers[id] = cur;
   }
-  // Study mode reveals the answer as soon as it is complete — that reveal is
-  // the grading the candidate sees, so the weak-spot record follows it. Exam
-  // mode stays editable until the attempt is scored, so it records there.
-  if (state.mode === "study" && hasAnswer(q, state.answers[id])) {
-    noteResult(q, state.answers[id]);
-    updateMissesUI();
-  }
+  // In Study mode a complete selection is still provisional. Grading happens
+  // only in commitStudy(), after the learner has generated a short explanation.
+  // Exam mode remains editable and is graded only at the attempt summary.
   save();
   renderQuestion(state.current);
   updateSidebar();
@@ -1704,6 +1851,7 @@ function clearProgress() {
     updateModeHint();
   }
   state.answers = {};
+  state.reasons = {};
   state.graded = {};
   state.current = 0;
   state.focus = "all";
@@ -2267,6 +2415,7 @@ function backToAnswers() {
 
 function restart() {
   state.answers = {};
+  state.reasons = {};
   state.elapsed = 0;
   // A fresh attempt has graded nothing yet, so every item in it can record a
   // miss again — that is what makes a repeated mistake count twice.
@@ -2433,6 +2582,7 @@ function init() {
   const saved = load();
   if (saved) {
     state.answers = saved.answers || {};
+    state.reasons = saved.reasons || {};
     state.order = saved.order;
     state.mode = saved.mode || "study";
     // load() normalized the length, so a pre-quick payload restores as "full".
@@ -2629,8 +2779,8 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
     home_href = "../ru.html" if lang_attr == "ru" else "../index.html"
     ravn_topbar = (
         '<header class="ravn-topbar">'
-        f'<a class="ravn-brand" href="{home_href}" aria-label="Claude Architect Trainer">'
-        '<span class="trainer-mark" aria-hidden="true">CA</span><span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
+        f'<a class="ravn-brand" href="{home_href}" aria-label="CCAR">'
+        '<span class="ravn-brand-tagline">CCAR</span></a>'
         f'{language_switch}'
         '<div class="mode-controls sheet" id="optionsSheet" aria-labelledby="optionsTitle">'
         f'{sheet_close}'
@@ -2659,8 +2809,8 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
     )
     bank_topbar = (
         '<header class="ravn-topbar">'
-        f'<a class="ravn-brand" href="{home_href}" aria-label="Claude Architect Trainer">'
-        '<span class="trainer-mark" aria-hidden="true">CA</span><span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
+        f'<a class="ravn-brand" href="{home_href}" aria-label="CCAR">'
+        '<span class="ravn-brand-tagline">CCAR</span></a>'
         f'{language_switch}'
         '<div class="mode-controls">'
         + (f'<a class="nav-btn" href="{exam_href}">{ui["exam_link"]}</a>' if exam_href else "")
@@ -2797,7 +2947,7 @@ def build(lang):
     render_page(
         questions=questions,
         title=LANG_TITLES[lang],
-        page_title=f"{LANG_LABELS[lang]} — Practice Exam · Claude Architect Trainer",
+        page_title=f"{LANG_LABELS[lang]} — Practice Exam · CCAR Training",
         out_path=os.path.join(ROOT_DIR, "ccaf", "dist", f"exam_{lang}.html"),
         bank_href=f"bank-{lang}.html",
         language_links={"en": "en.html", "ru": "ru.html"} if lang in ("en", "ru") else None,
@@ -2809,7 +2959,7 @@ def build(lang):
     render_page(
         questions=questions,
         title=UI[lang]["browse_title"],
-        page_title=f"{LANG_LABELS[lang]} — {UI[lang]['browse_title']} · Claude Architect Trainer",
+        page_title=f"{LANG_LABELS[lang]} — {UI[lang]['browse_title']} · CCAR Training",
         out_path=os.path.join(ROOT_DIR, "ccaf", "dist", f"bank_{lang}.html"),
         view="bank",
         exam_href=f"{lang}.html",

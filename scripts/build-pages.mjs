@@ -37,32 +37,8 @@ const PROFESSIONAL_GUIDES = [
   },
 ];
 
-const DEVELOPER_GUIDES = [
-  {
-    code: 'en',
-    label: 'English',
-    title: 'Developer - English',
-    guide: 'ccdf/guide_en.md',
-    output: 'developer-en',
-    test: 'ccdf/dist/exam_en.html',
-    bank: 'ccdf/dist/bank_en.html',
-  },
-];
-
-const ASSOCIATE_GUIDES = [
-  {
-    code: 'en',
-    label: 'English',
-    title: 'Associate - English',
-    guide: 'ccaof/guide_en.md',
-    output: 'associate-en',
-    test: 'ccaof/dist/exam_en.html',
-    bank: 'ccaof/dist/bank_en.html',
-  },
-];
-
 // Every track whose exam pages ship a fetched question bank.
-const EXAM_TRACKS = ['ccaf', 'ccap', 'ccdf', 'ccaof'];
+const EXAM_TRACKS = ['ccaf', 'ccap'];
 
 // Published exam page -> the bank JSON it fetches. Every page shell carries it,
 // so a link into an exam can warm that fetch before the click (app.js).
@@ -160,12 +136,8 @@ ${extraScripts}
 </html>`;
 }
 
-function siteFooter(lang = 'en') {
-  const ru = lang === 'ru';
-  return `<footer class="site-footer">
-  <p>${ru ? 'Независимый интерфейс для подготовки к сертификации Claude.' : 'Independent study interface for Claude certification preparation.'}</p>
-  <p>${ru ? 'Учебные материалы адаптированы из' : 'Study content adapted from'} <a href="https://github.com/ravnhq/claude-certified-architect">Ravn's Claude certification materials</a>. ${ru ? 'Проект не связан с Anthropic.' : 'Not affiliated with Anthropic.'}</p>
-</footer>`;
+function siteFooter() {
+  return '';
 }
 
 function header(currentLang = 'en', alternateHref = null) {
@@ -173,16 +145,14 @@ function header(currentLang = 'en', alternateHref = null) {
   const enHref = currentLang === 'en' ? null : (alternateHref || 'index.html');
   const ruHref = currentLang === 'ru' ? null : (alternateHref || 'ru.html');
   return `<header class="topbar">
-  <a class="brand trainer-brand" href="${ru ? 'ru.html' : 'index.html'}" aria-label="Claude Architect Trainer">
-    <span class="trainer-mark" aria-hidden="true">CA</span>
-    <span>Claude Architect Trainer</span>
+  <a class="brand trainer-brand" href="${ru ? 'ru.html' : 'index.html'}" aria-label="CCAR">
+    <span>CCAR</span>
   </a>
   <nav class="topbar-actions" aria-label="${ru ? 'Управление страницей' : 'Page controls'}">
     <div class="site-language-toggle" role="group" aria-label="${ru ? 'Язык интерфейса' : 'Interface language'}">
       ${enHref ? `<a href="${enHref}">EN</a>` : '<span aria-current="page">EN</span>'}
       ${ruHref ? `<a href="${ruHref}">RU</a>` : '<span aria-current="page">RU</span>'}
     </div>
-    <a class="topbar-link" href="catalog.html">${ru ? 'Библиотека' : 'Library'}</a>
     <button type="button" id="search-toggle" class="icon-btn" aria-label="${ru ? 'Поиск' : 'Search'}">⌕</button>
     <button type="button" id="theme-toggle" class="icon-btn" aria-label="${ru ? 'Переключить тему' : 'Toggle theme'}">◐</button>
   </nav>
@@ -202,343 +172,248 @@ function header(currentLang = 'en', alternateHref = null) {
 }
 
 
-function trainingDashboard(blueprint, lang = 'en') {
+function foundationLabsPage(lang = 'en') {
   const ru = lang === 'ru';
-  const practice = lang === 'ru' ? 'practical/ru.html' : 'practical/en.html';
-  const bank = lang === 'ru' ? 'practical/bank-ru.html' : 'practical/bank-en.html';
-  const guide = lang === 'ru' ? 'guides/ru.html' : 'guides/en.html';
-  const professionalGuide = lang === 'ru' ? 'guides/professional-ru.html' : 'guides/professional-en.html';
-  const professionalPractice = lang === 'ru' ? 'practical/professional-ru.html' : 'practical/professional-en.html';
-  const domains = Object.entries(blueprint.domains);
-  const domainCards = domains.map(([id, domain]) => `
-    <article class="training-domain-card">
-      <div class="training-domain-head">
-        <span class="training-domain-id">D${id}</span>
-        <span class="training-domain-weight">${domain.weight}%</span>
-      </div>
-      <h3>${domain.name}</h3>
-      <p>${domain.objectives.length} ${ru ? 'официальных task statements' : 'official task statements'}</p>
-      <div class="training-domain-bar" aria-hidden="true"><span style="width:${domain.weight}%"></span></div>
-      <a href="${practice}?mode=study&focus=${id}">${ru ? 'Тренировать домен' : 'Drill this domain'}</a>
-    </article>`).join('');
-
-  const pathSteps = [
+  const guide = ru ? 'guides/ru.html' : 'guides/en.html';
+  const labs = [
     {
-      n: '01',
-      kicker: ru ? 'Изучить' : 'Learn',
-      title: ru ? 'Пройти Foundation guide' : 'Work through the Foundation guide',
-      copy: ru
-        ? 'Сначала закрепите базовую модель Claude API, MCP, Agent SDK, Claude Code и архитектурные decision rules.'
-        : 'Build the base model first: Claude API, MCP, Agent SDK, Claude Code, and the architectural decision rules.',
-      href: guide,
-      action: ru ? 'Открыть guide' : 'Open guide',
+      id: 'agent',
+      title: 'Multi-Tool Agent',
+      domains: 'D1 · D2 · D5',
+      task: ru
+        ? 'Соберите agent loop с 3–4 инструментами, минимум двумя похожими по назначению, structured errors и обязательной эскалацией.'
+        : 'Build an agent loop with 3–4 tools, at least two with overlapping intent, structured errors, and an explicit escalation path.',
+      deliverable: ru
+        ? 'Код agent loop + tool schemas + два failure cases + журнал решения об эскалации.'
+        : 'Agent-loop code + tool schemas + two failure cases + an escalation decision log.',
+      checks: ru
+        ? ['tool_use/end_turn обрабатываются явно', 'обязательный business invariant enforced программно', 'ошибка несёт category/retryability/context', 'неоднозначный запрос приводит к корректной clarification/escalation']
+        : ['tool_use/end_turn handled explicitly', 'mandatory business invariant enforced programmatically', 'error carries category/retryability/context', 'ambiguous request triggers the correct clarification/escalation path'],
     },
     {
-      n: '02',
-      kicker: ru ? 'Закрепить' : 'Drill',
-      title: ru ? 'Короткие weighted drills' : 'Run short weighted drills',
-      copy: ru
-        ? 'Быстрые сеты сохраняют веса blueprint и сразу показывают объяснение ответа.'
-        : 'Quick sets preserve blueprint weighting and reveal the rationale immediately.',
-      href: `${practice}?mode=study&length=quick`,
-      action: ru ? 'Начать quick study' : 'Start quick study',
+      id: 'claude-code',
+      title: 'Claude Code Team Workflow',
+      domains: 'D3 · D2',
+      task: ru
+        ? 'Настройте реальный репозиторий: CLAUDE.md, conditional rules, reusable skill/command и MCP integration.'
+        : 'Configure a real repository with CLAUDE.md, conditional rules, a reusable skill/command, and MCP integration.',
+      deliverable: ru
+        ? 'Минимальный repo diff с конфигурацией + два примера задач, где разные правила загружаются по scope.'
+        : 'Minimal repository diff + two task examples demonstrating scope-specific instruction loading.',
+      checks: ru
+        ? ['общие правила не дублируются по подпапкам', 'path-specific conventions грузятся только где нужны', 'shared workflow version-controlled', 'сложная задача сначала исследуется/планируется']
+        : ['global rules are not duplicated across subdirectories', 'path-specific conventions load only where needed', 'shared workflow is version-controlled', 'complex change is explored/planned before edits'],
     },
     {
-      n: '03',
-      kicker: ru ? 'Исправить' : 'Repair',
-      title: ru ? 'Закрыть слабые места' : 'Close weak spots',
-      copy: ru
-        ? 'Повторяйте ошибочные вопросы и отдельно проходите слабые домены, пока ошибки не перестанут повторяться.'
-        : 'Repeat missed questions and drill weak domains until the same mistakes stop recurring.',
-      href: `${practice}?mode=study&focus=misses`,
-      action: ru ? 'Работа над ошибками' : 'Review weak spots',
-      id: 'training-misses-link',
+      id: 'extraction',
+      title: 'Structured Data Extraction',
+      domains: 'D4 · D5',
+      task: ru
+        ? 'Постройте extraction pipeline со schema-constrained output, semantic validation, retry-with-feedback и обработкой partial failures.'
+        : 'Build an extraction pipeline with schema-constrained output, semantic validation, retry-with-feedback, and partial-failure handling.',
+      deliverable: ru
+        ? 'Schema + 10 тестовых документов + validator + failure report по каждому неуспешному документу.'
+        : 'Schema + 10 test documents + validator + per-document failure report.',
+      checks: ru
+        ? ['required/optional/null semantics различаются', 'semantic validation отделена от JSON syntax', 'retry получает конкретную validation error', 'успешные документы не перерабатываются из-за одного failure']
+        : ['required/optional/null semantics are distinct', 'semantic validation is separate from JSON syntax', 'retry receives the specific validation error', 'successful documents are not reprocessed because one item failed'],
     },
     {
-      n: '04',
-      kicker: ru ? 'Симулировать' : 'Simulate',
-      title: ru ? 'Полная репетиция: 60 / 120' : 'Full rehearsal: 60 / 120',
-      copy: ru
-        ? 'Только после освоения материала переходите к exam mode без подсказок до конца попытки.'
-        : 'Only after learning the material, rehearse in exam mode with no answer reveal until the end.',
-      href: `${practice}?mode=exam&length=full`,
-      action: ru ? 'Запустить full mock' : 'Run full mock',
-    },
-    {
-      n: '05',
-      kicker: ru ? 'Проверить готовность' : 'Verify',
-      title: 'Foundation readiness gate',
-      copy: ru
-        ? 'Пройдите preflight перед записью на CCAR-F. Это завершает Stage 1 перед переходом к Professional.'
-        : 'Complete the preflight before booking CCAR-F. This closes Stage 1 before you move to Professional.',
-      href: 'preflight/architect-foundations.html',
-      action: ru ? 'Открыть preflight' : 'Open preflight',
-      id: 'training-readiness-link',
+      id: 'research',
+      title: 'Multi-Agent Research',
+      domains: 'D1 · D5',
+      task: ru
+        ? 'Спроектируйте coordinator + 2–3 subagents для исследования, где coverage, error propagation и provenance проверяются явно.'
+        : 'Design a coordinator + 2–3 subagents for research with explicit coverage, error propagation, and provenance checks.',
+      deliverable: ru
+        ? 'Task decomposition + subagent contracts + synthesis output с source attribution и отмеченными gaps.'
+        : 'Task decomposition + subagent contracts + synthesis output with source attribution and explicit gaps.',
+      checks: ru
+        ? ['decomposition покрывает все requested dimensions', 'subagent получает достаточный context', 'partial failure возвращает usable results + gap', 'synthesis не скрывает missing coverage']
+        : ['decomposition covers every requested dimension', 'subagent receives sufficient context', 'partial failure returns usable results + gap', 'synthesis does not hide missing coverage'],
     },
   ];
 
-  const pathCards = pathSteps.map(step => `
-    <article class="training-path-card">
-      <div class="training-path-number">${step.n}</div>
-      <span class="training-mode-kicker">${step.kicker}</span>
-      <strong>${step.title}</strong>
-      <span>${step.copy}</span>
-      <a${step.id ? ` id="${step.id}"` : ''} href="${step.href}">${step.action}</a>
-      ${step.id === 'training-misses-link' ? `<small id="training-misses-copy">${ru ? 'Станет полезно после первых ошибок.' : 'Becomes useful after your first misses.'}</small>` : ''}
-      ${step.id === 'training-readiness-link' ? `<small id="training-readiness-copy">Preflight: 0 / 10</small>` : ''}
+  const cards = labs.map((lab, i) => `
+    <article class="lab-card">
+      <div class="lab-card-head">
+        <span class="training-path-number">0${i + 1}</span>
+        <span class="training-domain-id">${lab.domains}</span>
+      </div>
+      <h2>${lab.title}</h2>
+      <p>${lab.task}</p>
+      <h3>${ru ? 'Результат' : 'Deliverable'}</h3>
+      <p>${lab.deliverable}</p>
+      <h3>${ru ? 'Критерии' : 'Acceptance criteria'}</h3>
+      <ul>${lab.checks.map(x => `<li>${x}</li>`).join('')}</ul>
+      <label class="lab-complete">
+        <input type="checkbox" data-lab-id="${lab.id}">
+        <span>${ru ? 'Выполнено и проверено по критериям' : 'Completed and checked against criteria'}</span>
+      </label>
     </article>`).join('');
 
-  return `<main class="training-dashboard" data-training-dashboard data-training-lang="${lang}">
-  <section class="training-hero">
-    <div class="training-hero-copy">
-      <p class="eyebrow">Stage 1 · CCAR-F · ${ru ? 'сначала Foundations' : 'Foundations first'}</p>
-      <h1>Claude Architect <span class="accent">${ru ? 'подготовка по этапам.' : 'training path.'}</span></h1>
-      <p class="training-lede">${ru
-        ? 'Маршрут специально построен под последовательность Architect Foundations → Architect Professional. Ежедневная тренировка остаётся в Foundation, пока этот этап не закрыт.'
-        : 'The path is intentionally ordered Architect Foundations → Architect Professional. Daily training stays on Foundation until that stage is complete.'}</p>
-      <div class="training-hero-actions">
-        <a class="training-btn training-btn-primary" id="training-primary" href="${practice}?mode=study&length=quick">${ru ? 'Продолжить Foundation' : 'Continue Foundation'}</a>
-        <a class="training-btn" href="${guide}">${ru ? 'Открыть study guide' : 'Open study guide'}</a>
-      </div>
-      <p class="training-calibration">${ru
-        ? 'Экзаменационные вопросы и терминология остаются на английском. RU переключает только интерфейс и пояснения навигации.'
-        : 'Exam questions and certification terminology stay in English. RU changes interface chrome and navigation guidance only.'}</p>
-    </div>
-
-    <aside class="training-progress-card" aria-labelledby="training-progress-title">
-      <div class="training-panel-label" id="training-progress-title">${ru ? 'Текущая тренировка' : 'Current practice'}</div>
-      <div class="training-progress-main">
-        <strong id="training-progress-value">${ru ? 'Нет активной попытки' : 'No active attempt'}</strong>
-        <span id="training-progress-detail">${ru ? 'Начните с guide или quick study.' : 'Start with the guide or a quick study set.'}</span>
-      </div>
-      <div class="training-progress-track" aria-hidden="true"><span id="training-progress-fill"></span></div>
-      <dl class="training-progress-stats">
-        <div><dt>${ru ? 'Отвечено' : 'Answered'}</dt><dd id="training-answered">0 / 0</dd></div>
-        <div><dt>${ru ? 'Ошибки' : 'Weak spots'}</dt><dd id="training-misses">0</dd></div>
-        <div><dt>${ru ? 'Режим' : 'Mode'}</dt><dd id="training-mode">${ru ? 'Обучение' : 'Study'}</dd></div>
-      </dl>
-    </aside>
-  </section>
-
-  <section class="training-section" aria-labelledby="training-path-title">
-    <div class="training-section-head">
+  return `<main class="training-dashboard labs-page" data-labs data-training-lang="${lang}">
+    <section class="labs-head">
       <div>
-        <p class="training-panel-label">Foundation path</p>
-        <h2 id="training-path-title">${ru ? 'Пять шагов до готовности CCAR-F.' : 'Five steps to CCAR-F readiness.'}</h2>
+        <p class="training-panel-label">CCAR-F · Hands-on</p>
+        <h1>${ru ? 'Практические лабораторные' : 'Practical labs'}</h1>
       </div>
-      <a href="${bank}">${ru ? 'Открыть весь банк' : 'Browse all questions'}</a>
-    </div>
-    <div class="training-path-grid">${pathCards}</div>
-  </section>
-
-  <section class="training-section" aria-labelledby="training-domains-title">
-    <div class="training-section-head">
-      <div>
-        <p class="training-panel-label">Blueprint</p>
-        <h2 id="training-domains-title">${ru ? 'Пять доменов. Тренируйтесь в их реальных весах.' : 'Five domains. Train to the real weights.'}</h2>
+      <div class="labs-progress">
+        <span>${ru ? 'Выполнено' : 'Completed'}</span>
+        <strong id="labs-progress">0 / 4</strong>
       </div>
-      <a href="preflight/architect-foundations.html">${ru ? 'Foundation preflight' : 'Readiness checklist'}</a>
-    </div>
-    <div class="training-domain-grid">${domainCards}</div>
-  </section>
-
-  <section class="training-resource-strip" aria-label="${ru ? 'Ресурсы Foundation' : 'Foundation resources'}">
-    <a href="cheatsheet/${lang}.html"><span>${ru ? 'Повторить' : 'Reference'}</span><strong>Cheatsheet</strong></a>
-    <a href="${bank}"><span>${ru ? 'Разобрать' : 'Explore'}</span><strong>${ru ? 'Банк вопросов' : 'Question bank'}</strong></a>
-    <a href="score-report.html"><span>${ru ? 'После экзамена' : 'After exam'}</span><strong>Score report</strong></a>
-    <a href="preflight/architect-foundations.html"><span>${ru ? 'Готовность' : 'Readiness'}</span><strong>Foundation preflight</strong></a>
-  </section>
-
-  <section class="training-next-stage">
-    <div>
-      <p class="training-panel-label">Stage 2 · CCAR-P</p>
-      <h2>${ru ? 'Professional начинается после Foundations.' : 'Professional starts after Foundations.'}</h2>
-      <p>${ru
-        ? 'Professional — отдельный blueprint из семи доменов и 38 objectives. Он не подмешивается в Foundation drills: сначала закрываем CCAR-F, затем переключаемся на архитектурные trade-offs, evaluation, governance и lifecycle.'
-        : 'Professional is a separate seven-domain, 38-objective blueprint. It is not mixed into Foundation drills: close CCAR-F first, then move to architecture trade-offs, evaluation, governance, and lifecycle.'}</p>
-      <div class="training-stage-actions">
-        <a class="training-btn" href="${professionalGuide}">${ru ? 'Посмотреть Professional guide' : 'Preview Professional guide'}</a>
-        <a class="training-btn" href="${professionalPractice}?mode=study&length=quick">${ru ? 'Открыть Professional practice' : 'Open Professional practice'}</a>
-      </div>
-    </div>
-  </section>
-</main>`;
+    </section>
+    <p class="labs-note">${ru
+      ? 'Отмечайте лабораторную только после проверки deliverable по всем критериям. Чтение примера не считается выполнением.'
+      : 'Mark a lab complete only after checking the deliverable against every criterion. Reading an example does not count.'}</p>
+    <div class="labs-grid">${cards}</div>
+    <p class="labs-reference"><a href="${guide}#practical-exercises">${ru ? 'Материал и примеры в Foundation guide' : 'Reference material and examples in the Foundation guide'}</a></p>
+  </main>`;
 }
 
-function landing() {
-  const foundationCards = LANGS.map(l => `
-    <article class="card" data-lang="${l.code}">
-      <h2>${l.code.toUpperCase()}</h2>
-      <div class="lang-name">${l.label}</div>
-      <ul>
-        <li><a href="guides/${l.code}.html">Read the guide</a></li>
-        <li><a href="practical/${l.code}.html">Practice exam</a></li>
-        <li><a href="practical/bank-${l.code}.html">Question bank</a></li>
-        <li><a href="cheatsheet/${l.code}.html">Cheatsheet</a></li>
-        <li><a href="pdf/guide_${l.code}.pdf">PDF download</a></li>
-      </ul>
-    </article>`).join('');
-  const professionalCards = PROFESSIONAL_GUIDES.map(l => `
-    <article class="card" data-lang="${l.code}">
-      <h2>${l.code.toUpperCase()}</h2>
-      <div class="lang-name">${l.label}</div>
-      <p class="card-summary">Seven-domain guidance for production architecture, integration, evaluation, governance, and lifecycle leadership.</p>
-      <ul>
-        <li><a href="guides/${l.output}.html">Read the study guide</a></li>
-        <li><a href="practical/${l.output}.html">Practice exam (63 questions)</a></li>
-        <li><a href="practical/bank-${l.output}.html">Question bank</a></li>
-        <li><a href="https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification">Official registration</a></li>
-      </ul>
-    </article>`).join('');
-  const developerCards = DEVELOPER_GUIDES.map(l => `
-    <article class="card" data-lang="${l.code}">
-      <h2>${l.code.toUpperCase()}</h2>
-      <div class="lang-name">${l.label}</div>
-      <p class="card-summary">Build, integrate, and ship production applications, agents, and workflows on Claude at a foundational level.</p>
-      <ul>
-        <li><a href="guides/${l.output}.html">Read the study guide</a></li>
-        <li><a href="https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification">Official registration</a></li>
-      </ul>
-    </article>`).join('');
+async function buildFoundationLabs() {
+  const out = path.join(DOCS, 'labs');
+  await ensureDir(out);
+  await fs.writeFile(path.join(out, 'foundation-en.html'), pageShell({
+    title: 'CCAR-F Practical Labs',
+    lang: 'en',
+    baseHref: SITE_BASE_HREF,
+    body: `${header('en', 'labs/foundation-ru.html')}${foundationLabsPage('en')}`,
+  }));
+  await fs.writeFile(path.join(out, 'foundation-ru.html'), pageShell({
+    title: 'CCAR-F Practical Labs · RU',
+    lang: 'ru',
+    baseHref: SITE_BASE_HREF,
+    body: `${header('ru', 'labs/foundation-en.html')}${foundationLabsPage('ru')}`,
+  }));
+}
 
-  // Track chooser — a one-glance self-selection grid placed above the
-  // per-track sections. All four render as peers in one grid; the section
-  // heading carries the Architect progression and the separate roles of
-  // Developer and Associate in prose, which the old two-group layout could only
-  // say by making the lone Developer card twice the width of its siblings.
-  // One card shape for all tracks. Each resource row names the resource
-  // once and lists the languages it exists in, so a tri-language track and a
-  // single-language track render from the same template without a separate
-  // "pick your language" section repeating the same links.
-  const TRACKS = [
-    {
-      code: 'CCAR-F',
-      name: 'Architect — Foundations',
-      summary: 'For practitioners building with Claude Code, the Agent SDK, the Claude API, and MCP.',
-      items: '60',
-      langs: 'EN · RU',
-      resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/en.html'], ['RU', 'guides/ru.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/en.html'], ['RU', 'practical/ru.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-en.html'], ['RU', 'practical/bank-ru.html']] },
-        { label: 'Cheatsheet', langs: [['EN', 'cheatsheet/en.html'], ['RU', 'cheatsheet/ru.html']] },
-        { label: 'PDF', langs: [['EN', 'pdf/guide_en.pdf']] },
-        { label: 'Preflight checklist', langs: [['EN', 'preflight/architect-foundations.html']] },
-      ],
-      register: 'https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification',
-    },
-    {
-      code: 'CCAR-P',
-      name: 'Architect — Professional',
-      summary: 'For architects owning production architecture, evaluation, governance, and lifecycle.',
-      items: '63',
-      langs: 'EN · RU',
-      resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/professional-en.html'], ['RU', 'guides/professional-ru.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/professional-en.html'], ['RU', 'practical/professional-ru.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-professional-en.html'], ['RU', 'practical/bank-professional-ru.html']] },
-        { label: 'Preflight checklist', langs: [['EN', 'preflight/architect-professional.html']] },
-      ],
-      register: 'https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification',
-    },
-    {
-      code: 'CCDV-F',
-      name: 'Developer — Foundations',
-      summary: 'For engineers building and shipping production applications, agents, and workflows.',
-      items: '53',
-      langs: 'EN',
-      resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/developer-en.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/developer-en.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-developer-en.html']] },
-        { label: 'Preflight checklist', langs: [['EN', 'preflight/developer-foundations.html']] },
-      ],
-      register: 'https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification',
-    },
-    {
-      code: 'CCAO-F',
-      name: 'Associate — Foundations',
-      summary: 'For professionals using Claude for research, analysis, drafting, planning, and workflow improvement.',
-      items: '60',
-      langs: 'EN',
-      resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/associate-en.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/associate-en.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-associate-en.html']] },
-      ],
-      register: 'https://anthropic-partners.skilljar.com/claude-certified-associate-foundations-certification',
-      // The certification FAQ lists Associate as the one exam that does not
-      // count towards Partner Network eligibility; say so before the fee.
-      registerNote: 'Does not count towards Claude Partner Network eligibility.',
-    },
+function trainingDashboard(blueprint, lang = 'en') {
+  const ru = lang === 'ru';
+  const practice = ru ? 'practical/ru.html' : 'practical/en.html';
+  const bank = ru ? 'practical/bank-ru.html' : 'practical/bank-en.html';
+  const guide = ru ? 'guides/ru.html' : 'guides/en.html';
+  const labsHref = ru ? 'labs/foundation-ru.html' : 'labs/foundation-en.html';
+  const professionalGuide = ru ? 'guides/professional-ru.html' : 'guides/professional-en.html';
+  const professionalPractice = ru ? 'practical/professional-ru.html' : 'practical/professional-en.html';
+  const domains = Object.entries(blueprint.domains);
+
+  const objectiveMap = domains.map(([id, domain]) => {
+    const rows = domain.objectives.map((objective, index) => {
+      const key = `${id}|${objective}`;
+      return `
+        <li class="objective-row" data-objective-key="${key}">
+          <span class="objective-id">${id}.${index + 1}</span>
+          <span class="objective-text">${objective}</span>
+          <span class="objective-status" aria-live="polite">${ru ? 'не начато' : 'not started'}</span>
+        </li>`;
+    }).join('');
+    return `
+      <section class="objective-domain" data-objective-domain="${id}">
+        <header class="objective-domain-head">
+          <div>
+            <span class="training-domain-id">D${id} · ${domain.weight}%</span>
+            <h3>${domain.name}</h3>
+            <span id="training-domain-mastered-${id}" class="objective-domain-progress">0 / ${domain.objectives.length} ${ru ? 'освоено' : 'mastered'}</span>
+          </div>
+          <div class="objective-domain-actions">
+            <a href="${guide}#domain-${id}-material">${ru ? 'Материал' : 'Material'}</a>
+            <a href="${practice}?mode=study&focus=${id}">${ru ? 'Практика' : 'Drill'}</a>
+          </div>
+        </header>
+        <ol class="objective-list">${rows}</ol>
+      </section>`;
+  }).join('');
+
+  const pathSteps = [
+    ['01', 'Diagnostic', ru ? '20 смешанных вопросов без подсказок.' : '20 mixed questions with no answer reveal.', `${practice}?mode=exam&length=quick`, ru ? 'Начать' : 'Start'],
+    ['02', ru ? 'Материал' : 'Study', ru ? 'Читать только то, что закрывает выявленный пробел.' : 'Read only what closes a diagnosed gap.', guide, ru ? 'Открыть' : 'Open'],
+    ['03', ru ? 'Извлечение из памяти' : 'Retrieval', ru ? 'Короткие weighted drills с rationale каждого варианта.' : 'Short weighted drills with rationale for every option.', `${practice}?mode=study&length=quick`, ru ? 'Практика' : 'Practice'],
+    ['04', 'Hands-on', ru ? '4 задания с deliverable и acceptance criteria.' : 'Four builds with deliverables and acceptance criteria.', labsHref, ru ? 'Лабораторные' : 'Labs', 'training-labs-link'],
+    ['05', ru ? 'Интервальное повторение' : 'Spaced review', ru ? 'Возвращаться к ошибкам по расписанию, а не сразу подряд.' : 'Return to misses on schedule instead of massed repetition.', `${practice}?mode=study&focus=misses`, ru ? 'Повторить' : 'Review', 'training-misses-link'],
+    ['06', 'Full mock', '60 / 120', `${practice}?mode=exam&length=full`, ru ? 'Запустить' : 'Run'],
+    ['07', 'Readiness', ru ? '30 task statements + 4 labs + объяснённые ошибки.' : '30 task statements + 4 labs + explained misses.', 'preflight/architect-foundations.html', ru ? 'Проверить' : 'Check', 'training-readiness-link'],
   ];
 
-  // Every track ships these three, so they stay visible on every card and give
-  // the three cards an identical resource block. Matched by label rather than
-  // by position, so reordering a track's resources cannot silently demote one.
-  const CORE_RESOURCES = ['Study guide', 'Practice exam', 'Question bank'];
+  const methodRows = pathSteps.map(([n, title, copy, href, action, id]) => `
+    <li class="study-method-row">
+      <span class="training-path-number">${n}</span>
+      <strong>${title}</strong>
+      <span>${copy}</span>
+      <a${id ? ` id="${id}"` : ''} href="${href}">${action}</a>
+      ${id === 'training-labs-link' ? '<small id="training-labs-copy">0 / 4</small>' : ''}
+      ${id === 'training-misses-link' ? `<small id="training-misses-copy">${ru ? 'нет повторений' : 'none due'}</small>` : ''}
+      ${id === 'training-readiness-link' ? '<small id="training-readiness-copy">0 / 10</small>' : ''}
+    </li>`).join('');
 
-  // A row with one language has one destination, so the whole row is the link
-  // rather than a chip-sized target beside inert text. Multi-language rows keep
-  // a chip per language, because each one goes somewhere different.
-  const resourceRows = rs => rs.map(r => r.langs.length === 1 ? `
-        <li><a class="cr-row" href="${r.langs[0][1]}"><span class="cr-label">${r.label}</span><span class="cr-langs"><span class="cr-chip">${r.langs[0][0]}</span></span></a></li>` : `
-        <li><span class="cr-label">${r.label}</span><span class="cr-langs">${
-          r.langs.map(([code, href]) => `<a href="${href}">${code}</a>`).join('')
-        }</span></li>`).join('');
+  return `<main class="training-dashboard" data-training-dashboard data-training-lang="${lang}">
+    <section class="study-status">
+      <div class="study-status-head">
+        <div>
+          <strong>CCAR-F · Foundation</strong>
+          <span>60 ${ru ? 'вопросов' : 'questions'} · 120 min · 720 / 1000</span>
+        </div>
+        <div class="study-status-metrics">
+          <span><b id="training-mastered">0 / 30</b> ${ru ? 'освоено' : 'mastered'}</span>
+          <span><b id="training-misses">0</b> ${ru ? 'повторить' : 'due'}</span>
+          <span><b id="training-labs-stat">0 / 4</b> labs</span>
+        </div>
+      </div>
 
-  // The card answers "which track am I?" above the fold, shows the three core
-  // materials, and keeps the rest one disclosure away, so a track with six
-  // materials and a track with four stay the same height in the grid.
-  const trackCard = tr => {
-    const core = CORE_RESOURCES
-      .map(label => tr.resources.find(r => r.label === label))
-      .filter(Boolean);
-    const rest = tr.resources.filter(r => !CORE_RESOURCES.includes(r.label));
-    return `
-    <article class="card chooser-card">
-      <h2 class="chooser-name"><a class="chooser-primary" href="${tr.resources[0].langs[0][1]}">${tr.name}</a></h2>
-      <p class="card-summary">${tr.summary}</p>
-      <dl class="chooser-facts">
-        <div class="chooser-fact"><dt class="chooser-fact-k">Exam</dt><dd class="chooser-fact-v">${tr.code}</dd></div>
-        <div class="chooser-fact"><dt class="chooser-fact-k">Items</dt><dd class="chooser-fact-v">${tr.items}</dd></div>
-        <div class="chooser-fact"><dt class="chooser-fact-k">Languages</dt><dd class="chooser-fact-v">${tr.langs}</dd></div>
-      </dl>
-      <ul class="chooser-res chooser-res-core">${resourceRows(core)}
-      </ul>${rest.length ? `
-      <details class="chooser-more">
-        <summary class="chooser-more-summary">${rest.length} more</summary>
-        <ul class="chooser-res">${resourceRows(rest)}
-        </ul>
-      </details>` : ''}${tr.registerNote ? `
-      <p class="chooser-reg-note">${tr.registerNote}</p>` : ''}
-      <a class="chooser-reg" href="${tr.register}">Register with Anthropic</a>
-    </article>`;
-  };
+      <div class="study-next">
+        <span class="training-panel-label">${ru ? 'Следующее действие' : 'Next action'}</span>
+        <strong id="training-next-title">${ru ? 'Диагностика' : 'Diagnostic'}</strong>
+        <p id="training-next-copy">${ru ? 'Начните с короткой попытки без подсказок, чтобы определить реальные пробелы.' : 'Start with a short no-reveal attempt to identify real gaps.'}</p>
+        <a class="training-btn training-btn-primary" id="training-primary" href="${practice}?mode=exam&length=quick">${ru ? 'Начать' : 'Start'}</a>
+      </div>
 
-  return `<main class="landing">
-  <section class="hero">
-    <p class="eyebrow">Study library</p>
-    <h1>Claude certifications <span class="accent">— choose your track.</span></h1>
-    <p class="lede">Foundation-first Architect preparation with an EN/RU interface over English exam wording, plus secondary reference material for the other certification tracks.</p>
-  </section>
-  <section class="track-chooser" aria-labelledby="chooser-title">
-    <div class="track-heading">
-      <p class="track-label">Choose your track</p>
-      <h2 id="chooser-title">Four exams, three roles</h2>
-      <p>Architect runs Foundations then Professional, so the second builds on the first. Developer and Associate Foundations sit alongside them — different jobs, not further levels: Developer builds on the Claude platform, Associate uses Claude for everyday work without writing code against the API.</p>
-    </div>
-    <div class="cards chooser-cards">${TRACKS.map(trackCard).join('')}</div>
-  </section>
-  <section class="report-entry" aria-labelledby="report-entry-title">
-    <div>
-      <p class="track-label">After the exam</p>
-      <h2 id="report-entry-title">Turn your score report into a study plan.</h2>
-      <p>Upload the PDF Pearson VUE sends you and get the readings and practice questions that target your weakest objectives — the report never leaves your device.</p>
-    </div>
-    <a class="chooser-link" href="score-report.html">Upload a score report</a>
-  </section>
-</main>`;
+      <div class="training-progress-track" aria-hidden="true"><span id="training-progress-fill"></span></div>
+      <p class="study-attempt" id="training-progress-detail">${ru ? 'Активной попытки нет.' : 'No active attempt.'}</p>
+    </section>
+
+    <section class="training-section objective-map" aria-labelledby="objective-map-title">
+      <div class="training-section-head">
+        <div>
+          <span class="training-panel-label">${ru ? 'Прогресс' : 'Progress'}</span>
+          <h2 id="objective-map-title">30 task statements</h2>
+        </div>
+      </div>
+      <div class="objective-domains">${objectiveMap}</div>
+    </section>
+
+    <section class="training-section" aria-labelledby="study-materials-title">
+      <div class="training-section-head">
+        <div>
+          <span class="training-panel-label">${ru ? 'Материалы' : 'Materials'}</span>
+          <h2 id="study-materials-title">${ru ? 'Учить и проверять' : 'Study and verify'}</h2>
+        </div>
+      </div>
+      <div class="material-list">
+        <a href="${guide}"><strong>${ru ? 'Foundation guide' : 'Foundation guide'}</strong><span>${ru ? 'Теория, decision rules, worked examples, domain notes.' : 'Theory, decision rules, worked examples, domain notes.'}</span></a>
+        <a href="${labsHref}"><strong>Hands-on labs</strong><span>${ru ? '4 практических задания с acceptance criteria.' : 'Four practical builds with acceptance criteria.'}</span></a>
+        <a href="${bank}"><strong>${ru ? 'Банк вопросов' : 'Question bank'}</strong><span>${ru ? 'Поиск по task statement, варианты и rationale.' : 'Browse task statements, options, and rationale.'}</span></a>
+        <a href="cheatsheet/${lang}.html"><strong>Cheatsheet</strong><span>${ru ? 'Краткое повторение decision rules.' : 'Compact review of decision rules.'}</span></a>
+        <a href="score-report.html"><strong>Score report</strong><span>${ru ? 'Привязать официальный результат к слабым objectives.' : 'Map an official score report to weak objectives.'}</span></a>
+      </div>
+    </section>
+
+    <details class="training-section study-method">
+      <summary>${ru ? 'Метод обучения' : 'Training method'}</summary>
+      <ol class="study-method-list">${methodRows}</ol>
+    </details>
+
+    <section class="professional-row" id="professional-stage">
+      <div>
+        <span class="training-panel-label">CCAR-P</span>
+        <strong>Professional</strong>
+        <span id="professional-stage-status">${ru ? 'Откроется после Foundation mastery.' : 'Unlocks after Foundation mastery.'}</span>
+      </div>
+      <div class="training-stage-actions">
+        <a class="training-btn disabled" id="professional-guide-link" aria-disabled="true" href="${professionalGuide}">Guide</a>
+        <a class="training-btn disabled" id="professional-practice-link" aria-disabled="true" href="${professionalPractice}?mode=study&length=quick">Practice</a>
+      </div>
+    </section>
+  </main>`;
 }
 
 const REPORT_THEME_READINGS = {
@@ -747,28 +622,6 @@ async function buildScoreReportData() {
     practiceHref: 'practical/professional-en.html',
     bankHref: 'practical/bank-professional-en.html',
   });
-  exams['CCDV-F'] = await buildBlueprintExamData({
-    code: 'CCDV-F',
-    name: 'Claude Certified Developer Foundations',
-    objectivesFile: path.join('ccdf', 'data', 'objectives.json'),
-    guidanceFile: path.join('ccdf', 'data', 'objective_guidance.json'),
-    bankFile: path.join('ccdf', 'data', 'questions.json'),
-    guideFile: path.join('ccdf', 'guide_en.md'),
-    guideHref: 'guides/developer-en.html',
-    practiceHref: 'practical/developer-en.html',
-    bankHref: 'practical/bank-developer-en.html',
-  });
-  exams['CCAO-F'] = await buildBlueprintExamData({
-    code: 'CCAO-F',
-    name: 'Claude Certified Associate Foundations',
-    objectivesFile: path.join('ccaof', 'data', 'objectives.json'),
-    guidanceFile: path.join('ccaof', 'data', 'objective_guidance.json'),
-    bankFile: path.join('ccaof', 'data', 'questions.json'),
-    guideFile: path.join('ccaof', 'guide_en.md'),
-    guideHref: 'guides/associate-en.html',
-    practiceHref: 'practical/associate-en.html',
-    bankHref: 'practical/bank-associate-en.html',
-  });
   return { version: 2, exams };
 }
 
@@ -776,8 +629,8 @@ function scoreReportPage() {
   return `<main class="report-page">
   <div id="report-intro">
     <section class="report-hero">
-      <h1>Turn your score report into a study plan.</h1>
-      <p class="report-lede">Upload the PDF Pearson VUE sent you and get the guide readings and practice questions for your weakest objectives.</p>
+      <h1>Score report</h1>
+      <p class="report-lede">Upload a CCAR-F or CCAR-P PDF to map weak objectives to the relevant material and practice.</p>
     </section>
     <section class="report-upload" aria-label="Upload your report">
       <label class="file-picker" for="report-file"><span>Upload score report</span><input id="report-file" type="file" accept="application/pdf,.pdf"></label>
@@ -794,8 +647,6 @@ function scoreReportPage() {
         <option value="">Choose an exam</option>
         <option value="CCAR-F">Architect Foundations (CCAR-F)</option>
         <option value="CCAR-P">Architect Professional (CCAR-P)</option>
-        <option value="CCDV-F">Developer Foundations (CCDV-F)</option>
-        <option value="CCAO-F">Associate Foundations (CCAO-F)</option>
       </select>
     </label>
     <div class="report-actions"><button id="confirm-exam" class="report-primary" type="button" disabled>Continue</button></div>
@@ -852,19 +703,17 @@ const PREFLIGHT_TRACKS = [
     slug: 'architect-foundations',
     files: ['architect-foundations.html', 'en.html'],
     storageKey: 'ccaf-preflight:state',
-    title: 'Preflight checklist — Claude Certified Architect – Foundations · Claude Architect Trainer',
+    title: 'Readiness — Claude Certified Architect – Foundations · CCAR Training',
     eyebrow: 'Architect &mdash; Foundations &middot; CCAR-F',
-    heading: 'Ten checks before <span class="accent">you book the slot.</span>',
-    lede: 'You sit this as an Anthropic partner: register through Partner Academy, and your tier&rsquo;s discount comes off at checkout. Retakes wait 14, then 30, then 90 days &mdash; four attempts a year, $125 list each. Tick what is true and see what is left.',
-    scope: 'This checklist is for <strong>Architect &mdash; Foundations</strong> only. <a href="preflight/architect-professional.html">Architect &mdash; Professional</a> and <a href="preflight/developer-foundations.html">Developer &mdash; Foundations</a> are separate exams with their own blueprints, so the domains and prep courses below do not carry over.',
-    note: 'Multiple-choice <em>and</em> multiple-response. 4 scenarios drawn from a bank of 6. Delivered by Pearson VUE — OnVUE at home or a test centre.',
+    heading: 'Foundation <span class="accent">readiness.</span>',
+    lede: 'Mark a check only when you can demonstrate the skill without relying on answer memorization.',
+    scope: '<strong>CCAR-F only.</strong> Complete this before moving to Architect &mdash; Professional.',
+    note: 'Practice both multiple-choice and multiple-response. Train against the five-domain blueprint and the published scenario structure.',
     facts: [
       { k: 'Code', v: 'CCAR-F' },
       { k: 'Questions', v: '60' },
       { k: 'Time', v: '120 min' },
       { k: 'Pass', v: '720 / 1000' },
-      { k: 'Fee', v: '$125' },
-      { k: 'Valid', v: '12 months' },
     ],
     domains: [
       { n: '01', name: 'Agentic Architecture &amp; Orchestration', weight: 27 },
@@ -876,102 +725,72 @@ const PREFLIGHT_TRACKS = [
     items: [
       {
         n: '01',
-        label: 'Prep courses that carry weight',
-        detail: `Seven exist, none required. Highest yield: <strong>Claude Code in Action</strong> (Domain 3), <strong>Intro to MCP</strong> (Domain 2), <strong>Building with the Claude API</strong> (Domains 2 and 4). Skim the rest. ${extLink('https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses', 'Courses')}`,
+        label: 'Official guide completed',
+        detail: 'Read the current CCAR-F exam guide and map every task statement to the study guide.',
       },
       {
         n: '02',
-        label: 'Bonus courses done',
-        detail: `Off the prep page, on the blueprint: ${extLink('https://anthropic-partners.skilljar.com/introduction-to-subagents', 'Introduction to subagents')} (Domain 1) and ${extLink('https://anthropic-partners.skilljar.com/model-context-protocol-advanced-topics', 'MCP: Advanced Topics')} (Domain 2).`,
+        label: 'D1 — Agent architecture and orchestration',
+        detail: 'Choose agent loops, decomposition, coordinator/subagent boundaries, hooks, handoffs, and session strategy from a scenario and defend the trade-off.',
       },
       {
         n: '03',
-        label: 'Read the exam guide end-to-end',
-        detail: `v1.0, July 2026. Source of truth. Not skimmed. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification', 'Official guide')} · <a href="guides/en.html">study guide</a>`,
+        label: 'D2 — Tool design and MCP',
+        detail: 'Design narrow tool interfaces, classify errors, distribute tools by responsibility, and choose MCP or built-in tools for the stated constraint.',
       },
       {
         n: '04',
-        label: 'Can name and explain all 5 domains',
-        detail: 'Without notes. Use the blueprint above to self-check.',
+        label: 'D3 — Claude Code workflows',
+        detail: 'Reason about CLAUDE.md scope, rules, skills and commands, plan vs direct execution, iterative review, and CI/CD integration.',
       },
       {
         n: '05',
-        label: 'Drilled the question bank by domain',
-        detail: `Work the <a href="practical/bank-en.html">question bank</a> a domain at a time and read the explanation on every miss. Anthropic&rsquo;s self-service practice exam is retired; what is left officially is the guide&rsquo;s own samples and the graded quiz ending each prep course. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification', 'Get the guide')}`,
+        label: 'D4 — Prompting and structured output',
+        detail: 'Choose explicit criteria, few-shot examples, schema/tool enforcement, validation and retry loops, batch strategy, and independent review patterns.',
       },
       {
         n: '06',
-        label: 'Sat a full-length attempt under time',
-        detail: 'Sixty questions in 120 minutes on the <a href="practical/en.html">practice exam</a>, drawn fresh each attempt so repeats stay useful — then review by failure type rather than by topic. Community banks drill recall; only a full-length run calibrates your pacing.',
+        label: 'D5 — Context and reliability',
+        detail: 'Preserve critical context, propagate errors, resolve ambiguity, calibrate human review, and retain provenance across multi-source work.',
       },
       {
         n: '07',
-        label: 'Registered and slot booked',
-        detail: `Check out in Partner Academy with your partner-company email so the tier discount applies, then schedule in Pearson VUE using the credentials it emails you. Reschedule 24h+ ahead or forfeit the fee. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification', 'Register')}`,
+        label: 'Multiple-response format practiced',
+        detail: 'Answer select-N items by evaluating every option against the scenario constraint rather than selecting everything that sounds plausible.',
       },
       {
         n: '08',
-        label: 'OnVUE system test passed',
-        detail: `On the actual machine and network you will use. Webcam, mic, and OnVUE domains reachable. ${extLink('https://www.pearsonvue.com/us/en/anthropic.html', 'Pearson VUE')}`,
+        label: 'Hands-on labs completed',
+        detail: 'Complete all four practical labs and check each deliverable against its acceptance criteria: Multi-Tool Agent, Claude Code Team Workflow, Structured Data Extraction, and Multi-Agent Research.',
       },
       {
         n: '09',
-        label: 'Workspace ready',
-        detail: 'Government photo ID matching your registration name. Quiet room, no second monitor, phone away.',
+        label: 'Full mock completed under time',
+        detail: 'Complete 60 questions in 120 minutes in exam mode. Treat the scaled practice score as a training signal, not a prediction of the official score.',
       },
       {
         n: '10',
-        label: 'You would expect to pass right now',
-        detail: 'Not hope. Expect.',
+        label: 'Misses explained from first principles',
+        detail: 'For repeated misses, explain why the correct choice satisfies the constraint and why each distractor fails. Do not memorize option letters.',
       },
     ],
     resources: [
       {
-        group: 'Study materials',
+        group: 'Training',
         items: [
-          { name: 'Study guide', href: 'guides/en.html', note: 'The full Foundations guide, about a 2-hour read. The public trainer exposes EN and a RU interface over the same English exam terminology. The print-ready PDF remains English.', internal: true },
-          { name: 'Practice exam', href: 'practical/en.html', note: '60 questions drawn <strong>fresh on every attempt</strong> from a bank of 600+ English questions, scored per domain to 1000. EN and RU share the same English question bank and the same saved attempt state.', internal: true },
-          { name: 'Question bank', href: 'practical/bank-en.html', note: 'The same 600+ English questions as a browsable list, filtered by domain and searched by text, with the explanation on every item. RU changes interface chrome, not exam wording.', internal: true },
-          { name: 'Cheatsheet', href: 'cheatsheet/en.html', note: 'One-page recap of the five domains. The terminology stays English to match the exam.', internal: true },
+          { name: 'Study guide', href: 'guides/en.html', note: 'Task statements, decision rules, and worked reasoning.', internal: true },
+          { name: 'Practice', href: 'practical/en.html', note: 'Weighted study drills and full timed attempts.', internal: true },
+          { name: 'Question bank', href: 'practical/bank-en.html', note: 'Browse by domain and inspect explanations.', internal: true },
+          { name: 'Cheatsheet', href: 'cheatsheet/en.html', note: 'Compact recall reference.', internal: true },
         ],
       },
       {
-        group: 'Before you trust a question bank',
+        group: 'Source of truth',
         items: [
           {
-            name: 'Drill them for recall; settle arguments against the official guide',
+            name: 'Official CCAR-F exam guide',
             href: 'https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification',
-            note: 'Some community banks encode reasoning that contradicts Anthropic&rsquo;s own guidance. Where a bank and the official guide disagree, the guide wins — it is what the exam is written against.',
-          },
-        ],
-      },
-      {
-        group: 'Drill after you have read the guide',
-        items: [
-          {
-            name: 'claudecertificationguide.com — diagnostic',
-            href: 'https://claudecertificationguide.com/learn/diagnostic',
-            note: 'Short. Use it to gauge where you stand before spending time on full-length mocks.',
-          },
-          {
-            name: 'claudecertificationguide.com — mock exam',
-            href: 'https://claudecertificationguide.com/mock-exam',
-            note: 'Full-length, and its questions rotate between attempts, so it stays useful after the first run.',
-          },
-          {
-            name: 'krog.app',
-            href: 'https://krog.app/exam/6a1a0c49ca96069990f7e8bc',
-            note: '113 questions organised by the five domains, built by a Ravn engineer.',
-          },
-        ],
-      },
-      {
-        group: 'Video',
-        items: [
-          {
-            name: 'CCAF study playlist',
-            href: 'https://www.youtube.com/playlist?list=PLmiDJB5zE0KGwFtDCSqHfQG7SV6VeQ_31',
-            note: 'Community-curated audiovisual material.',
+            note: 'Use the current official guide when any study material conflicts with it.',
           },
         ],
       },
@@ -981,19 +800,17 @@ const PREFLIGHT_TRACKS = [
     slug: 'architect-professional',
     files: ['architect-professional.html'],
     storageKey: 'ccarp-preflight:state',
-    title: 'Preflight checklist — Claude Certified Architect – Professional · Claude Architect Trainer',
+    title: 'Readiness — Claude Certified Architect – Professional · CCAR Training',
     eyebrow: 'Architect &mdash; Professional &middot; CCAR-P',
-    heading: 'Ten checks before <span class="accent">you book the slot.</span>',
-    lede: 'You sit this as an Anthropic partner: register through Partner Academy, and your tier&rsquo;s discount comes off at checkout. Retakes wait 14, then 30, then 90 days &mdash; four attempts a year, $175 list each. Tick what is true and see what is left.',
-    scope: 'This checklist is for <strong>Architect &mdash; Professional</strong> only. <a href="preflight/architect-foundations.html">Architect &mdash; Foundations</a> and <a href="preflight/developer-foundations.html">Developer &mdash; Foundations</a> are separate exams with their own blueprints, so the domains and prep courses below do not carry over.',
-    note: 'Multiple-choice <em>and</em> multiple-response; every item states how many responses to select. Closed book, English only. Delivered by Pearson VUE — online proctored or at a test centre.',
+    heading: 'Professional <span class="accent">readiness.</span>',
+    lede: 'Mark a check only when you can make and defend the architecture decision from an unfamiliar scenario.',
+    scope: '<strong>CCAR-P only.</strong> Stage 2 after Architect &mdash; Foundations.',
+    note: 'Train architecture trade-offs, integration, evaluation, governance, lifecycle, and operational enablement across all seven domains.',
     facts: [
       { k: 'Code', v: 'CCAR-P' },
       { k: 'Questions', v: '63' },
       { k: 'Time', v: '120 min' },
       { k: 'Pass', v: '720 / 1000' },
-      { k: 'Fee', v: '$175' },
-      { k: 'Valid', v: '12 months' },
     ],
     domains: [
       { n: '01', name: 'Solution Design &amp; Architecture', weight: 17 },
@@ -1007,204 +824,71 @@ const PREFLIGHT_TRACKS = [
     items: [
       {
         n: '01',
-        label: 'Official prep path finished',
-        detail: `Five courses, about 12 hours. Not required, and the only material written against the Professional blueprint. ${extLink('https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional', 'Prep path')}`,
+        label: 'Current official guide completed',
+        detail: 'Read the current CCAR-P exam guide and map every task statement to the study guide.',
       },
       {
         n: '02',
-        label: 'Read the exam guide end-to-end',
-        detail: `Effective July 2026. Source of truth. Not skimmed. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification', 'Official guide')} · <a href="guides/professional-en.html">study guide</a>`,
+        label: 'D1 — Solution design and architecture',
+        detail: 'Translate a business constraint into an end-to-end Claude architecture and defend workflow vs agentic vs augmented-LLM patterns.',
       },
       {
         n: '03',
-        label: 'Can name and explain all 7 domains',
-        detail: 'Without notes. Integration and Solution Design carry 36% between them — budget your study by the weights above, not by what you enjoy.',
+        label: 'D2 — Models, prompting, and context',
+        detail: 'Choose model tier, prompt strategy, context policy, caching, and modular prompt or Skill design from explicit cost, latency, and quality constraints.',
       },
       {
         n: '04',
-        label: 'Worked the practice exam',
-        detail: 'Under the 120-minute limit, then reviewed by failure type rather than topic, repairing weak domains in the <a href="practical/bank-professional-en.html">question bank</a>. The community mocks listed for Foundations target CCAR-F, so they do not calibrate this exam. <a href="practical/professional-en.html">Practice exam</a>',
+        label: 'D3 — Integration',
+        detail: 'Reason about auth, capability bloat, RAG shape, retrieval, observability, progressive discovery, and MCP/API/CLI/agent-to-agent boundaries.',
       },
       {
         n: '05',
-        label: 'Eligibility confirmed',
-        detail: 'Registration requires a recognised Claude Partner Network company email. Personal addresses are rejected, and adding a domain takes 7&ndash;10 days — start this before you plan a date.',
+        label: 'D4 — Evaluation and optimization',
+        detail: 'Define metrics, datasets, mixed evaluation methods, A/B tests, diagnosis strategy, and cost/latency/quality optimization.',
       },
       {
         n: '06',
-        label: 'Can defend an end-to-end design out loud',
-        detail: 'From a short business brief: the pattern you chose, the integration surface, how you would evaluate it, the controls, and the rollout — plus the trade-off each decision cost you.',
+        label: 'D5 — Governance, safety, and risk',
+        detail: 'Place guardrails at the correct control point, identify failure modes, choose HITL, and reason about compliance, bias, fairness, and transparency.',
       },
       {
         n: '07',
-        label: 'Registered and slot booked',
-        detail: `Check out in Partner Academy with your partner-company email so the tier discount applies, then schedule in Pearson VUE using the credentials it emails you. Reschedule 24h+ ahead or forfeit the fee. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification', 'Register')}`,
+        label: 'D6 — Stakeholders and lifecycle',
+        detail: 'Gather requirements, communicate trade-offs, define SLAs, document the design, and plan handoff, monitoring, and iteration.',
       },
       {
         n: '08',
-        label: 'OnVUE system test passed',
-        detail: `On the actual machine and network you will use. Webcam, mic, and OnVUE domains reachable. Corporate networks often block them — a test centre is the safer fallback. ${extLink('https://www.pearsonvue.com/us/en/anthropic.html', 'Pearson VUE')}`,
+        label: 'D7 — Developer productivity and operations',
+        detail: 'Configure team tooling, improve engineering workflows, and diagnose operational issues without over-automating unsafe decisions.',
       },
       {
         n: '09',
-        label: 'Workspace ready',
-        detail: 'Government photo ID matching your registration name. Quiet room, no second monitor, phone away. Allow about 135 minutes on site for a 120-minute exam.',
+        label: 'Full mock completed under time',
+        detail: 'Complete 63 questions in 120 minutes in exam mode, including multiple-response items. Use the result as a training signal, not an official score prediction.',
       },
       {
         n: '10',
-        label: 'You would expect to pass right now',
-        detail: 'Not hope. Expect.',
+        label: 'Architecture trade-offs can be defended',
+        detail: 'For repeated misses, state the governing constraint, the rejected alternatives, and the operational consequence of the chosen design.',
       },
     ],
     resources: [
       {
-        group: 'Study materials',
+        group: 'Training',
         items: [
-          { name: 'Study guide', href: 'guides/professional-en.html', note: 'The full Professional guide, English only.', internal: true },
-          { name: 'Practice exam', href: 'practical/professional-en.html', note: '63 questions drawn fresh on every attempt from a bank of 421, scored to 1000.', internal: true },
-          { name: 'Question bank', href: 'practical/bank-professional-en.html', note: 'All 421 questions as a browsable list, filtered by domain and searched by text, with the explanation on every item.', internal: true },
+          { name: 'Study guide', href: 'guides/professional-en.html', note: 'Seven-domain task statements and decision rules.', internal: true },
+          { name: 'Practice', href: 'practical/professional-en.html', note: 'Weighted study drills and full timed attempts.', internal: true },
+          { name: 'Question bank', href: 'practical/bank-professional-en.html', note: 'Browse by domain and inspect explanations.', internal: true },
         ],
       },
       {
-        group: 'Official preparation',
+        group: 'Source of truth',
         items: [
           {
-            name: 'Professional prep path',
-            href: 'https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional',
-            note: 'Five courses, about 12 hours. Optional, and the only Professional-specific course material.',
-          },
-          {
-            name: 'Certification and registration page',
+            name: 'Official CCAR-P exam guide',
             href: 'https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification',
-            note: 'The exam guide and the checkout that unlocks Pearson VUE scheduling.',
-          },
-          {
-            name: 'Certification FAQ',
-            href: 'https://anthropic-partners.skilljar.com/page/faq-certifications',
-            note: 'Eligibility, retakes, validity, proctoring, and badging.',
-          },
-          {
-            name: 'Computer and network setup',
-            href: 'https://anthropic-partners.skilljar.com/page/computer-and-network-setup',
-            note: 'Read this before you book online proctoring.',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'developer-foundations',
-    files: ['developer-foundations.html'],
-    storageKey: 'ccdvf-preflight:state',
-    title: 'Preflight checklist — Claude Certified Developer – Foundations · Claude Architect Trainer',
-    eyebrow: 'Developer &mdash; Foundations &middot; CCDV-F',
-    heading: 'Ten checks before <span class="accent">you book the slot.</span>',
-    lede: 'You sit this as an Anthropic partner: register through Partner Academy, and your tier&rsquo;s discount comes off at checkout. Retakes wait 14, then 30, then 90 days &mdash; four attempts a year, $125 list each. Tick what is true and see what is left.',
-    scope: 'This checklist is for <strong>Developer &mdash; Foundations</strong> only. <a href="preflight/architect-foundations.html">Architect &mdash; Foundations</a> and <a href="preflight/architect-professional.html">Architect &mdash; Professional</a> are separate exams with their own blueprints, so the domains and prep courses below do not carry over.',
-    note: 'Multiple-choice <em>and</em> multiple-response; every item states how many responses to select. Closed book, English only. Delivered by Pearson VUE — online proctored or at a test centre.',
-    facts: [
-      { k: 'Code', v: 'CCDV-F' },
-      { k: 'Questions', v: '53' },
-      { k: 'Time', v: '120 min' },
-      { k: 'Pass', v: '720 / 1000' },
-      { k: 'Fee', v: '$125' },
-      { k: 'Valid', v: '12 months' },
-    ],
-    domains: [
-      // Quoted so a whole-number weight keeps the blueprint's decimal — 11.0,
-      // not 11 — next to the seven fractional rows.
-      { n: '01', name: 'Agents and Workflows', weight: '14.7' },
-      { n: '02', name: 'Applications and Integration', weight: '33.1' },
-      { n: '03', name: 'Claude Code', weight: '3.1' },
-      { n: '04', name: 'Eval, Testing and Debugging', weight: '2.6' },
-      { n: '05', name: 'Model Selection and Optimization', weight: '16.8' },
-      { n: '06', name: 'Prompt and Context Engineering', weight: '11.0' },
-      { n: '07', name: 'Security and Safety', weight: '8.1' },
-      { n: '08', name: 'Tools and MCPs', weight: '10.6' },
-    ],
-    items: [
-      {
-        n: '01',
-        label: 'Official prep path finished',
-        detail: `Five modules, about 12 hours 40 minutes. Not required, and the only material written against the Developer blueprint. ${extLink('https://anthropic-partners.skilljar.com/path/claude-certified-developer-foundations', 'Prep path')}`,
-      },
-      {
-        n: '02',
-        label: 'Read the exam guide end-to-end',
-        detail: `v1.0, effective July 2026. Source of truth. Not skimmed. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification', 'Official guide')} · <a href="guides/developer-en.html">study guide</a>`,
-      },
-      {
-        n: '03',
-        label: 'Can name and explain all 8 domains',
-        detail: 'Without notes. Applications and Integration alone is a third of the exam, while Claude Code and Eval together are under 6% — study to the weights above, not to the course hours.',
-      },
-      {
-        n: '04',
-        label: 'Drilled the question bank by domain',
-        detail: 'Work the <a href="practical/bank-developer-en.html">question bank</a> a domain at a time and read the explanation on every miss. Officially there are three sample items with full rationale in Section 8 of the exam guide — read those in the source, since the answer key is the clearest signal available about how items are built.',
-      },
-      {
-        n: '05',
-        label: 'Practice material worked through',
-        detail: 'Draw a full 53-question set from the <a href="practical/developer-en.html">Developer practice exam</a> under time. The CCAR-F exam is a different blueprint — do not substitute it. No cheatsheet ships for this track yet.',
-      },
-      {
-        n: '06',
-        label: 'Built it, not just read it',
-        detail: 'One reference application you wrote yourself: the agent loop, a tool schema, a consumed stream, batch and caching, and a trace you read to find a failing step.',
-      },
-      {
-        n: '07',
-        label: 'Registered and slot booked',
-        detail: `Check out in Partner Academy with your partner-company email so the tier discount applies, then schedule in Pearson VUE using the credentials it emails you. Reschedule 24h+ ahead or forfeit the fee — a no-show forfeits it too. ${extLink('https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification', 'Register')}`,
-      },
-      {
-        n: '08',
-        label: 'OnVUE system test passed',
-        detail: `On the actual machine and network you will use. Webcam, mic, and OnVUE domains reachable. Corporate networks often block them — a test centre is the safer fallback. ${extLink('https://www.pearsonvue.com/us/en/anthropic.html', 'Pearson VUE')}`,
-      },
-      {
-        n: '09',
-        label: 'Workspace ready',
-        detail: 'Government photo ID matching your registration name, exactly. Quiet room, no second monitor, phone away. You must accept the non-disclosure agreement before the exam starts; declining ends the session with no refund.',
-      },
-      {
-        n: '10',
-        label: 'You would expect to pass right now',
-        detail: 'Not hope. Expect.',
-      },
-    ],
-    resources: [
-      {
-        group: 'Study materials',
-        items: [
-          { name: 'Study guide', href: 'guides/developer-en.html', note: 'The full Developer guide, English only.', internal: true },
-          { name: 'Practice exam', href: 'practical/developer-en.html', note: '53 questions drawn fresh on every attempt from a bank of 475, weighted to the eight domains and scored to 1000.', internal: true },
-          { name: 'Question bank', href: 'practical/bank-developer-en.html', note: 'All 475 questions as a browsable list, filtered by domain and searched by text, with the explanation on every item.', internal: true },
-        ],
-      },
-      {
-        group: 'Official preparation',
-        items: [
-          {
-            name: 'Developer prep path',
-            href: 'https://anthropic-partners.skilljar.com/path/claude-certified-developer-foundations',
-            note: 'Five modules, about 12 hours 40 minutes. Organised by topic, not by domain.',
-          },
-          {
-            name: 'Certification and registration page',
-            href: 'https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification',
-            note: 'The exam guide and the checkout that unlocks Pearson VUE scheduling.',
-          },
-          {
-            name: 'Certification FAQ',
-            href: 'https://anthropic-partners.skilljar.com/page/faq-certifications',
-            note: 'Eligibility, retakes, validity, proctoring, and badging.',
-          },
-          {
-            name: 'Computer and network setup',
-            href: 'https://anthropic-partners.skilljar.com/page/computer-and-network-setup',
-            note: 'Read this before you book online proctoring.',
+            note: 'Use the current official guide when any study material conflicts with it.',
           },
         ],
       },
@@ -1442,8 +1126,6 @@ async function buildGuides() {
   const guides = [
     ...LANGS.map(l => ({ ...l, output: l.code })),
     ...PROFESSIONAL_GUIDES,
-    ...DEVELOPER_GUIDES,
-    ...ASSOCIATE_GUIDES,
   ];
   for (const l of guides) {
     const src = path.join(ROOT, l.guide);
@@ -1501,7 +1183,7 @@ async function buildGuides() {
     // exam page has nothing left to download and never shows its skeleton.
     const ownBank = bankHrefs[`practical/${l.output}.html`];
     await fs.writeFile(out, pageShell({
-      title: `${l.title || l.label} — Claude Certified Architect · Claude Architect Trainer`,
+      title: `${l.title || l.label} — Claude Certified Architect · CCAR Training`,
       lang: l.code,
       baseHref: SITE_BASE_HREF,
       extraHead: ownBank ? `<link rel="prefetch" as="fetch" href="${ownBank}">
@@ -1582,8 +1264,6 @@ async function copyScoreReport() {
   // drift would silently produce dead links, so verify them post-build.
   const guidePages = {
     'CCAR-P': 'guides/professional-en.html',
-    'CCDV-F': 'guides/developer-en.html',
-    'CCAO-F': 'guides/associate-en.html',
   };
   for (const [code, page] of Object.entries(guidePages)) {
     const html = await fs.readFile(path.join(DOCS, page), 'utf8');
@@ -1594,7 +1274,7 @@ async function copyScoreReport() {
   await fs.copyFile(path.join(ROOT, 'scripts', 'score-report.js'), path.join(DOCS, 'score-report.js'));
   await fs.writeFile(path.join(DOCS, 'score-report-data.json'), JSON.stringify(data));
   await fs.writeFile(path.join(DOCS, 'score-report.html'), pageShell({
-    title: 'Score Report · Claude Architect Trainer',
+    title: 'Score Report · CCAR Training',
     lang: 'en',
     baseHref: SITE_BASE_HREF,
     body: `${header('en')}${scoreReportPage()}`,
@@ -1629,8 +1309,6 @@ async function collectBankHrefs() {
   const pages = [
     ...LANGS.map(l => ({ ...l, output: l.code })),
     ...PROFESSIONAL_GUIDES,
-    ...DEVELOPER_GUIDES,
-    ...ASSOCIATE_GUIDES,
   ];
   const map = {};
   for (const l of pages) {
@@ -1662,7 +1340,7 @@ async function copyPracticalTests() {
         <p><a href="index.html">← back to home</a></p>
       </main>`;
       await fs.writeFile(dest, pageShell({
-        title: `${l.label} — Practical exam (pending) · Claude Architect Trainer`,
+        title: `${l.label} — Practical exam (pending) · CCAR Training`,
         lang: l.code,
         baseHref: SITE_BASE_HREF,
         body,
@@ -1671,14 +1349,13 @@ async function copyPracticalTests() {
   }
 }
 
-// Single-language exams are keyed on `output`
-// (professional-en.html, developer-en.html, associate-en.html), never on `code` — their entries
-// use code 'en', which would overwrite the Foundations English exam that
-// copyPracticalTests() just wrote.
+// Professional pages are keyed on `output` (professional-en.html /
+// professional-ru.html), never on `code`, so they cannot overwrite the
+// Foundation EN/RU practice pages.
 async function copyProfessionalExams() {
   const out = path.join(DOCS, 'practical');
   await ensureDir(out);
-  for (const l of [...PROFESSIONAL_GUIDES, ...DEVELOPER_GUIDES, ...ASSOCIATE_GUIDES]) {
+  for (const l of PROFESSIONAL_GUIDES) {
     if (!l.test) continue;
     const src = path.join(ROOT, l.test);
     if (l.bank && await exists(path.join(ROOT, l.bank))) {
@@ -1694,7 +1371,7 @@ async function copyProfessionalExams() {
         <p><a href="index.html">← back to home</a></p>
       </main>`;
       await fs.writeFile(dest, pageShell({
-        title: `${l.label} — Professional practice exam (pending) · Claude Architect Trainer`,
+        title: `${l.label} — Professional practice exam (pending) · CCAR Training`,
         lang: l.code,
         baseHref: SITE_BASE_HREF,
         body,
@@ -1718,7 +1395,7 @@ async function copyCheatsheets() {
         <p><a href="index.html">← back to home</a></p>
       </main>`;
       await fs.writeFile(dest, pageShell({
-        title: `${l.label} — Cheatsheet (pending) · Claude Architect Trainer`,
+        title: `${l.label} — Cheatsheet (pending) · CCAR Training`,
         lang: l.code,
         baseHref: SITE_BASE_HREF,
         body,
@@ -1739,9 +1416,14 @@ async function copyPdfs() {
 
 async function removeRetiredPublicLocales() {
   const retired = [
+    'catalog.html',
     'guides/es.html', 'guides/pt.html',
+    'guides/developer-en.html', 'guides/associate-en.html',
     'practical/es.html', 'practical/pt.html',
     'practical/bank-es.html', 'practical/bank-pt.html',
+    'practical/developer-en.html', 'practical/bank-developer-en.html',
+    'practical/associate-en.html', 'practical/bank-associate-en.html',
+    'preflight/developer-foundations.html',
     'cheatsheet/es.html', 'cheatsheet/pt.html',
     'pdf/guide_es.pdf', 'pdf/guide_pt.pdf',
   ];
@@ -1751,22 +1433,16 @@ async function removeRetiredPublicLocales() {
 async function writeIndex() {
   const blueprint = JSON.parse(await fs.readFile(path.join(ROOT, 'ccaf', 'data', 'blueprint.json'), 'utf8'));
   await fs.writeFile(path.join(DOCS, 'index.html'), pageShell({
-    title: 'Claude Architect Trainer · CCAR-F',
+    title: 'CCAR-F · Training',
     lang: 'en',
     baseHref: SITE_BASE_HREF,
     body: `${header('en', 'ru.html')}${trainingDashboard(blueprint, 'en')}`,
   }));
   await fs.writeFile(path.join(DOCS, 'ru.html'), pageShell({
-    title: 'Claude Architect Trainer · CCAR-F · RU',
+    title: 'CCAR-F · Training · RU',
     lang: 'ru',
     baseHref: SITE_BASE_HREF,
     body: `${header('ru', 'index.html')}${trainingDashboard(blueprint, 'ru')}`,
-  }));
-  await fs.writeFile(path.join(DOCS, 'catalog.html'), pageShell({
-    title: 'Study Library · Claude Architect Trainer',
-    lang: 'en',
-    baseHref: SITE_BASE_HREF,
-    body: `${header('en')}${landing()}`,
   }));
   await fs.writeFile(path.join(DOCS, '.nojekyll'), '');
 }
@@ -1780,6 +1456,7 @@ async function main() {
   await copyBrowserDependencies();
   await writeIndex();
   await buildGuides();
+  await buildFoundationLabs();
   await copyScoreReport();
   await copyPracticalTests();
   await copyProfessionalExams();

@@ -1,0 +1,10 @@
+{
+  "validator": "02-provenance-scope",
+  "status": "PASS",
+  "summary": "Official exam scope is separated from training policy, community reports, and non-training material.",
+  "findings": [],
+  "metrics": {
+    "scanned_files": 3,
+    "admin_ui_hits": 0
+  }
+}

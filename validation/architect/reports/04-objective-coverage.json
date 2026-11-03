@@ -1,0 +1,10 @@
+{
+  "validator": "04-objective-coverage",
+  "status": "PASS",
+  "summary": "Every official task statement/objective has guide coverage and repeated practice coverage.",
+  "findings": [],
+  "metrics": {
+    "foundation_mapped": 481,
+    "professional_mapped": 421
+  }
+}

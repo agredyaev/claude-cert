@@ -1,0 +1,476 @@
+[
+  {
+    "id": "mr1-001",
+    "domain": 1,
+    "task_id": "1.4",
+    "objective": "Implement multi-step workflows with enforcement and handoff patterns",
+    "situation": "A customer-support agent may issue refunds only after a verified customer ID has been returned. Prompt instructions already state the rule, but production logs still show occasional violations.",
+    "question": "Select TWO changes that provide the strongest reliability improvement.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Block refund and order-modification tools programmatically until verification state is present.",
+        "correct": true,
+        "explanation": "A hard prerequisite makes the business invariant deterministic instead of depending on probabilistic instruction following."
+      },
+      {
+        "letter": "B",
+        "text": "Repeat the verification rule three times in the system prompt.",
+        "correct": false,
+        "explanation": "Repeating a prompt can increase salience but still cannot guarantee ordering for a financially sensitive invariant."
+      },
+      {
+        "letter": "C",
+        "text": "Ask the model to self-report confidence before every refund.",
+        "correct": false,
+        "explanation": "Self-reported confidence does not enforce the required sequence and can itself be miscalibrated."
+      },
+      {
+        "letter": "D",
+        "text": "Represent verification as explicit workflow state and pass that state into downstream steps.",
+        "correct": true,
+        "explanation": "Explicit state makes the handoff condition observable and lets downstream logic reject calls that lack verified identity."
+      },
+      {
+        "letter": "E",
+        "text": "Increase the model tier so the agent follows the prompt more consistently.",
+        "correct": false,
+        "explanation": "A stronger model may reduce errors but does not turn a mandatory business rule into a deterministic control."
+      }
+    ],
+    "correct": [
+      "A",
+      "D"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "ca6246a0006d9"
+  },
+  {
+    "id": "mr1-002",
+    "domain": 1,
+    "task_id": "1.6",
+    "objective": "Design task decomposition strategies for complex workflows",
+    "situation": "A research coordinator is asked to analyze the impact of AI across visual art, music, film, and writing. Previous runs over-focused on visual art even though each specialist executed its assigned task correctly.",
+    "question": "Select TWO decomposition practices that best address the failure.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Give the synthesis agent a longer context window.",
+        "correct": false,
+        "explanation": "The observed failure originates before synthesis: the coordinator did not assign work covering the omitted domains."
+      },
+      {
+        "letter": "B",
+        "text": "Decompose the request into explicit coverage dimensions before spawning specialists.",
+        "correct": true,
+        "explanation": "Enumerating the required dimensions prevents the coordinator from collapsing a broad topic into a narrow subset."
+      },
+      {
+        "letter": "C",
+        "text": "Retry each specialist twice and keep the longer answer.",
+        "correct": false,
+        "explanation": "Retries improve execution reliability but do not fix missing assignments in the decomposition itself."
+      },
+      {
+        "letter": "D",
+        "text": "Use a more capable model only for the synthesis step.",
+        "correct": false,
+        "explanation": "A stronger synthesizer cannot recover evidence that no specialist was asked to collect."
+      },
+      {
+        "letter": "E",
+        "text": "Add a coverage check that compares assigned subtasks with the required dimensions before execution.",
+        "correct": true,
+        "explanation": "A pre-execution coverage check catches omissions while they are still cheap to correct."
+      }
+    ],
+    "correct": [
+      "B",
+      "E"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "0aa592c2a84b5"
+  },
+  {
+    "id": "mr1-003",
+    "domain": 1,
+    "task_id": "1.7",
+    "objective": "Manage session state, resumption, and forking",
+    "situation": "An engineer investigated an intermittent auth bug yesterday. Today the repository has changed. They want to continue the investigation, but also compare two alternative fixes without contaminating one approach with the other.",
+    "question": "Select TWO actions that best fit the situation.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Resume yesterday's session and trust all cached observations because the session already contains the investigation history.",
+        "correct": false,
+        "explanation": "Resuming stale context without checking repository changes can preserve observations that are no longer valid."
+      },
+      {
+        "letter": "B",
+        "text": "Resume only after summarizing what changed and re-validating observations that depend on modified files.",
+        "correct": true,
+        "explanation": "Resumption preserves useful context, while explicit re-validation protects against stale tool results after repository changes."
+      },
+      {
+        "letter": "C",
+        "text": "Run both alternative fixes sequentially in the same session so each can build on the other's reasoning.",
+        "correct": false,
+        "explanation": "Sequential work in one context risks cross-contamination when the goal is to compare independent approaches."
+      },
+      {
+        "letter": "D",
+        "text": "Fork from the shared validated context so each fix can evolve independently.",
+        "correct": true,
+        "explanation": "Forking preserves the common starting point while isolating the reasoning and edits for competing approaches."
+      },
+      {
+        "letter": "E",
+        "text": "Discard all previous context and start from scratch even if the relevant files are unchanged.",
+        "correct": false,
+        "explanation": "A fresh session is sometimes safest, but discarding validated context is unnecessary when state can be resumed carefully."
+      }
+    ],
+    "correct": [
+      "B",
+      "D"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "adcaafdc19f5c"
+  },
+  {
+    "id": "mr2-001",
+    "domain": 2,
+    "task_id": "2.1",
+    "objective": "Design effective tool interfaces with clear descriptions and boundaries",
+    "situation": "Two tools accept similar identifiers: get_customer retrieves account data, while lookup_order retrieves order status. The model frequently chooses the wrong tool because both descriptions are one sentence long.",
+    "question": "Select TWO changes that most directly improve tool-selection reliability.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Describe the accepted identifiers, intended queries, boundaries, and when to prefer each tool over the other.",
+        "correct": true,
+        "explanation": "Tool descriptions are a primary selection signal; explicit boundaries make competing tools easier to distinguish."
+      },
+      {
+        "letter": "B",
+        "text": "Rename both tools to shorter names so they consume fewer tokens.",
+        "correct": false,
+        "explanation": "Shorter names do not resolve semantic overlap and can remove useful selection cues."
+      },
+      {
+        "letter": "C",
+        "text": "Include representative examples and edge cases in the descriptions where the tools are easy to confuse.",
+        "correct": true,
+        "explanation": "Examples and edge cases expose the decision boundary the model must learn at selection time."
+      },
+      {
+        "letter": "D",
+        "text": "Merge the tools into one catch-all lookup tool without changing the backend contract.",
+        "correct": false,
+        "explanation": "A catch-all tool may hide the ambiguity rather than solve it and can create a broader, harder-to-control interface."
+      },
+      {
+        "letter": "E",
+        "text": "Add a separate routing model before every tool call.",
+        "correct": false,
+        "explanation": "A routing layer can work, but it is a heavier intervention than fixing the deficient interface that caused the problem."
+      }
+    ],
+    "correct": [
+      "A",
+      "C"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "e1657b2ea7d38"
+  },
+  {
+    "id": "mr2-002",
+    "domain": 2,
+    "task_id": "2.2",
+    "objective": "Implement structured error responses for MCP tools",
+    "situation": "An MCP search tool can fail because of rate limiting, invalid queries, or upstream timeout. The coordinator should decide whether to retry, change the query, or hand off to another source.",
+    "question": "Select THREE fields that are most useful in the tool's structured error response.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "A stable error category such as rate_limit, invalid_query, or timeout.",
+        "correct": true,
+        "explanation": "A stable category lets the coordinator branch on failure type rather than parse free-form prose."
+      },
+      {
+        "letter": "B",
+        "text": "A stack trace from the server implementation.",
+        "correct": false,
+        "explanation": "A raw stack trace is implementation detail and is less useful to the model than a stable semantic error contract."
+      },
+      {
+        "letter": "C",
+        "text": "Whether the failure is retryable and, when relevant, a retry-after hint.",
+        "correct": true,
+        "explanation": "Retryability and timing allow the coordinator to distinguish transient failures from errors requiring a different action."
+      },
+      {
+        "letter": "D",
+        "text": "A generic message such as 'search unavailable' for every failure type.",
+        "correct": false,
+        "explanation": "A generic message removes the information needed for intelligent recovery."
+      },
+      {
+        "letter": "E",
+        "text": "The attempted query plus any partial usable result.",
+        "correct": true,
+        "explanation": "The attempted input and partial result support query revision, fallback, or synthesis with explicit coverage gaps."
+      }
+    ],
+    "correct": [
+      "A",
+      "C",
+      "E"
+    ],
+    "select": 3,
+    "source": "curated-mr",
+    "fingerprint": "cef557e9298be"
+  },
+  {
+    "id": "mr3-001",
+    "domain": 3,
+    "task_id": "3.1",
+    "objective": "Configure CLAUDE.md files with appropriate hierarchy, scoping, and modular organization",
+    "situation": "A monorepo has organization-wide conventions, repository-wide build commands, and service-specific rules for payments and analytics.",
+    "question": "Select THREE placements that keep instructions scoped and maintainable.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Put repository-wide commands and conventions in the project CLAUDE.md.",
+        "correct": true,
+        "explanation": "Project-wide instructions belong at repository scope so every task can inherit them without duplication."
+      },
+      {
+        "letter": "B",
+        "text": "Put service-specific instructions near the corresponding service when directory scope is appropriate.",
+        "correct": true,
+        "explanation": "Local instructions reduce unrelated context and make ownership of service-specific conventions clear."
+      },
+      {
+        "letter": "C",
+        "text": "Copy every instruction into the root CLAUDE.md so the model sees everything on every task.",
+        "correct": false,
+        "explanation": "Flattening all guidance into one file increases irrelevant context and makes scope conflicts harder to reason about."
+      },
+      {
+        "letter": "D",
+        "text": "Use modular imports or rules when guidance is shared but should load conditionally.",
+        "correct": true,
+        "explanation": "Modular or conditional organization keeps reusable guidance available without forcing it into every task context."
+      },
+      {
+        "letter": "E",
+        "text": "Store mandatory repository conventions only in a personal user-level file.",
+        "correct": false,
+        "explanation": "Personal configuration is not a reliable place for rules that must be shared with every contributor."
+      }
+    ],
+    "correct": [
+      "A",
+      "B",
+      "D"
+    ],
+    "select": 3,
+    "source": "curated-mr",
+    "fingerprint": "63324dd48d448"
+  },
+  {
+    "id": "mr3-002",
+    "domain": 3,
+    "task_id": "3.4",
+    "objective": "Determine when to use plan mode vs direct execution",
+    "situation": "A developer receives two tasks: rename one local variable in a known function, and split a monolith into services across dozens of files with uncertain boundaries.",
+    "question": "Select TWO statements that correctly choose the execution mode.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Use direct execution for the small, localized rename when the target and desired change are already clear.",
+        "correct": true,
+        "explanation": "A trivial, well-scoped edit gains little from a separate planning phase."
+      },
+      {
+        "letter": "B",
+        "text": "Use plan mode for the rename because every code change should begin with architecture exploration.",
+        "correct": false,
+        "explanation": "For a tiny deterministic change, mandatory planning adds overhead without reducing meaningful uncertainty."
+      },
+      {
+        "letter": "C",
+        "text": "Use direct execution for the service split and let the implementation reveal boundaries after edits begin.",
+        "correct": false,
+        "explanation": "The task explicitly contains architectural uncertainty and cross-file dependencies, so early editing risks avoidable rework."
+      },
+      {
+        "letter": "D",
+        "text": "Use plan mode for the service split to explore dependencies and compare boundary options before committing changes.",
+        "correct": true,
+        "explanation": "Planning is valuable when the task spans many files, has multiple viable approaches, and contains architecture decisions."
+      },
+      {
+        "letter": "E",
+        "text": "Choose the mode only from repository size; task uncertainty does not matter.",
+        "correct": false,
+        "explanation": "Mode selection should follow task complexity and uncertainty, not a crude proxy such as repository size."
+      }
+    ],
+    "correct": [
+      "A",
+      "D"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "c4189a2ffb00a"
+  },
+  {
+    "id": "mr4-001",
+    "domain": 4,
+    "task_id": "4.3",
+    "objective": "Enforce structured output using tool use and JSON schemas",
+    "situation": "A document-extraction pipeline must emit records that downstream code can validate automatically. Optional fields may be absent, and a status field has a small known vocabulary plus an 'other' fallback.",
+    "question": "Select THREE design choices that best support reliable structured output.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Define a schema with explicit required fields, types, and enums.",
+        "correct": true,
+        "explanation": "A precise schema turns format expectations into machine-checkable constraints rather than prose."
+      },
+      {
+        "letter": "B",
+        "text": "Ask for JSON in natural-language instructions but accept any syntactically valid object.",
+        "correct": false,
+        "explanation": "Syntactic JSON alone does not enforce required fields, types, or allowed values."
+      },
+      {
+        "letter": "C",
+        "text": "Represent optional or nullable fields explicitly instead of inventing placeholder strings.",
+        "correct": true,
+        "explanation": "Explicit optionality preserves the difference between missing data and a real textual value."
+      },
+      {
+        "letter": "D",
+        "text": "Let the model create new status strings whenever the source wording is unusual.",
+        "correct": false,
+        "explanation": "Unbounded labels undermine downstream validation; a controlled enum with an escape value is safer."
+      },
+      {
+        "letter": "E",
+        "text": "Use tool/schema-constrained output and validate the returned arguments before accepting the record.",
+        "correct": true,
+        "explanation": "Schema-constrained generation plus validation provides both generation-time guidance and a deterministic acceptance check."
+      }
+    ],
+    "correct": [
+      "A",
+      "C",
+      "E"
+    ],
+    "select": 3,
+    "source": "curated-mr",
+    "fingerprint": "0f8791c352c99"
+  },
+  {
+    "id": "mr4-002",
+    "domain": 4,
+    "task_id": "4.4",
+    "objective": "Implement validation, retry, and feedback loops for extraction quality",
+    "situation": "An extraction passes JSON syntax checks but fails a business rule: end_date precedes start_date. The source document is still available.",
+    "question": "Select TWO retry-loop behaviors that best improve the next attempt.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "Retry with the same prompt and no information about the failure.",
+        "correct": false,
+        "explanation": "A blind retry may produce a different answer but does not teach the model what constraint was violated."
+      },
+      {
+        "letter": "B",
+        "text": "Return the original document, the rejected extraction, and the specific validation error.",
+        "correct": true,
+        "explanation": "Targeted feedback gives the next attempt both the evidence and the exact constraint that must be repaired."
+      },
+      {
+        "letter": "C",
+        "text": "Replace both dates with null so the record always passes validation.",
+        "correct": false,
+        "explanation": "Erasing valid evidence avoids the rule instead of correcting the extraction."
+      },
+      {
+        "letter": "D",
+        "text": "Re-validate the corrected record and cap retries or escalate when the constraint cannot be satisfied.",
+        "correct": true,
+        "explanation": "A bounded loop prevents infinite retries and turns persistent failures into an explicit recovery path."
+      },
+      {
+        "letter": "E",
+        "text": "Accept the record if its JSON syntax is valid, because semantic validation belongs only downstream.",
+        "correct": false,
+        "explanation": "The stated quality requirement is semantic; accepting a known-invalid record defeats the validation stage."
+      }
+    ],
+    "correct": [
+      "B",
+      "D"
+    ],
+    "select": 2,
+    "source": "curated-mr",
+    "fingerprint": "7e196cbc2f71a"
+  },
+  {
+    "id": "mr5-001",
+    "domain": 5,
+    "task_id": "5.3",
+    "objective": "Implement error propagation strategies across multi-agent systems",
+    "situation": "A web-search subagent times out after returning two useful sources from a planned five-source search. The coordinator must decide how to continue and must not silently present partial coverage as complete.",
+    "question": "Select THREE pieces of information the subagent should propagate.",
+    "options": [
+      {
+        "letter": "A",
+        "text": "The failure type and operation that timed out.",
+        "correct": true,
+        "explanation": "The coordinator needs a semantic failure description to choose retry, fallback, or partial completion."
+      },
+      {
+        "letter": "B",
+        "text": "Only a boolean success=false flag.",
+        "correct": false,
+        "explanation": "A boolean signals failure but removes the context needed for intelligent recovery."
+      },
+      {
+        "letter": "C",
+        "text": "The partial sources already collected, with provenance.",
+        "correct": true,
+        "explanation": "Preserving usable partial results avoids throwing away successful work and supports transparent synthesis."
+      },
+      {
+        "letter": "D",
+        "text": "The remaining coverage gap or intended queries that were not completed.",
+        "correct": true,
+        "explanation": "Explicit missing coverage lets the coordinator reassign work or mark the final result as incomplete."
+      },
+      {
+        "letter": "E",
+        "text": "A generic apology written for the end user.",
+        "correct": false,
+        "explanation": "User-facing prose is not a substitute for structured recovery information between agents."
+      }
+    ],
+    "correct": [
+      "A",
+      "C",
+      "D"
+    ],
+    "select": 3,
+    "source": "curated-mr",
+    "fingerprint": "273ab39e03f87"
+  }
+]

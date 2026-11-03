@@ -1,0 +1,17 @@
+{
+  "validator": "08-skill-transfer",
+  "status": "PASS",
+  "summary": "Scenario-based judgment plus hands-on practice aligned to official preparation exercises.",
+  "findings": [],
+  "metrics": {
+    "foundation": {
+      "scenario_pct": 99.4,
+      "decision_stem_pct": 96.5
+    },
+    "professional": {
+      "scenario_pct": 98.6,
+      "decision_stem_pct": 99.5
+    },
+    "hands_on_lab_markers_present": 4
+  }
+}

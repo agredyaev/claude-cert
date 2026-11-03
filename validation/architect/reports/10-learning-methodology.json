@@ -1,0 +1,18 @@
+{
+  "validator": "10-learning-methodology",
+  "status": "PASS",
+  "summary": "Checks staged skill acquisition, readiness gating, and removal of non-training UI content.",
+  "findings": [],
+  "metrics": {
+    "sequence_markers": [
+      "Diagnostic",
+      "Study",
+      "Retrieval",
+      "Hands-on",
+      "Spaced review",
+      "Full mock",
+      "Readiness"
+    ],
+    "non_training_hits": []
+  }
+}

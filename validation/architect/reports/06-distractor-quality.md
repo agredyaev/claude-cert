@@ -1,0 +1,38 @@
+# 06-distractor-quality
+
+**Status:** PASS
+
+Checks whether superficial cues can reveal the key without domain reasoning.
+
+## Findings
+
+- None.
+
+## Metrics
+
+~~~json
+{
+  "foundation": {
+    "single_answer_positions": {
+      "D": 120,
+      "B": 121,
+      "A": 128,
+      "C": 102
+    },
+    "max_position_deviation": 0.134,
+    "median_correct_wrong_length_ratio": 1.016,
+    "duplicate_options": 0
+  },
+  "professional": {
+    "single_answer_positions": {
+      "D": 81,
+      "A": 81,
+      "B": 80,
+      "C": 77
+    },
+    "max_position_deviation": 0.034,
+    "median_correct_wrong_length_ratio": 1.0,
+    "duplicate_options": 0
+  }
+}
+~~~

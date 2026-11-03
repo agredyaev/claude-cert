@@ -91,9 +91,9 @@ def main():
             title=("Claude Certified Architect — Professional Practice Exam"
                    if lang == "en" else
                    "Claude Certified Architect — Professional · Тренировочный экзамен"),
-            page_title=("Professional Practice Exam · Claude Architect Trainer"
+            page_title=("CCAR-P · Practice Exam"
                         if lang == "en" else
-                        "Professional · Тренировочный экзамен · Claude Architect Trainer"),
+                        "CCAR-P · Тренировочный экзамен"),
             out_path=os.path.join(ROOT_DIR, "ccap", "dist", f"exam_{lang}.html"),
             bank_href=f"bank-professional-{lang}.html",
             language_links={
@@ -105,7 +105,7 @@ def main():
         engine.render_page(
             questions=questions,
             title=ui["browse_title"],
-            page_title=f"{ui['browse_title']} · Claude Architect Trainer",
+            page_title=f"CCAR-P · {ui['browse_title']}",
             out_path=os.path.join(ROOT_DIR, "ccap", "dist", f"bank_{lang}.html"),
             view="bank",
             exam_href=f"professional-{lang}.html",

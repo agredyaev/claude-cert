@@ -1,74 +1,30 @@
-# Claude Certified Architect - Professional
+# Claude Certified Architect — Professional
 
-## Study Guide for Exam CCAR-P
+## How to use this material
 
-> Based on the [official Professional Exam Guide, version 1.0](https://everpath-course-content.s3-accelerate.amazonaws.com/instructor%2F6nizmqk8tpzpfjvt6qmmav7rh%2Fpublic%2F1783542810%2FClaude+Certified+Architect+%E2%80%93+Professional+Exam+Guide.pdf), effective July 2026. Anthropic marks the guide as subject to change, so confirm the current blueprint before scheduling.
+Professional preparation starts after the Foundation training stage in this workspace. That ordering is a learning policy, not an official exam prerequisite.
 
-The Professional track tests whether you can own the architecture and lifecycle of a production Claude system. It goes beyond implementation mechanics: you must connect business requirements to technical decisions, defend trade-offs, evaluate quality, manage operational risk, and communicate the design to technical and non-technical stakeholders.
+For each objective:
 
-This guide turns the official blueprint into a practical preparation plan. It does not reproduce or predict live exam content.
+1. Identify the architecture decision being tested.
+2. Read the relevant material and worked example.
+3. State the governing constraint before choosing a design.
+4. Compare at least two plausible alternatives and explain the operational consequence of each.
+5. Solve an unfamiliar scenario without notes.
+6. Re-test weak objectives after a delay and mix domains once individual objectives are stable.
 
-## Exam at a Glance
+## Exam facts
 
 | Parameter | Official detail |
 |---|---|
 | Exam code | **CCAR-P** |
 | Items | **63** |
-| Formats | Multiple choice and multiple response; each item tells you how many responses to select |
+| Formats | **Multiple-choice and multiple-response; select count is stated** |
 | Time | **120 minutes** |
-| Delivery | Proctored online or at a test center, subject to program policy |
-| Passing score | **720** on a 100-1,000 scaled score |
-| Fee | **$175 USD** |
-| Credential validity | **12 months** from the date the credential is awarded |
-| Prerequisites | **None.** The credential is awarded on exam performance alone |
-| Score report | Pass/fail, scaled score, and percent correct by domain |
+| Passing score | **720** on a 100–1000 scaled score |
+| Official prerequisite | **None** |
 
-The schedule allows about 1 minute 54 seconds per item. Treat that as a pacing signal, not a target for every question: direct knowledge checks should leave time for architecture scenarios and multiple-response items.
-
-Registration starts on the [Anthropic Partner Academy certification page](https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification). Scheduling and delivery then move to Pearson VUE.
-
-### Item formats
-
-The exam guide names multiple choice and multiple response, and each item tells you how many responses to select. Candidates also report two further formats appearing on the live exam. They are not documented in the official blueprint, so read what follows as what to expect, not as blueprint text.
-
-- **Yes/no matrix.** One scenario, five statements, each judged independently as yes or no. There is no fixed count of "yes" answers, and the statements do not trade off against each other. Evaluate each on its own merits instead of balancing the set.
-- **Drop-down matching.** Several scenarios share one option set, and you classify each. **Options can be reused.** Assuming a one-to-one mapping between scenarios and options is the trap; an option is not exhausted the first time you assign it.
-
-Practise both before exam day. The yes/no matrix rewards a steady per-statement read, because a single scenario that "feels mostly right" still hides statements that fail on their own. The drop-down rewards checking each classification against the option set fresh, never crossing an option off because you already used it.
-
-### Scoring
-
-The exam is **criterion-referenced**: you are measured against a fixed performance standard, not against other candidates. The 720 cut score came from a formal standard-setting study in which subject-matter experts judged the performance expected of a minimally qualified candidate.
-
-The score report shows percent correct per domain. Those **section percentages do not determine pass or fail** — only the total scaled score does. Use them to direct a retake, not to predict one.
-
-### Policies worth knowing before you register
-
-| Policy | Detail |
-|---|---|
-| Eligibility | Employees of Claude Partner Network organizations, registering with a recognized company email domain. Personal email addresses are rejected; adding a domain takes 7-10 days |
-| Attempts | Up to **4 per rolling 12-month period**, at full fee each time |
-| Retake waits | **14 days** after a first failure, **30 days** after a second, **90 days** after a third |
-| Delivery | Pearson VUE, online proctored or at a test center; **closed book** |
-| Time on site | About **135 minutes** including check-in, for a 120-minute exam |
-| Language | **English only.** Browser translation tools are prohibited during proctored testing |
-| Accommodations | Request through Pearson at least **10 days** before your exam date |
-| Reschedule | Free up to **24 hours** before the appointment; changes inside 24 hours forfeit the fee |
-| Results | Scaled score shown immediately; Credly badge invitation follows within minutes for online delivery |
-| Renewal | Review what changed and complete a complimentary **non-proctored** assessment |
-
-Corporate networks must allow Pearson's domains for online proctoring. If your device is locked down, a test center is the safer choice.
-
-## Who the Exam Is For
-
-Anthropic targets mid- to senior-level solution architects, AI/ML engineers, technical leads, and senior software engineers who design end-to-end AI systems. The official candidate profile recommends:
-
-- A strong base in modular software design, scalability, and separation of concerns
-- Three or more years in systems architecture or platform engineering
-- At least six months operating Claude or a comparable LLM system in production
-- Experience taking a system from discovery through deployment and operations
-
-These are recommendations, not prerequisites. Exam performance alone determines certification.
+The training sequence in this repository requires Foundation readiness before Professional so that Professional practice can focus on architecture trade-offs rather than basic product mechanics.
 
 ## The Seven-Domain Blueprint
 
@@ -516,24 +472,6 @@ Be able to:
 
 **Practice artifact:** define a team rollout for Claude tooling that covers configuration ownership, access, review gates, usage guidance, telemetry, and support.
 
-## The Official Prep Path
-
-Anthropic publishes a Professional prep path on the Partner Academy. It is **not required** — the exam guide states there is no single required course and that no resource guarantees a pass — but it is the only preparation material written against this blueprint.
-
-| # | Course | Length | Primary domains |
-|---|---|---:|---|
-| 1 | Claude Platform & Solution Design | 238 min | 1, 2 |
-| 2 | Enterprise Integration & Production | 158 min | 3 |
-| 3 | Responsible AI, Safety & Risk for Architects | 114 min | 5 |
-| 4 | Stakeholder Engagement, Lifecycle & GTM | 178 min | 6 |
-| 5 | Team Enablement & Operational Productivity | 45 min | 7 |
-
-Total run time is about **12 hours 15 minutes**.
-
-Two things to notice. First, the course hours do not track the domain weights: Solution Design gets the most video time but Integration is the heaviest domain at 19%, and **Domain 4 (Evaluation, Testing & Optimization, 16%) has no dedicated course**. Second, that gap is yours to close with hands-on work — evaluation design is the domain where reading substitutes least well for having built the thing.
-
-Access: [prep course path](https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional) · [all prep courses](https://anthropic-partners.skilljar.com/page/claude-certification-exam-prep-courses)
-
 ## What the Official Sample Questions Teach
 
 Section 8 of the exam guide contains three sample items with full rationale. Read them in the source rather than a summary — the reasoning in the answer key is the most direct signal available about how items are constructed. What they demonstrate:
@@ -563,7 +501,7 @@ A mitigation absorbs the failure after it appears. A structural fix changes the 
 
 The rule is general. When two options both look like improvements, ask which one merely lowers the frequency of a failure the design still permits, and which one removes the condition that produces it. Prefer the second.
 
-## Ravn Practice Exam
+## Practice engine
 
 This repository ships a **Professional practice exam** you can run in the browser:
 
@@ -618,7 +556,7 @@ This mirrors the judgment the Professional blueprint rewards.
 
 Practice mixed architecture questions under the 120-minute limit. Include multiple-response items and force yourself to verify the requested number of selections. Review misses by failure type, not just topic: overlooked constraint, weak trade-off, unsafe default, confused metric, or incomplete lifecycle thinking.
 
-Use the [Ravn practice exam](#ravn-practice-exam) in **exam mode** for the timed run, then re-run the same domains in **study mode** to read the rationale for every option you got wrong — including why the distractor you picked was attractive.
+Use the [practice engine](#ravn-practice-exam) in **exam mode** for the timed run, then re-run the same domains in **study mode** to read the rationale for every option you got wrong — including why the distractor you picked was attractive.
 
 ## Exam Decision Framework
 
@@ -656,22 +594,13 @@ You are ready when you can do all of the following without notes:
 - Map major safety and compliance risks to enforceable controls and evidence
 - Communicate the same decision to executives, engineers, security, and operations
 - Define rollout, monitoring, incident, feedback, iteration, and ownership plans
-- Complete 63 mixed-format practice items within 120 minutes — the [Ravn practice exam](#ravn-practice-exam) in exam mode is one way to rehearse this
+- Complete 63 mixed-format practice items within 120 minutes — the [practice engine](#ravn-practice-exam) in exam mode is one way to rehearse this
 
 ## Resources
 
-### Official — certification program
+### Official — exam scope
 
-Everything in this guide's tables traces to one of these.
-
-- [Claude Certified Architect - Professional Exam Guide (PDF)](https://everpath-course-content.s3-accelerate.amazonaws.com/instructor%2F6nizmqk8tpzpfjvt6qmmav7rh%2Fpublic%2F1783542810%2FClaude+Certified+Architect+%E2%80%93+Professional+Exam+Guide.pdf) — the authoritative blueprint, and the source of the 38 objectives above
-- [Professional certification registration page](https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification)
-- [All certifications and exam guides](https://anthropic-partners.skilljar.com/page/partner-certifications) — Associate, Developer, Architect Foundations, Architect Professional
-- [Professional prep course path](https://anthropic-partners.skilljar.com/path/claude-certified-architect-professional) (5 courses, ~12h)
-- [Certification FAQ](https://anthropic-partners.skilljar.com/page/faq-certifications) — eligibility, retakes, validity, proctoring, badging
-- [Certification policies](https://anthropic-partners.skilljar.com/page/policies-certifications)
-- [Computer and network setup](https://anthropic-partners.skilljar.com/page/computer-and-network-setup) — check this before booking online proctoring
-- [Claude Partner Network learning path](https://anthropic-partners.skilljar.com/page/claude-partner-network-learning-path)
+- [Claude Certified Architect - Professional Exam Guide (PDF)](https://everpath-course-content.s3-accelerate.amazonaws.com/instructor%2F6nizmqk8tpzpfjvt6qmmav7rh%2Fpublic%2F1783542810%2FClaude+Certified+Architect+%E2%80%93+Professional+Exam+Guide.pdf) — authoritative blueprint and objective list.
 
 ### Official — product documentation
 
@@ -686,5 +615,3 @@ The exam guide directs candidates to the Claude API, models, prompt engineering,
 - [Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Claude Code documentation](https://code.claude.com/docs/en/overview)
-
-Review the official exam guide again before registration. It contains the current policies for identification, accommodations, retakes, rescheduling, exam conduct, confidentiality, renewal, support, and appeals — and Anthropic marks it subject to change without notice.

@@ -1,0 +1,48 @@
+{
+  "validators": 10,
+  "pass": 10,
+  "warn": 0,
+  "fail": 0,
+  "results": [
+    {
+      "validator": "01-official-blueprint",
+      "status": "PASS"
+    },
+    {
+      "validator": "02-provenance-scope",
+      "status": "PASS"
+    },
+    {
+      "validator": "03-exam-format",
+      "status": "PASS"
+    },
+    {
+      "validator": "04-objective-coverage",
+      "status": "PASS"
+    },
+    {
+      "validator": "05-key-defensibility",
+      "status": "PASS"
+    },
+    {
+      "validator": "06-distractor-quality",
+      "status": "PASS"
+    },
+    {
+      "validator": "07-explanation-quality",
+      "status": "PASS"
+    },
+    {
+      "validator": "08-skill-transfer",
+      "status": "PASS"
+    },
+    {
+      "validator": "09-duplication-balance",
+      "status": "PASS"
+    },
+    {
+      "validator": "10-learning-methodology",
+      "status": "PASS"
+    }
+  ]
+}
