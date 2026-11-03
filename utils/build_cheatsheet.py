@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build cheatsheet_<lang>.html — the 12-principle exam cheatsheet (EN/ES/PT).
+"""Build cheatsheet_en.html — the 12-principle Foundation exam cheatsheet.
 
 Usage: python3 utils/build_cheatsheet.py
 
-Self-contained static pages using the Ravn design documented in DESIGN.md.
+Self-contained static page using the adapted visual system documented in DESIGN.md.
 Stats are kept in sync with the 136-question, 5-domain exam; domain names match
 utils/exam_data.py (DOMAIN_NAMES). The deploy workflow does not run this script —
 it copies the committed cheatsheet_*.html via scripts/build-pages.mjs — so re-run
@@ -43,7 +43,7 @@ def _load_exam(lang):
 
 QDATA = {}
 _order = None
-for _l in ("en", "es", "pt"):
+for _l in ("en",):
     QDATA[_l], _o = _load_exam(_l)
     if _order is None:
         _order = _o
@@ -92,7 +92,7 @@ PMETA = [
 # --- per-language UI strings ---
 UI = {
 "en": {
-  "title": "English — Cheatsheet · Ravn",
+  "title": "English — Cheatsheet · Claude Architect Trainer",
   "study": "Study", "exam": "Exam",
   "eyebrow": "Claude Certified Architect · Study Cheatsheet",
   "h1": 'Every question has <span class="key">one correct move</span> and three traps.',
@@ -303,7 +303,7 @@ KEYS = {
 }
 
 CSS = """
-/* Shared Ravn typography and palette; warm emphasis marks study guidance. */
+/* Adapted upstream typography and palette; warm emphasis marks study guidance. */
 :root {
   --bg: #0E0E0E; --surface: #141414; --surface-2: #1C1C1C;
   --fg: #FFFFFF; --fg-soft: #D4D4D4; --muted: #A3A3A3; --subtle: #949494;
@@ -325,7 +325,9 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .ravn-brand { display: inline-flex; align-items: center; gap: 16px; color: var(--fg);
   text-decoration: none; font-weight: 600; }
 .ravn-brand:hover { color: var(--accent); }
-.ravn-brand svg { height: 20px; width: auto; fill: currentColor; flex-shrink: 0; }
+.trainer-mark { display: inline-grid; place-items: center; width: 30px; height: 30px;
+  border: 1px solid var(--border-strong); border-radius: 8px; color: var(--accent);
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; }
 .ravn-brand-tagline { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.167em; font-weight: 600; }
 .topbar-kicker { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.167em; font-weight: 600; }
 
@@ -455,8 +457,8 @@ RAVN_LOGO_SVG = (
   '<path d="M8.53644 32.9974C11.4172 32.9974 13.7526 30.7402 13.7526 27.9557C13.7526 25.1713 11.4172 22.9141 8.53644 22.9141C5.65565 22.9141 3.32031 25.1713 3.32031 27.9557C3.32031 30.7402 5.65565 32.9974 8.53644 32.9974Z"/></svg>')
 
 TOPBAR = ('<header class="ravn-topbar"><a class="ravn-brand" href="../index.html" '
-  'aria-label="Ravn — Claude Certified Architect">' + RAVN_LOGO_SVG +
-  '<span class="ravn-brand-tagline">Claude Certified Architect</span></a>'
+  'aria-label="Claude Architect Trainer"><span class="trainer-mark" aria-hidden="true">CA</span>'
+  '<span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
   '<span class="topbar-kicker">{kicker}</span></header>')
 
 
@@ -610,7 +612,17 @@ def build(lang):
         note=u["note"], footer=u["footer"])
 
 
-for lang in ("en", "es", "pt"):
+for lang in ("en",):
     path = os.path.join(REPO, "ccaf", "dist", "cheatsheet_%s.html" % lang)
     open(path, "w", encoding="utf-8").write(build(lang))
     print("wrote", path, os.path.getsize(path), "bytes")
+
+# The public trainer is EN/RU only; RU intentionally reuses English exam
+# terminology. Remove legacy generated translations while keeping upstream
+# source material available for provenance.
+for lang in ("es", "pt"):
+    stale = os.path.join(REPO, "ccaf", "dist", "cheatsheet_%s.html" % lang)
+    try:
+        os.remove(stale)
+    except FileNotFoundError:
+        pass

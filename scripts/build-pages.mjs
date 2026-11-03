@@ -10,20 +10,30 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const DOCS = path.join(ROOT, 'docs');
 
 const LANGS = [
-  { code: 'en', label: 'English',    guide: 'ccaf/guide_en.md',  test: 'ccaf/dist/exam_en.html', bank: 'ccaf/dist/bank_en.html' },
-  { code: 'es', label: 'Español',    guide: 'ccaf/guide_es.md',  test: 'ccaf/dist/exam_es.html', bank: 'ccaf/dist/bank_es.html' },
-  { code: 'pt', label: 'Português',  guide: 'ccaf/guide_pt.md',  test: 'ccaf/dist/exam_pt.html', bank: 'ccaf/dist/bank_pt.html' },
+  { code: 'en', label: 'English', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_en.html', bank: 'ccaf/dist/bank_en.html' },
+  { code: 'ru', label: 'Русский', contentCode: 'en', guide: 'ccaf/guide_en.md', test: 'ccaf/dist/exam_ru.html', bank: 'ccaf/dist/bank_ru.html' },
 ];
 
 const PROFESSIONAL_GUIDES = [
   {
     code: 'en',
     label: 'English',
+    contentCode: 'en',
     title: 'Professional - English',
     guide: 'ccap/guide_en.md',
     output: 'professional-en',
     test: 'ccap/dist/exam_en.html',
     bank: 'ccap/dist/bank_en.html',
+  },
+  {
+    code: 'ru',
+    label: 'Русский',
+    contentCode: 'en',
+    title: 'Professional - Russian UI',
+    guide: 'ccap/guide_en.md',
+    output: 'professional-ru',
+    test: 'ccap/dist/exam_ru.html',
+    bank: 'ccap/dist/bank_ru.html',
   },
 ];
 
@@ -71,8 +81,7 @@ const PDFJS_BUILD = path.join(ROOT, 'node_modules', 'pdfjs-dist', 'build');
 // Localized labels for the per-guide navigation chrome (TOC + heading anchors).
 const GUIDE_UI = {
   en: { contents: 'Contents', anchor: 'Copy link to this section' },
-  es: { contents: 'Contenido', anchor: 'Copiar el enlace a esta sección' },
-  pt: { contents: 'Conteúdo', anchor: 'Copiar o link para esta seção' },
+  ru: { contents: 'Содержание', anchor: 'Скопировать ссылку на раздел' },
 };
 
 let headingSlug = createSlugger();
@@ -143,7 +152,7 @@ ${extraHead}<script type="application/json" id="bank-map">${JSON.stringify(bankH
 </head>
 <body>
 ${body}
-${siteFooter()}
+${siteFooter(lang)}
 <script src="vendor/minisearch.js" defer></script>
 <script src="${appHref}" defer></script>
 ${extraScripts}
@@ -151,42 +160,55 @@ ${extraScripts}
 </html>`;
 }
 
-function siteFooter() {
+function siteFooter(lang = 'en') {
+  const ru = lang === 'ru';
   return `<footer class="site-footer">
-  <p>Independent study interface for Claude certification preparation.</p>
-  <p>Study content adapted from <a href="https://github.com/ravnhq/claude-certified-architect">Ravn's Claude certification materials</a>. Not affiliated with Anthropic.</p>
+  <p>${ru ? 'Независимый интерфейс для подготовки к сертификации Claude.' : 'Independent study interface for Claude certification preparation.'}</p>
+  <p>${ru ? 'Учебные материалы адаптированы из' : 'Study content adapted from'} <a href="https://github.com/ravnhq/claude-certified-architect">Ravn's Claude certification materials</a>. ${ru ? 'Проект не связан с Anthropic.' : 'Not affiliated with Anthropic.'}</p>
 </footer>`;
 }
 
-function header(_currentLang) {
+function header(currentLang = 'en', alternateHref = null) {
+  const ru = currentLang === 'ru';
+  const enHref = currentLang === 'en' ? null : (alternateHref || 'index.html');
+  const ruHref = currentLang === 'ru' ? null : (alternateHref || 'ru.html');
   return `<header class="topbar">
-  <a class="brand trainer-brand" href="index.html" aria-label="Claude Architect Trainer">
+  <a class="brand trainer-brand" href="${ru ? 'ru.html' : 'index.html'}" aria-label="Claude Architect Trainer">
     <span class="trainer-mark" aria-hidden="true">CA</span>
     <span>Claude Architect Trainer</span>
   </a>
-  <nav class="topbar-actions" aria-label="Page controls">
-    <a class="topbar-link" href="catalog.html">Library</a>
-    <button type="button" id="search-toggle" class="icon-btn" aria-label="Search">⌕</button>
-    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle theme">◐</button>
+  <nav class="topbar-actions" aria-label="${ru ? 'Управление страницей' : 'Page controls'}">
+    <div class="site-language-toggle" role="group" aria-label="${ru ? 'Язык интерфейса' : 'Interface language'}">
+      ${enHref ? `<a href="${enHref}">EN</a>` : '<span aria-current="page">EN</span>'}
+      ${ruHref ? `<a href="${ruHref}">RU</a>` : '<span aria-current="page">RU</span>'}
+    </div>
+    <a class="topbar-link" href="catalog.html">${ru ? 'Библиотека' : 'Library'}</a>
+    <button type="button" id="search-toggle" class="icon-btn" aria-label="${ru ? 'Поиск' : 'Search'}">⌕</button>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="${ru ? 'Переключить тему' : 'Toggle theme'}">◐</button>
   </nav>
 </header>
 <dialog id="search-dialog" aria-labelledby="search-title">
-  <h2 id="search-title" class="visually-hidden">Search the study guides</h2>
-  <div class="search-filter" role="group" aria-label="Filter by language">
-    <button type="button" class="search-lang active" data-lang="all" aria-pressed="true">All</button>
+  <h2 id="search-title" class="visually-hidden">${ru ? 'Поиск по учебным материалам' : 'Search the study guides'}</h2>
+  <div class="search-filter" role="group" aria-label="${ru ? 'Фильтр по языку интерфейса' : 'Filter by interface language'}">
+    <button type="button" class="search-lang active" data-lang="all" aria-pressed="true">${ru ? 'Все' : 'All'}</button>
     <button type="button" class="search-lang" data-lang="en" aria-pressed="false">EN</button>
-    <button type="button" class="search-lang" data-lang="es" aria-pressed="false">ES</button>
-    <button type="button" class="search-lang" data-lang="pt" aria-pressed="false">PT</button>
+    <button type="button" class="search-lang" data-lang="ru" aria-pressed="false">RU</button>
   </div>
-  <label class="visually-hidden" for="search-input">Search terms</label>
-  <input id="search-input" type="search" placeholder="Search the guide…" autocomplete="off">
+  <label class="visually-hidden" for="search-input">${ru ? 'Поисковый запрос' : 'Search terms'}</label>
+  <input id="search-input" type="search" placeholder="${ru ? 'Поиск по гайду…' : 'Search the guide…'}" autocomplete="off">
   <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
-  <ul id="search-results" aria-label="Search results"></ul>
+  <ul id="search-results" aria-label="${ru ? 'Результаты поиска' : 'Search results'}"></ul>
 </dialog>`;
 }
 
 
-function trainingDashboard(blueprint) {
+function trainingDashboard(blueprint, lang = 'en') {
+  const ru = lang === 'ru';
+  const practice = lang === 'ru' ? 'practical/ru.html' : 'practical/en.html';
+  const bank = lang === 'ru' ? 'practical/bank-ru.html' : 'practical/bank-en.html';
+  const guide = lang === 'ru' ? 'guides/ru.html' : 'guides/en.html';
+  const professionalGuide = lang === 'ru' ? 'guides/professional-ru.html' : 'guides/professional-en.html';
+  const professionalPractice = lang === 'ru' ? 'practical/professional-ru.html' : 'practical/professional-en.html';
   const domains = Object.entries(blueprint.domains);
   const domainCards = domains.map(([id, domain]) => `
     <article class="training-domain-card">
@@ -195,97 +217,150 @@ function trainingDashboard(blueprint) {
         <span class="training-domain-weight">${domain.weight}%</span>
       </div>
       <h3>${domain.name}</h3>
-      <p>${domain.objectives.length} official task statements</p>
+      <p>${domain.objectives.length} ${ru ? 'официальных task statements' : 'official task statements'}</p>
       <div class="training-domain-bar" aria-hidden="true"><span style="width:${domain.weight}%"></span></div>
-      <a href="practical/en.html?mode=study&focus=${id}">Drill this domain</a>
+      <a href="${practice}?mode=study&focus=${id}">${ru ? 'Тренировать домен' : 'Drill this domain'}</a>
     </article>`).join('');
 
-  return `<main class="training-dashboard" data-training-dashboard>
+  const pathSteps = [
+    {
+      n: '01',
+      kicker: ru ? 'Изучить' : 'Learn',
+      title: ru ? 'Пройти Foundation guide' : 'Work through the Foundation guide',
+      copy: ru
+        ? 'Сначала закрепите базовую модель Claude API, MCP, Agent SDK, Claude Code и архитектурные decision rules.'
+        : 'Build the base model first: Claude API, MCP, Agent SDK, Claude Code, and the architectural decision rules.',
+      href: guide,
+      action: ru ? 'Открыть guide' : 'Open guide',
+    },
+    {
+      n: '02',
+      kicker: ru ? 'Закрепить' : 'Drill',
+      title: ru ? 'Короткие weighted drills' : 'Run short weighted drills',
+      copy: ru
+        ? 'Быстрые сеты сохраняют веса blueprint и сразу показывают объяснение ответа.'
+        : 'Quick sets preserve blueprint weighting and reveal the rationale immediately.',
+      href: `${practice}?mode=study&length=quick`,
+      action: ru ? 'Начать quick study' : 'Start quick study',
+    },
+    {
+      n: '03',
+      kicker: ru ? 'Исправить' : 'Repair',
+      title: ru ? 'Закрыть слабые места' : 'Close weak spots',
+      copy: ru
+        ? 'Повторяйте ошибочные вопросы и отдельно проходите слабые домены, пока ошибки не перестанут повторяться.'
+        : 'Repeat missed questions and drill weak domains until the same mistakes stop recurring.',
+      href: `${practice}?mode=study&focus=misses`,
+      action: ru ? 'Работа над ошибками' : 'Review weak spots',
+      id: 'training-misses-link',
+    },
+    {
+      n: '04',
+      kicker: ru ? 'Симулировать' : 'Simulate',
+      title: ru ? 'Полная репетиция: 60 / 120' : 'Full rehearsal: 60 / 120',
+      copy: ru
+        ? 'Только после освоения материала переходите к exam mode без подсказок до конца попытки.'
+        : 'Only after learning the material, rehearse in exam mode with no answer reveal until the end.',
+      href: `${practice}?mode=exam&length=full`,
+      action: ru ? 'Запустить full mock' : 'Run full mock',
+    },
+    {
+      n: '05',
+      kicker: ru ? 'Проверить готовность' : 'Verify',
+      title: 'Foundation readiness gate',
+      copy: ru
+        ? 'Пройдите preflight перед записью на CCAR-F. Это завершает Stage 1 перед переходом к Professional.'
+        : 'Complete the preflight before booking CCAR-F. This closes Stage 1 before you move to Professional.',
+      href: 'preflight/architect-foundations.html',
+      action: ru ? 'Открыть preflight' : 'Open preflight',
+      id: 'training-readiness-link',
+    },
+  ];
+
+  const pathCards = pathSteps.map(step => `
+    <article class="training-path-card">
+      <div class="training-path-number">${step.n}</div>
+      <span class="training-mode-kicker">${step.kicker}</span>
+      <strong>${step.title}</strong>
+      <span>${step.copy}</span>
+      <a${step.id ? ` id="${step.id}"` : ''} href="${step.href}">${step.action}</a>
+      ${step.id === 'training-misses-link' ? `<small id="training-misses-copy">${ru ? 'Станет полезно после первых ошибок.' : 'Becomes useful after your first misses.'}</small>` : ''}
+      ${step.id === 'training-readiness-link' ? `<small id="training-readiness-copy">Preflight: 0 / 10</small>` : ''}
+    </article>`).join('');
+
+  return `<main class="training-dashboard" data-training-dashboard data-training-lang="${lang}">
   <section class="training-hero">
     <div class="training-hero-copy">
-      <p class="eyebrow">CCAR-F · Foundations first</p>
-      <h1>Claude Architect <span class="accent">training workspace.</span></h1>
-      <p class="training-lede">Study the concepts, drill weak areas, and run full exam rehearsals from one place. Your practice state stays in this browser.</p>
+      <p class="eyebrow">Stage 1 · CCAR-F · ${ru ? 'сначала Foundations' : 'Foundations first'}</p>
+      <h1>Claude Architect <span class="accent">${ru ? 'подготовка по этапам.' : 'training path.'}</span></h1>
+      <p class="training-lede">${ru
+        ? 'Маршрут специально построен под последовательность Architect Foundations → Architect Professional. Ежедневная тренировка остаётся в Foundation, пока этот этап не закрыт.'
+        : 'The path is intentionally ordered Architect Foundations → Architect Professional. Daily training stays on Foundation until that stage is complete.'}</p>
       <div class="training-hero-actions">
-        <a class="training-btn training-btn-primary" id="training-primary" href="practical/en.html?mode=study&length=quick">Start quick study</a>
-        <a class="training-btn" href="practical/en.html?mode=exam&length=full">Run a full mock</a>
+        <a class="training-btn training-btn-primary" id="training-primary" href="${practice}?mode=study&length=quick">${ru ? 'Продолжить Foundation' : 'Continue Foundation'}</a>
+        <a class="training-btn" href="${guide}">${ru ? 'Открыть study guide' : 'Open study guide'}</a>
       </div>
-      <p class="training-calibration">Practice scores are training signals, not a calibrated prediction of your real exam result.</p>
+      <p class="training-calibration">${ru
+        ? 'Экзаменационные вопросы и терминология остаются на английском. RU переключает только интерфейс и пояснения навигации.'
+        : 'Exam questions and certification terminology stay in English. RU changes interface chrome and navigation guidance only.'}</p>
     </div>
 
     <aside class="training-progress-card" aria-labelledby="training-progress-title">
-      <div class="training-panel-label" id="training-progress-title">Current practice</div>
+      <div class="training-panel-label" id="training-progress-title">${ru ? 'Текущая тренировка' : 'Current practice'}</div>
       <div class="training-progress-main">
-        <strong id="training-progress-value">No active attempt</strong>
-        <span id="training-progress-detail">Start with a quick study set.</span>
+        <strong id="training-progress-value">${ru ? 'Нет активной попытки' : 'No active attempt'}</strong>
+        <span id="training-progress-detail">${ru ? 'Начните с guide или quick study.' : 'Start with the guide or a quick study set.'}</span>
       </div>
       <div class="training-progress-track" aria-hidden="true"><span id="training-progress-fill"></span></div>
       <dl class="training-progress-stats">
-        <div><dt>Answered</dt><dd id="training-answered">0 / 0</dd></div>
-        <div><dt>Weak spots</dt><dd id="training-misses">0</dd></div>
-        <div><dt>Mode</dt><dd id="training-mode">Study</dd></div>
+        <div><dt>${ru ? 'Отвечено' : 'Answered'}</dt><dd id="training-answered">0 / 0</dd></div>
+        <div><dt>${ru ? 'Ошибки' : 'Weak spots'}</dt><dd id="training-misses">0</dd></div>
+        <div><dt>${ru ? 'Режим' : 'Mode'}</dt><dd id="training-mode">${ru ? 'Обучение' : 'Study'}</dd></div>
       </dl>
     </aside>
   </section>
 
-  <section class="training-section" aria-labelledby="training-start-title">
+  <section class="training-section" aria-labelledby="training-path-title">
     <div class="training-section-head">
       <div>
-        <p class="training-panel-label">Train</p>
-        <h2 id="training-start-title">Choose the session you need now.</h2>
+        <p class="training-panel-label">Foundation path</p>
+        <h2 id="training-path-title">${ru ? 'Пять шагов до готовности CCAR-F.' : 'Five steps to CCAR-F readiness.'}</h2>
       </div>
-      <a href="practical/bank-en.html">Browse all questions</a>
+      <a href="${bank}">${ru ? 'Открыть весь банк' : 'Browse all questions'}</a>
     </div>
-    <div class="training-mode-grid">
-      <a class="training-mode-card" href="guides/en.html">
-        <span class="training-mode-kicker">Learn</span>
-        <strong>Study guide</strong>
-        <span>Review concepts and documented behavior before drilling.</span>
-      </a>
-      <a class="training-mode-card" href="practical/en.html?mode=study&length=quick">
-        <span class="training-mode-kicker">20-minute loop</span>
-        <strong>Quick study</strong>
-        <span>Short weighted set with explanations revealed as you answer.</span>
-      </a>
-      <a class="training-mode-card" href="practical/en.html?mode=exam&length=full">
-        <span class="training-mode-kicker">60 questions · 120 min</span>
-        <strong>Full mock</strong>
-        <span>Exam mode, full weighted draw, answers revealed at the end.</span>
-      </a>
-      <a class="training-mode-card" id="training-misses-link" href="practical/en.html?mode=study&focus=misses" aria-disabled="true">
-        <span class="training-mode-kicker">Adaptive review</span>
-        <strong>Weak spots</strong>
-        <span id="training-misses-copy">Miss questions first, then this drill becomes available.</span>
-      </a>
-    </div>
+    <div class="training-path-grid">${pathCards}</div>
   </section>
 
   <section class="training-section" aria-labelledby="training-domains-title">
     <div class="training-section-head">
       <div>
         <p class="training-panel-label">Blueprint</p>
-        <h2 id="training-domains-title">Five domains. Study to the weights.</h2>
+        <h2 id="training-domains-title">${ru ? 'Пять доменов. Тренируйтесь в их реальных весах.' : 'Five domains. Train to the real weights.'}</h2>
       </div>
-      <a href="preflight/architect-foundations.html">Readiness checklist</a>
+      <a href="preflight/architect-foundations.html">${ru ? 'Foundation preflight' : 'Readiness checklist'}</a>
     </div>
-    <div class="training-domain-grid">${domainCards}
-    </div>
+    <div class="training-domain-grid">${domainCards}</div>
   </section>
 
-  <section class="training-resource-strip" aria-label="Study resources">
-    <a href="cheatsheet/en.html"><span>Reference</span><strong>Cheatsheet</strong></a>
-    <a href="practical/bank-en.html"><span>Explore</span><strong>Question bank</strong></a>
-    <a href="score-report.html"><span>Target</span><strong>Score report</strong></a>
-    <a href="catalog.html"><span>Later</span><strong>Professional track</strong></a>
+  <section class="training-resource-strip" aria-label="${ru ? 'Ресурсы Foundation' : 'Foundation resources'}">
+    <a href="cheatsheet/${lang}.html"><span>${ru ? 'Повторить' : 'Reference'}</span><strong>Cheatsheet</strong></a>
+    <a href="${bank}"><span>${ru ? 'Разобрать' : 'Explore'}</span><strong>${ru ? 'Банк вопросов' : 'Question bank'}</strong></a>
+    <a href="score-report.html"><span>${ru ? 'После экзамена' : 'After exam'}</span><strong>Score report</strong></a>
+    <a href="preflight/architect-foundations.html"><span>${ru ? 'Готовность' : 'Readiness'}</span><strong>Foundation preflight</strong></a>
   </section>
 
   <section class="training-next-stage">
     <div>
-      <p class="training-panel-label">Stage 2</p>
-      <h2>Professional comes after Foundations.</h2>
-      <p>The Professional material stays available, but the default training path remains CCAR-F until the Foundations exam is done.</p>
+      <p class="training-panel-label">Stage 2 · CCAR-P</p>
+      <h2>${ru ? 'Professional начинается после Foundations.' : 'Professional starts after Foundations.'}</h2>
+      <p>${ru
+        ? 'Professional — отдельный blueprint из семи доменов и 38 objectives. Он не подмешивается в Foundation drills: сначала закрываем CCAR-F, затем переключаемся на архитектурные trade-offs, evaluation, governance и lifecycle.'
+        : 'Professional is a separate seven-domain, 38-objective blueprint. It is not mixed into Foundation drills: close CCAR-F first, then move to architecture trade-offs, evaluation, governance, and lifecycle.'}</p>
+      <div class="training-stage-actions">
+        <a class="training-btn" href="${professionalGuide}">${ru ? 'Посмотреть Professional guide' : 'Preview Professional guide'}</a>
+        <a class="training-btn" href="${professionalPractice}?mode=study&length=quick">${ru ? 'Открыть Professional practice' : 'Open Professional practice'}</a>
+      </div>
     </div>
-    <a class="training-btn" href="guides/professional-en.html">Preview Professional</a>
   </section>
 </main>`;
 }
@@ -341,13 +416,13 @@ function landing() {
       name: 'Architect — Foundations',
       summary: 'For practitioners building with Claude Code, the Agent SDK, the Claude API, and MCP.',
       items: '60',
-      langs: 'EN · ES · PT',
+      langs: 'EN · RU',
       resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/en.html'], ['ES', 'guides/es.html'], ['PT', 'guides/pt.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/en.html'], ['ES', 'practical/es.html'], ['PT', 'practical/pt.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-en.html'], ['ES', 'practical/bank-es.html'], ['PT', 'practical/bank-pt.html']] },
-        { label: 'Cheatsheet', langs: [['EN', 'cheatsheet/en.html'], ['ES', 'cheatsheet/es.html'], ['PT', 'cheatsheet/pt.html']] },
-        { label: 'PDF', langs: [['EN', 'pdf/guide_en.pdf'], ['ES', 'pdf/guide_es.pdf'], ['PT', 'pdf/guide_pt.pdf']] },
+        { label: 'Study guide', langs: [['EN', 'guides/en.html'], ['RU', 'guides/ru.html']] },
+        { label: 'Practice exam', langs: [['EN', 'practical/en.html'], ['RU', 'practical/ru.html']] },
+        { label: 'Question bank', langs: [['EN', 'practical/bank-en.html'], ['RU', 'practical/bank-ru.html']] },
+        { label: 'Cheatsheet', langs: [['EN', 'cheatsheet/en.html'], ['RU', 'cheatsheet/ru.html']] },
+        { label: 'PDF', langs: [['EN', 'pdf/guide_en.pdf']] },
         { label: 'Preflight checklist', langs: [['EN', 'preflight/architect-foundations.html']] },
       ],
       register: 'https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification',
@@ -357,11 +432,11 @@ function landing() {
       name: 'Architect — Professional',
       summary: 'For architects owning production architecture, evaluation, governance, and lifecycle.',
       items: '63',
-      langs: 'EN',
+      langs: 'EN · RU',
       resources: [
-        { label: 'Study guide', langs: [['EN', 'guides/professional-en.html']] },
-        { label: 'Practice exam', langs: [['EN', 'practical/professional-en.html']] },
-        { label: 'Question bank', langs: [['EN', 'practical/bank-professional-en.html']] },
+        { label: 'Study guide', langs: [['EN', 'guides/professional-en.html'], ['RU', 'guides/professional-ru.html']] },
+        { label: 'Practice exam', langs: [['EN', 'practical/professional-en.html'], ['RU', 'practical/professional-ru.html']] },
+        { label: 'Question bank', langs: [['EN', 'practical/bank-professional-en.html'], ['RU', 'practical/bank-professional-ru.html']] },
         { label: 'Preflight checklist', langs: [['EN', 'preflight/architect-professional.html']] },
       ],
       register: 'https://anthropic-partners.skilljar.com/claude-certified-architect-professional-certification',
@@ -445,7 +520,7 @@ function landing() {
   <section class="hero">
     <p class="eyebrow">Study library</p>
     <h1>Claude certifications <span class="accent">— choose your track.</span></h1>
-    <p class="lede">Free, open study material for the Anthropic Partner Network certifications — guides, practice exams, and cheatsheets, in English, Spanish, and Portuguese for Architect Foundations.</p>
+    <p class="lede">Foundation-first Architect preparation with an EN/RU interface over English exam wording, plus secondary reference material for the other certification tracks.</p>
   </section>
   <section class="track-chooser" aria-labelledby="chooser-title">
     <div class="track-heading">
@@ -854,10 +929,10 @@ const PREFLIGHT_TRACKS = [
       {
         group: 'Study materials',
         items: [
-          { name: 'Study guide', href: 'guides/en.html', note: 'The full Foundations guide, about a 2-hour read. Also in <a href="guides/es.html">Spanish</a> and <a href="guides/pt.html">Portuguese</a>, and as a print-ready PDF in <a href="pdf/guide_en.pdf">EN</a>, <a href="pdf/guide_es.pdf">ES</a> and <a href="pdf/guide_pt.pdf">PT</a>.', internal: true },
-          { name: 'Practice exam', href: 'practical/en.html', note: '60 questions drawn <strong>fresh on every attempt</strong> from a bank of 600+ in English, scored per domain to 1000 — full length on purpose, because the real exam is 60 questions in 120 minutes. A domain selector drills a single domain&rsquo;s whole bank instead. Also in <a href="practical/es.html">Spanish</a> and <a href="practical/pt.html">Portuguese</a>, which draw from 136 questions each.', internal: true },
-          { name: 'Question bank', href: 'practical/bank-en.html', note: 'The same 600+ questions as a browsable list, filtered by domain and searched by text, with the explanation on every item. Also in <a href="practical/bank-es.html">Spanish</a> and <a href="practical/bank-pt.html">Portuguese</a>.', internal: true },
-          { name: 'Cheatsheet', href: 'cheatsheet/en.html', note: 'One-page recap of the five domains. Also in <a href="cheatsheet/es.html">Spanish</a> and <a href="cheatsheet/pt.html">Portuguese</a>.', internal: true },
+          { name: 'Study guide', href: 'guides/en.html', note: 'The full Foundations guide, about a 2-hour read. The public trainer exposes EN and a RU interface over the same English exam terminology. The print-ready PDF remains English.', internal: true },
+          { name: 'Practice exam', href: 'practical/en.html', note: '60 questions drawn <strong>fresh on every attempt</strong> from a bank of 600+ English questions, scored per domain to 1000. EN and RU share the same English question bank and the same saved attempt state.', internal: true },
+          { name: 'Question bank', href: 'practical/bank-en.html', note: 'The same 600+ English questions as a browsable list, filtered by domain and searched by text, with the explanation on every item. RU changes interface chrome, not exam wording.', internal: true },
+          { name: 'Cheatsheet', href: 'cheatsheet/en.html', note: 'One-page recap of the five domains. The terminology stays English to match the exam.', internal: true },
         ],
       },
       {
@@ -1431,7 +1506,14 @@ async function buildGuides() {
       baseHref: SITE_BASE_HREF,
       extraHead: ownBank ? `<link rel="prefetch" as="fetch" href="${ownBank}">
 ` : '',
-      body: `${header(l.code)}<main class="guide">${renderToc(tocEntries, ui.contents, pageHref)}<div class="guide-body">${html}</div></main>`,
+      body: `${header(
+        l.code,
+        l.output === 'en' ? 'guides/ru.html'
+          : l.output === 'ru' ? 'guides/en.html'
+          : l.output === 'professional-en' ? 'guides/professional-ru.html'
+          : l.output === 'professional-ru' ? 'guides/professional-en.html'
+          : null
+      )}<main class="guide">${renderToc(tocEntries, ui.contents, pageHref)}<div class="guide-body">${html}</div></main>`,
     }));
   }
 
@@ -1625,7 +1707,7 @@ async function copyCheatsheets() {
   const out = path.join(DOCS, 'cheatsheet');
   await ensureDir(out);
   for (const l of LANGS) {
-    const src = path.join(ROOT, 'ccaf', 'dist', `cheatsheet_${l.code}.html`);
+    const src = path.join(ROOT, 'ccaf', 'dist', `cheatsheet_${l.contentCode || l.code}.html`);
     const dest = path.join(out, `${l.code}.html`);
     if (await exists(src)) {
       await fs.copyFile(src, dest);
@@ -1655,13 +1737,30 @@ async function copyPdfs() {
   }
 }
 
+async function removeRetiredPublicLocales() {
+  const retired = [
+    'guides/es.html', 'guides/pt.html',
+    'practical/es.html', 'practical/pt.html',
+    'practical/bank-es.html', 'practical/bank-pt.html',
+    'cheatsheet/es.html', 'cheatsheet/pt.html',
+    'pdf/guide_es.pdf', 'pdf/guide_pt.pdf',
+  ];
+  await Promise.all(retired.map(rel => fs.rm(path.join(DOCS, rel), { force: true })));
+}
+
 async function writeIndex() {
   const blueprint = JSON.parse(await fs.readFile(path.join(ROOT, 'ccaf', 'data', 'blueprint.json'), 'utf8'));
   await fs.writeFile(path.join(DOCS, 'index.html'), pageShell({
     title: 'Claude Architect Trainer · CCAR-F',
     lang: 'en',
     baseHref: SITE_BASE_HREF,
-    body: `${header('en')}${trainingDashboard(blueprint)}`,
+    body: `${header('en', 'ru.html')}${trainingDashboard(blueprint, 'en')}`,
+  }));
+  await fs.writeFile(path.join(DOCS, 'ru.html'), pageShell({
+    title: 'Claude Architect Trainer · CCAR-F · RU',
+    lang: 'ru',
+    baseHref: SITE_BASE_HREF,
+    body: `${header('ru', 'index.html')}${trainingDashboard(blueprint, 'ru')}`,
   }));
   await fs.writeFile(path.join(DOCS, 'catalog.html'), pageShell({
     title: 'Study Library · Claude Architect Trainer',
@@ -1688,6 +1787,7 @@ async function main() {
   await copyCheatsheets();
   await buildPreflight();
   await copyPdfs();
+  await removeRetiredPublicLocales();
   console.log('docs/ built');
 }
 

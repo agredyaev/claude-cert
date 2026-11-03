@@ -110,7 +110,7 @@ function checkPage(file) {
     out.includes(drawn.find(q => !multi || q.id !== multi.id).id.toUpperCase()));
   check('an unanswered row says so instead of showing an empty dash',
     out.includes(api.T.not_answered));
-  // Compare against the page's own string, so es and pt are checked too.
+  // Compare against the page's own localized string so EN and RU are both covered.
   check('the unanswered warning still renders',
     out.includes(api.T.unanswered.split('{n}').pop().trim()));
 
@@ -125,12 +125,13 @@ function checkPage(file) {
       out.includes(api.T.incomplete_answer));
     check('a half-picked row shows the letters it did pick', out.includes(picked));
 
-    // Each correct letter gets its own rationale, not one merged paragraph.
-    const perLetter = (out.match(/<strong>Why [A-H]:<\/strong>/g) || []).length;
+    // Each correct letter gets its own rationale, using the page's localized label.
+    const perLetter = [...'ABCDEFGH'].filter(letter =>
+      out.includes(`<strong>${api.T.why} ${letter}:</strong>`)).length;
     check(`each correct letter gets its own rationale (${perLetter} found, ${need} needed)`,
       perLetter >= need);
     check('no merged multi-letter rationale heading remains',
-      !/<strong>Why [A-H], /.test(out));
+      ![...'ABCDEFGH'].some(letter => out.includes(`<strong>${api.T.why} ${letter}, `)));
   }
 
   // Nothing may escape as markup. Look for a tag no template writes.
@@ -580,36 +581,51 @@ async function checkBootChain(file) {
   check('a failed download still shows the load-failed message', failedShown(failed.el));
 }
 
-// Every shipped page, so a UI string missing from one language cannot pass.
+function checkLocalePair(enFile, ruFile) {
+  console.log(`\nShared EN/RU training state (${enFile} ↔ ${ruFile})`);
+  const en = fs.readFileSync(path.join(ROOT, enFile), 'utf8');
+  const ru = fs.readFileSync(path.join(ROOT, ruFile), 'utf8');
+  const store = html => html.match(/const BASE_STORE_KEY = "([^"]+)"/)?.[1];
+  const bank = html => html.match(/const BANK_URL = "([^"]+)"/)?.[1];
+  check('EN and RU use the same persistence key', store(en) && store(en) === store(ru));
+  check('EN and RU fetch the same English question bank', bank(en) && bank(en) === bank(ru));
+  check('RU page declares Russian interface language', ru.includes('<html lang="ru">'));
+  check('both pages render the EN/RU language switch', en.includes('class="language-toggle"') && ru.includes('class="language-toggle"'));
+}
+
+// Every shipped public interface page, so a UI string missing from EN or RU cannot pass.
 checkPage('ccaf/dist/exam_en.html');
-checkPage('ccaf/dist/exam_es.html');
-checkPage('ccaf/dist/exam_pt.html');
+checkPage('ccaf/dist/exam_ru.html');
 checkPage('ccap/dist/exam_en.html');
+checkPage('ccap/dist/exam_ru.html');
 checkPage('ccdf/dist/exam_en.html');
 checkPage('ccaof/dist/exam_en.html');
 checkDrill('ccaf/dist/exam_en.html');
-checkDrill('ccaf/dist/exam_es.html');
-checkDrill('ccaf/dist/exam_pt.html');
+checkDrill('ccaf/dist/exam_ru.html');
 checkDrill('ccap/dist/exam_en.html');
+checkDrill('ccap/dist/exam_ru.html');
 checkDrill('ccdf/dist/exam_en.html');
 checkDrill('ccaof/dist/exam_en.html');
 checkWideItems('ccap/dist/exam_en.html');
 checkWideItems('ccdf/dist/exam_en.html');
 checkWideItems('ccaof/dist/exam_en.html');
 checkBrowse('ccaf/dist/bank_en.html');
-checkBrowse('ccaf/dist/bank_pt.html');
+checkBrowse('ccaf/dist/bank_ru.html');
 checkBrowse('ccap/dist/bank_en.html');
+checkBrowse('ccap/dist/bank_ru.html');
 checkBrowse('ccdf/dist/bank_en.html');
 checkBrowse('ccaof/dist/bank_en.html');
-checkMissesUI('ccaf/dist/exam_es.html');
-checkMissesUI('ccap/dist/exam_en.html');
+checkMissesUI('ccaf/dist/exam_ru.html');
+checkMissesUI('ccap/dist/exam_ru.html');
 checkMissesUI('ccdf/dist/exam_en.html');
 checkMissesUI('ccaof/dist/exam_en.html');
-for (const file of ['ccaf/dist/exam_en.html', 'ccaf/dist/exam_es.html',
-                    'ccaf/dist/exam_pt.html', 'ccap/dist/exam_en.html',
+for (const file of ['ccaf/dist/exam_en.html', 'ccaf/dist/exam_ru.html',
+                    'ccap/dist/exam_en.html', 'ccap/dist/exam_ru.html',
                     'ccdf/dist/exam_en.html', 'ccaof/dist/exam_en.html']) {
   checkShell(file);
 }
+checkLocalePair('ccaf/dist/exam_en.html', 'ccaf/dist/exam_ru.html');
+checkLocalePair('ccap/dist/exam_en.html', 'ccap/dist/exam_ru.html');
 checkTimer('ccaf/dist/exam_en.html');
 checkTimer('ccap/dist/exam_en.html');
 checkPreBoot('ccaf/dist/exam_en.html');

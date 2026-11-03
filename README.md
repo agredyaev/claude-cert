@@ -1,22 +1,22 @@
 # Claude Architect Trainer
 
-A Foundation-first training workspace for Claude Certified Architect preparation. The default path focuses on CCAR-F, with study, quick drills, full mock exams, domain drills, weak-spot review, and resumable browser-local progress.
+A Foundation-first training workspace for Claude Certified Architect preparation. The primary learning path is deliberately sequential: **CCAR-F (Architect – Foundations) first, then CCAR-P (Architect – Professional)**. Foundations uses study, weighted drills, weak-spot review, full mock exams, and a readiness gate before Professional becomes the next training stage.
 
 The training interface and workflow in this fork build on the open study corpus from [Ravn's Claude Certified Architect repository](https://github.com/ravnhq/claude-certified-architect). Source attribution and upstream history are intentionally preserved. This project is not affiliated with Anthropic.
 
-GitHub Pages deployment is included in `.github/workflows/pages.yml`; the published base path is derived from the repository name automatically.
+GitHub Pages deployment is included in `.github/workflows/pages.yml`; the published base path is derived from the repository name automatically. The public trainer exposes **EN / RU interface chrome only**. Exam questions, certification terminology, and guide prose remain English in RU mode so practice stays aligned with the wording used on the real exams.
 
 Before you book a Foundations slot, work through the
-[preflight checklist](https://ravnhq.github.io/claude-certified-architect/preflight/en.html):
+[preflight checklist](https://agredyaev.github.io/claude-cert/preflight/architect-foundations.html):
 ten readiness checks, the exam blueprint, and a list of practice material. Your ticks stay in
 the browser.
 
-## Choose your track
+## Training scope
 
 | Track | Exam code | Best fit | What this repo gives you |
 |---|---|---|---|
-| **Architect – Foundations** | CCAR-F | Practitioners building with Claude Code, the Claude Agent SDK, the Claude API, and MCP | Study guide, practice exam, and cheatsheet in EN / ES / PT, plus the preflight checklist |
-| **Architect – Professional** | CCAR-P | Architects responsible for production AI architecture, evaluation, governance, and lifecycle decisions | English study guide and a 63-question practice exam |
+| **Architect – Foundations** | CCAR-F | Practitioners building with Claude Code, the Claude Agent SDK, the Claude API, and MCP | EN/RU training interface over the English exam wording, plus the Foundation readiness checklist |
+| **Architect – Professional** | CCAR-P | Architects responsible for production AI architecture, evaluation, governance, and lifecycle decisions | Stage 2 after CCAR-F: EN/RU interface over the English guide and 63-question practice exam |
 | **Developer – Foundations** | CCDV-F | Engineers building and shipping production applications, agents, and workflows on the Claude platform | English study guide and a 53-question practice exam |
 | **Associate – Foundations** | CCAO-F | Professionals using Claude for research, analysis, drafting, planning, and workflow improvement | English study guide, 60-question practice exam, and 758-question bank |
 
@@ -24,10 +24,10 @@ The four exams use different blueprints. Architect Foundations has five domains,
 Professional seven, and Associate seven. Foundations material does not represent Professional coverage, and the
 reverse is equally true; the same holds between every pair of tracks.
 
-> **Professional, Developer, and Associate material is English only.** Anthropic delivers those exams and
-> their prep content in English and prohibits browser translation during proctored testing, so
-> ES/PT tracks would train against wording the exams never use. The Foundations material stays
-> tri-language.
+> **The public trainer uses EN / RU interface chrome only.** The exam questions, official terminology,
+> and guide prose stay English in both modes. RU is intentionally an interface layer rather than a
+> translated exam track, so practice stays aligned with the wording used during proctored testing.
+> Legacy upstream translation source files are retained for provenance only and are not part of the published training UX.
 
 ## Exam facts
 
@@ -96,22 +96,21 @@ Fluency are orientation rather than exam preparation.
 
 ## Foundations study guides
 
-| Language | Markdown | PDF |
+| Public view | Source content | PDF |
 |---|---|---|
-| English | [`ccaf/guide_en.md`](./ccaf/guide_en.md) | [Download](https://ravnhq.github.io/claude-certified-architect/pdf/guide_en.pdf) |
-| Spanish | [`ccaf/guide_es.md`](./ccaf/guide_es.md) | [Download](https://ravnhq.github.io/claude-certified-architect/pdf/guide_es.pdf) |
-| Portuguese | [`ccaf/guide_pt.md`](./ccaf/guide_pt.md) | [Download](https://ravnhq.github.io/claude-certified-architect/pdf/guide_pt.pdf) |
+| English | [`ccaf/guide_en.md`](./ccaf/guide_en.md) | English PDF generated on deploy |
+| Русский интерфейс | Same English guide content with Russian navigation chrome | Uses the same English source |
 
-PDFs are generated fresh on every deploy from the current markdown sources.
+Only the English PDF is published; RU is an interface layer, not a translated certification guide.
 
 ## Foundations practice exam
 
 A self-paced HTML quiz that runs entirely in your browser. Each attempt draws **12 random
 questions per domain — 60 in total**. The English bank holds 607 items: the 76 scenario
 questions from the guide, 60 domain-style questions from the mock bank, and 471 imported
-practice items tagged to the official task statements. Spanish and Portuguese draw from the
-136 hand-authored items. The score is scaled to 1,000 with a passing cut of **720**, mirroring
-the real scale.
+practice items tagged to the official task statements. EN and RU use the same English bank and
+share the same saved attempt / weak-spot state. The score is scaled to 1,000 with a passing cut
+of **720**, mirroring the real scale.
 
 Features: a fresh 60-question draw each attempt, questions randomized within each domain, a
 **study** mode that reveals answers as you go with a rationale for every option, an **exam** mode
@@ -119,7 +118,7 @@ that reveals at the end, per-domain breakdown against the pass threshold, and pr
 `localStorage` so a refresh keeps your place. **Restart** draws a new set. A domain selector
 drills a single domain's whole bank instead, scored raw with no pass/fail verdict.
 
-- [`ccaf/dist/exam_en.html`](./ccaf/dist/exam_en.html) · [`ccaf/dist/exam_es.html`](./ccaf/dist/exam_es.html) · [`ccaf/dist/exam_pt.html`](./ccaf/dist/exam_pt.html)
+- [`ccaf/dist/exam_en.html`](./ccaf/dist/exam_en.html) · [`ccaf/dist/exam_ru.html`](./ccaf/dist/exam_ru.html)
 
 ## Foundations cheatsheet
 
@@ -127,11 +126,11 @@ A one-page reference distilling the exam into **12 recurring principles** — ea
 approach and the trap to avoid — **5 questions to ask when two answers look equally good**, and a
 breakdown of the 136 hand-authored questions by domain, with weights and answer-letter distribution.
 
-- [`ccaf/dist/cheatsheet_en.html`](./ccaf/dist/cheatsheet_en.html) · [`ccaf/dist/cheatsheet_es.html`](./ccaf/dist/cheatsheet_es.html) · [`ccaf/dist/cheatsheet_pt.html`](./ccaf/dist/cheatsheet_pt.html)
+- [`ccaf/dist/cheatsheet_en.html`](./ccaf/dist/cheatsheet_en.html) — the RU dashboard reuses the same English terminology.
 
 ## Associate study guide and practice exam
 
-[`ccaof/guide_en.md`](./ccaof/guide_en.md) · [read online](https://ravnhq.github.io/claude-certified-architect/guides/associate-en.html)
+[`ccaof/guide_en.md`](./ccaof/guide_en.md) · [read online](https://agredyaev.github.io/claude-cert/guides/associate-en.html)
 
 The guide covers all **30 official objectives** across prompting, output validation, product and
 model selection, workflow integration, configuration and knowledge management, governance, and
@@ -153,7 +152,7 @@ all-or-nothing.
 
 ## Developer study guide
 
-[`ccdf/guide_en.md`](./ccdf/guide_en.md) · [read online](https://ravnhq.github.io/claude-certified-architect/guides/developer-en.html)
+[`ccdf/guide_en.md`](./ccdf/guide_en.md) · [read online](https://agredyaev.github.io/claude-cert/guides/developer-en.html)
 
 Covers the **eight-domain Developer – Foundations blueprint (CCDV-F)**: agents and workflows, applications and integration, Claude Code, eval and debugging, model selection and optimization, prompt and context engineering, security and safety, and tools and MCPs. It turns the official objectives into a practical preparation plan with the exam and policy details and the decision rules the blueprint rewards — without reproducing or predicting live exam content.
 
@@ -187,7 +186,7 @@ single domain's whole bank instead, scored raw with no pass/fail verdict.
 
 ## Professional study guide
 
-[`ccap/guide_en.md`](./ccap/guide_en.md) · [read online](https://ravnhq.github.io/claude-certified-architect/guides/professional-en.html)
+[`ccap/guide_en.md`](./ccap/guide_en.md) · [read online](https://agredyaev.github.io/claude-cert/guides/professional-en.html)
 
 Reproduces all **38 official objectives** across the seven domains, with the exam and policy
 details, the official prep path, a breakdown of the three official sample questions, and the
@@ -223,17 +222,17 @@ raw with no pass/fail verdict.
 
 ## How to use
 
-1. Choose your track.
-2. **Foundations** — pick a language, work the scenarios, then alternate practice exam and
-   cheatsheet. Run the preflight checklist before you book.
-3. **Developer** — read the guide, map your experience against the 25 objectives, then drill the
-   practice exam. The domain weighting is deliberately uneven (Applications and Integration is a
-   third of the exam), so check the per-domain breakdown before booking.
-4. **Professional** — read the official guide first, map your experience against the 38
-   objectives, build one end-to-end reference system, then rehearse trade-offs under time
-   pressure. Use exam mode for the timed run and study mode to read the rationale on every miss.
-5. **Associate** — work through the 30 objective sections, practice output verification and
-   governance decisions, then alternate timed 60-question attempts with objective-level drills.
+1. **Stage 1 — Architect Foundations (CCAR-F).** Read the Foundation guide first.
+2. Run short weighted study drills, then domain drills, and use weak-spot review until repeated
+   mistakes stop recurring.
+3. Move to full 60-question / 120-minute exam rehearsals only after the concepts are stable.
+4. Complete the Foundation preflight readiness checklist before booking CCAR-F.
+5. **Stage 2 — Architect Professional (CCAR-P).** Only after Foundation, map experience against
+   the 38 Professional objectives, build one end-to-end reference architecture, and rehearse
+   architecture trade-offs under time pressure. Professional stays separate from Foundation
+   drills because it has its own seven-domain blueprint.
+6. Developer and Associate material remains available in the repository as secondary reference,
+   but it is not part of the default Architect learning path.
 
 ### Review a score report
 
@@ -256,8 +255,7 @@ score prediction.
 
 ## Design
 
-[DESIGN.md](./DESIGN.md) documents the current Ravn identity, extracted with Firecrawl
-and checked against the live site. The shared fonts live in `docs/assets/` and every page
+[DESIGN.md](./DESIGN.md) documents the upstream visual system that this trainer adapts. The shared fonts live in `docs/assets/` and every page
 links `docs/assets/fonts.css`; edit generator styles and regenerate every exam, bank, and
 cheatsheet after design changes.
 
@@ -266,13 +264,13 @@ cheatsheet after design changes.
 ```bash
 npm install --no-save marked@13.0.3 minisearch@7.2.0 pdfjs-dist@4.10.38 md-to-pdf html-minifier-terser@7.2.0   # pinned build dependencies
 
-python3 utils/build_exam_html.py               # → ccaf/dist/exam_{en,es,pt}.html + data/*.json
-python3 utils/build_exam_html.py en es         # specific languages
+python3 utils/build_exam_html.py               # → ccaf/dist/exam_{en,ru}.html + shared English bank
+python3 utils/build_exam_html.py en ru         # specific public interface variants
 python3 utils/import_practice_bank.py          # corpus + tags → ccap,ccdf,ccaof data/questions.json
-python3 utils/build_professional_exam.py       # → ccap/dist/exam_en.html
+python3 utils/build_professional_exam.py       # → ccap/dist/exam_{en,ru}.html
 python3 utils/build_developer_exam.py          # → ccdf/dist/exam_en.html
 python3 utils/build_associate_exam.py          # → ccaof/dist/exam_en.html
-python3 utils/build_cheatsheet.py              # → ccaf/dist/cheatsheet_{en,es,pt}.html
+python3 utils/build_cheatsheet.py              # → ccaf/dist/cheatsheet_en.html (RU view reuses English terminology)
 node scripts/build-pages.mjs                   # → docs/ site
 node scripts/minify-docs.mjs                   # minify docs/ in place — always last
 node scripts/serve-docs.mjs                    # serve docs/ gzipped, under its <base href>
@@ -306,7 +304,7 @@ Each exam owns a top-level directory with the same internal shape:
 
 | | CCAF (CCAR-F) | CCAP (CCAR-P) | CCDF (CCDV-F) | CCAOF (CCAO-F) |
 |---|---|---|---|---|
-| Study guide | `ccaf/guide_{en,es,pt}.md` | `ccap/guide_en.md` | `ccdf/guide_en.md` | `ccaof/guide_en.md` |
+| Study guide | `ccaf/guide_en.md` (published EN/RU chrome) | `ccap/guide_en.md` (published EN/RU chrome) | `ccdf/guide_en.md` | `ccaof/guide_en.md` |
 | Question data | `ccaf/data/` | `ccap/data/` | `ccdf/data/` | `ccaof/data/` |
 | Source material | `ccaf/sources/` | `.corpus/practice-bank/` | `ccdf/sources/`, `.corpus/practice-bank/` | `ccaof/sources/`, `.corpus/practice-bank/` |
 | Exercises | `ccaf/exercises/` | — | — | — |
@@ -333,8 +331,7 @@ lives in `scripts/build-pages.mjs` (`PREFLIGHT_TRACKS`, one entry per exam) and
 
 ## Contributing
 
-- Translation fixes and clarifications are welcome. Keep the heading structure aligned across
-  `ccaf/guide_en.md`, `ccaf/guide_es.md`, and `ccaf/guide_pt.md` so question extraction stays consistent.
+- The published Architect trainer is EN/RU only. Keep certification questions and guide terminology in English; Russian changes interface chrome and training guidance, not exam wording.
 - Run the validators and both test scripts before opening a PR.
 - **Do not commit material from the Partner Academy courses.** That content is partner-gated.
   Guide prose and the Foundations practice items are Ravn-authored; keep it that way. The

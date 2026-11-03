@@ -34,10 +34,9 @@ PER_DOMAIN = 12  # questions drawn per domain each attempt → 5 × 12 = 60 tota
 
 LANG_TITLES = {
     "en": "Claude Certified Architect — Practice Exam",
-    "es": "Claude Certified Architect — Examen de Práctica",
-    "pt": "Claude Certified Architect — Exame de Prática",
+    "ru": "Claude Certified Architect — Тренировочный экзамен",
 }
-LANG_LABELS = {"en": "English", "es": "Español", "pt": "Português"}
+LANG_LABELS = {"en": "English", "ru": "Русский интерфейс"}
 
 # All user-facing UI strings, per language.
 UI = {
@@ -124,171 +123,74 @@ UI = {
         "topics": "Topics",
         "load_failed": "The question bank could not be loaded. Check your connection and reload the page.",
     },
-    "es": {
-        "questions": "Preguntas", "answered": "Respondidas", "mode_study": "Estudio",
-        "mode_exam": "Examen", "mode_hint_study": "Las respuestas se revelan al instante",
-        "mode_hint_exam": "Las respuestas se revelan al final",
-        "prev": "← Anterior", "next": "Siguiente →", "finish": "Finalizar y revisar",
-        "finish_confirm": ("Quedan {n} pregunta(s) sin responder y contarán como "
-                           "incorrectas. ¿Finalizar y ver tu puntuación?"),
-        "back_to_answers": "← Volver a mis respuestas",
-        "study_switch_confirm": ("Cambiar a Estudio revela la respuesta correcta "
-                                 "de cada pregunta que ya respondiste. ¿Continuar?"),
-        "time_label": "Tiempo", "skip_to_question": "Ir a la pregunta",
-        "answer_recorded": "Respuesta registrada.",
-        "question": "Pregunta", "your_answer": "Tu respuesta", "correct": "Correcta",
-        "why": "Por qué", "complete": "Examen completado", "answered_of":
-        "Respondiste {a} de {t} preguntas.", "unanswered":
-        "&#9888; {n} pregunta(s) sin responder (cuentan como incorrectas).",
-        "score": "Puntaje", "pass": "APROBADO", "fail": "REPROBADO", "by_domain":
-        "Puntaje por dominio", "review_wrong": "Revisar respuestas incorrectas",
-        "all_correct": "¡Todas correctas — excelente!",
-        "restart": "Nuevo intento — nuevo sorteo aleatorio", "weight": "peso",
-        "threshold_note": ("Aprobación fijada en {p}/1000. Cada intento sortea "
-                           "12 preguntas aleatorias por dominio (60 en total); "
-                           "el puntaje se escala sobre 1000 como aproximación "
-                           "de estudio de la escala real de 100–1000."),
-        "incorrect": "incorrectas", "domain": "Dominio",
-        "select_n": "Selecciona {n} respuestas.",
-        "select_full": "Ya elegiste las {n} respuestas. Deselecciona una para cambiar tu respuesta.",
-        "not_answered": "Sin responder", "incomplete_answer": "respuesta incompleta",
-        "length_full": "Completo · {n}", "length_quick": "Rápido · {n}",
-        "length_aria": "Duración del intento",
-        "new_set": "Nuevo sorteo",
-        "focus_all": "Todos los dominios",
-        "focus_label": "Practicar un dominio",
-        "focus_note": ("Práctica del dominio {d}: las {n} preguntas de este "
-                       "dominio, reordenadas en cada intento. Vuelve a Todos "
-                       "los dominios para un sorteo completo."),
-        "drill_score": "Puntaje del dominio {d}",
-        "focus_report": "Enfoque del informe de resultados",
-        "report_note": ("Práctica dirigida por el informe: {n} preguntas con "
-                        "más peso en los objetivos débiles revisados, manteniendo "
-                        "cobertura de los cinco dominios."),
-        "report_score": "Práctica dirigida",
-        "new_draw_confirm": ("¿Iniciar un nuevo intento con un nuevo sorteo "
-                             "aleatorio? Tus respuestas actuales se borrarán."),
-        "draw_note_full": ("Cada intento sortea un conjunto aleatorio nuevo: "
-                           "esta vez, {n} de las {bank} preguntas del banco. "
-                           "La duración completa refleja el examen real: 60 "
-                           "preguntas en 120 minutos."),
-        "draw_note_quick": ("Práctica rápida: {n} preguntas sorteadas al azar, "
-                            "ponderadas entre dominios — un conjunto nuevo en "
-                            "cada intento."),
-        "summary_rotate": ("Este intento fue un sorteo aleatorio de {n} "
-                           "preguntas de un banco de {bank}. Inicia un nuevo "
-                           "intento para recibir un conjunto distinto: las "
-                           "preguntas rotan cada vez."),
-        "threshold_note_quick": ("Aprobación fijada en {p}/1000. La práctica "
-                                 "rápida sortea un conjunto aleatorio más "
-                                 "corto ponderado entre dominios y escala el "
-                                 "puntaje a 1000 de la misma forma; usa la "
-                                 "duración completa para un ensayo realista."),
-        "misses_btn": "Mis fallos · {n}",
-        "misses_label": "Practicar mis fallos",
-        "misses_empty": "Sin fallos aún",
-        "misses_note": ("Práctica de puntos débiles: las {n} pregunta(s) que "
-                        "ya respondiste mal, empezando por las más falladas."),
-        "misses_score": "Puntaje de puntos débiles",
-        "misses_clear": "Borrar mis fallos",
-        "misses_clear_confirm": ("¿Borrar el registro de todas las preguntas "
-                                 "que fallaste? También termina el intento en "
-                                 "curso."),
-        "bank_link": "Banco de preguntas", "exam_link": "Examen de práctica", "browse_all": "Todos los temas",
-        "browse_title": "Banco de preguntas",
-        "browse_search": "Buscar en preguntas, opciones y explicaciones",
-        "browse_domain": "Filtrar por dominio",
-        "browse_count": "{n} de {bank} preguntas",
-        "browse_none": "Ninguna pregunta coincide con este filtro.",
-        "cluster_note": "{i} de {n} variantes de este escenario",
-        "loading": "Cargando preguntas\u2026",
-        "options": "Opciones", "close": "Cerrar", "jump_to": "Ir a la pregunta",
-        "topics": "Temas",
-        "load_failed": "No se pudo cargar el banco de preguntas. Revisa tu conexi\u00f3n y recarga la p\u00e1gina.",
-    },
-    "pt": {
-        "questions": "Perguntas", "answered": "Respondidas", "mode_study": "Estudo",
-        "mode_exam": "Exame", "mode_hint_study": "As respostas aparecem na hora",
-        "mode_hint_exam": "As respostas aparecem no final",
-        "prev": "← Anterior", "next": "Próxima →", "finish": "Finalizar e revisar",
-        "finish_confirm": ("Restam {n} pergunta(s) sem resposta, que contarão como "
-                           "incorretas. Finalizar e ver sua pontuação?"),
-        "back_to_answers": "← Voltar às minhas respostas",
-        "study_switch_confirm": ("Mudar para Estudo revela a resposta correta de "
-                                 "cada pergunta que você já respondeu. Continuar?"),
-        "time_label": "Tempo", "skip_to_question": "Ir para a pergunta",
-        "answer_recorded": "Resposta registrada.",
-        "question": "Pergunta", "your_answer": "Sua resposta", "correct": "Correta",
-        "why": "Por que", "complete": "Exame concluído", "answered_of":
-        "Você respondeu {a} de {t} perguntas.", "unanswered":
-        "&#9888; {n} pergunta(s) sem resposta (contam como incorretas).",
-        "score": "Pontuação", "pass": "APROVADO", "fail": "REPROVADO", "by_domain":
-        "Pontuação por domínio", "review_wrong": "Revisar respostas incorretas",
-        "all_correct": "Todas corretas — excelente!",
-        "restart": "Nova tentativa — novo sorteio aleatório", "weight": "peso",
-        "threshold_note": ("Aprovação definida em {p}/1000. Cada tentativa "
-                           "sorteia 12 perguntas aleatórias por domínio (60 no "
-                           "total); a pontuação é escalada para 1000 como "
-                           "aproximação de estudo da escala real de 100–1000."),
-        "incorrect": "incorretas", "domain": "Domínio",
-        "select_n": "Selecione {n} respostas.",
-        "select_full": "As {n} respostas já foram escolhidas. Desmarque uma para alterar sua resposta.",
-        "not_answered": "Sem resposta", "incomplete_answer": "resposta incompleta",
-        "length_full": "Completo · {n}", "length_quick": "Rápido · {n}",
-        "length_aria": "Duração da tentativa",
-        "new_set": "Novo sorteio",
-        "focus_all": "Todos os domínios",
-        "focus_label": "Treinar um domínio",
-        "focus_note": ("Treino do domínio {d}: as {n} perguntas deste domínio, "
-                       "reordenadas a cada tentativa. Volte a Todos os domínios "
-                       "para um sorteio completo."),
-        "drill_score": "Pontuação do domínio {d}",
-        "focus_report": "Foco no relatório de resultados",
-        "report_note": ("Treino direcionado pelo relatório: {n} perguntas com "
-                        "mais peso nos objetivos fracos revisados, mantendo a "
-                        "cobertura dos cinco domínios."),
-        "report_score": "Prática direcionada",
-        "new_draw_confirm": ("Iniciar uma nova tentativa com um novo sorteio "
-                             "aleatório? Suas respostas atuais serão "
-                             "apagadas."),
-        "draw_note_full": ("Cada tentativa sorteia um conjunto aleatório novo: "
-                           "desta vez, {n} das {bank} perguntas do banco. A "
-                           "duração completa espelha o exame real: 60 "
-                           "perguntas em 120 minutos."),
-        "draw_note_quick": ("Treino rápido: {n} perguntas sorteadas ao acaso, "
-                            "ponderadas entre os domínios — um conjunto novo "
-                            "a cada tentativa."),
-        "summary_rotate": ("Esta tentativa foi um sorteio aleatório de {n} "
-                           "perguntas de um banco de {bank}. Inicie uma nova "
-                           "tentativa para receber um conjunto diferente: as "
-                           "perguntas mudam a cada vez."),
-        "threshold_note_quick": ("Aprovação definida em {p}/1000. O treino "
-                                 "rápido sorteia um conjunto aleatório mais "
-                                 "curto ponderado entre os domínios e escala "
-                                 "a pontuação para 1000 da mesma forma; use a "
-                                 "duração completa para um ensaio realista."),
-        "misses_btn": "Meus erros · {n}",
-        "misses_label": "Treinar meus erros",
-        "misses_empty": "Sem erros ainda",
-        "misses_note": ("Treino de pontos fracos: as {n} pergunta(s) que você "
-                        "já errou, começando pelas mais erradas."),
-        "misses_score": "Pontuação dos pontos fracos",
-        "misses_clear": "Limpar meus erros",
-        "misses_clear_confirm": ("Limpar o registro de todas as perguntas que "
-                                 "você errou? Isso também encerra a tentativa "
-                                 "em curso."),
-        "bank_link": "Banco de questões", "exam_link": "Exame de prática", "browse_all": "Todos os temas",
-        "browse_title": "Banco de questões",
-        "browse_search": "Buscar em perguntas, opções e explicações",
-        "browse_domain": "Filtrar por domínio",
-        "browse_count": "{n} de {bank} perguntas",
-        "browse_none": "Nenhuma pergunta corresponde a este filtro.",
-        "cluster_note": "{i} de {n} variantes deste cenário",
-        "loading": "Carregando quest\u00f5es\u2026",
-        "options": "Op\u00e7\u00f5es", "close": "Fechar", "jump_to": "Ir para a pergunta",
-        "topics": "Temas",
-        "load_failed": "N\u00e3o foi poss\u00edvel carregar o banco de quest\u00f5es. Verifique sua conex\u00e3o e recarregue a p\u00e1gina.",
-    },
+
+}
+
+
+UI["ru"] = {
+    "questions": "Вопросы", "answered": "Отвечено", "mode_study": "Обучение",
+    "mode_exam": "Экзамен", "mode_hint_study": "Ответ и объяснение показываются сразу",
+    "mode_hint_exam": "Ответы показываются после завершения",
+    "prev": "← Назад", "next": "Далее →", "finish": "Завершить и проверить",
+    "finish_confirm": ("Осталось {n} вопрос(ов) без ответа; они будут засчитаны как "
+                       "неверные. Завершить попытку и показать результат?"),
+    "back_to_answers": "← Вернуться к ответам",
+    "study_switch_confirm": ("Переход в режим обучения покажет правильные ответы "
+                             "для уже отвеченных вопросов. Продолжить?"),
+    "time_label": "Время", "skip_to_question": "Перейти к вопросу",
+    "answer_recorded": "Ответ сохранён.",
+    "question": "Вопрос", "your_answer": "Ваш ответ", "correct": "Правильно",
+    "why": "Почему", "complete": "Попытка завершена",
+    "answered_of": "Вы ответили на {a} из {t} вопросов.",
+    "unanswered": "&#9888; Без ответа: {n} (засчитаны как неверные).",
+    "score": "Результат", "pass": "ПРОХОД", "fail": "НЕ ПРОХОД",
+    "by_domain": "Результат по доменам", "review_wrong": "Разобрать ошибки",
+    "all_correct": "Все ответы правильные.",
+    "restart": "Новая попытка — новая выборка", "weight": "вес",
+    "threshold_note": ("Порог: {p}/1000. Каждая полная попытка берёт по 12 случайных "
+                       "вопросов из каждого домена (60 всего); результат масштабируется "
+                       "до 1000 как тренировочная аппроксимация реальной шкалы 100–1000."),
+    "incorrect": "ошибок", "domain": "Домен",
+    "select_n": "Выберите {n} вариант(а).",
+    "select_full": "Уже выбрано {n} вариант(а). Снимите один выбор, чтобы изменить ответ.",
+    "not_answered": "Нет ответа", "incomplete_answer": "неполный ответ",
+    "length_full": "Полный · {n}", "length_quick": "Быстрый · {n}",
+    "length_aria": "Длина попытки", "new_set": "Новая выборка",
+    "focus_all": "Все домены", "focus_label": "Тренировать один домен",
+    "focus_note": ("Тренировка домена {d}: все {n} вопросов этого домена в новой "
+                   "последовательности. Вернитесь к «Все домены» для полной выборки."),
+    "drill_score": "Результат домена {d}",
+    "focus_report": "Фокус по score report",
+    "report_note": ("Целевая тренировка по score report: {n} вопросов с повышенным "
+                    "весом слабых objectives при сохранении покрытия всех пяти доменов."),
+    "report_score": "Целевая тренировка",
+    "new_draw_confirm": ("Начать новую попытку с новой случайной выборкой? "
+                         "Текущие ответы будут удалены."),
+    "draw_note_full": ("Каждая попытка использует новую случайную выборку: сейчас {n} "
+                       "из {bank} вопросов банка. Полный режим соответствует реальному "
+                       "экзамену: 60 вопросов за 120 минут."),
+    "draw_note_quick": ("Быстрая тренировка: {n} случайных вопросов с весами доменов; "
+                        "каждая попытка использует новую выборку."),
+    "summary_rotate": ("Эта попытка была одной случайной выборкой из {n} вопросов "
+                       "банка на {bank}. Начните новую попытку, чтобы получить другой набор."),
+    "threshold_note_quick": ("Порог: {p}/1000. Быстрая тренировка использует сокращённую "
+                             "взвешенную выборку и масштабирует результат до 1000; "
+                             "для реалистичной репетиции используйте полный режим."),
+    "misses_btn": "Мои ошибки · {n}", "misses_label": "Тренировать ошибки",
+    "misses_empty": "Ошибок пока нет",
+    "misses_note": ("Работа над ошибками: {n} вопрос(ов), на которые вы раньше "
+                    "ответили неверно; сначала наиболее часто ошибочные."),
+    "misses_score": "Результат по ошибкам", "misses_clear": "Очистить ошибки",
+    "misses_clear_confirm": ("Удалить историю всех ошибок? Текущая попытка также будет завершена."),
+    "bank_link": "Банк вопросов", "exam_link": "Тренировочный экзамен",
+    "browse_all": "Все темы", "browse_title": "Банк вопросов",
+    "browse_search": "Искать по вопросам, вариантам и объяснениям",
+    "browse_domain": "Фильтр по домену", "browse_count": "{n} из {bank} вопросов",
+    "browse_none": "По этому фильтру вопросов нет.",
+    "cluster_note": "Вариант {i} из {n} для этого сценария",
+    "loading": "Загрузка вопросов…", "options": "Настройки", "close": "Закрыть",
+    "jump_to": "Перейти к вопросу", "topics": "Темы",
+    "load_failed": "Не удалось загрузить банк вопросов. Проверьте соединение и обновите страницу.",
 }
 
 _FAVICON_PATH = os.path.join(ROOT_DIR, "docs", "assets", "favicon.png")
@@ -298,17 +200,6 @@ try:
 except FileNotFoundError:
     _FAVICON_DATA_URI = ""
 
-# Official RAVN wordmark — inlined so fill:currentColor follows the brand bar color.
-RAVN_LOGO_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 33" '
-    'aria-label="Ravn" role="img" height="20" fill="currentColor">'
-    '<path d="M147.001 0.000976562H139.097V21.1196L120.763 0.00198534H112.859V32.9979H120.763V11.8853L139.095 33.001L139.098 32.9979H147.001V0.000976562Z"/>'
-    '<path d="M94.3156 33H85.8811L73.0273 0H81.4608L90.0978 22.1056L98.7348 0H107.169L94.3156 33Z"/>'
-    '<path d="M64.4406 0H56.0061L43.1523 33H51.5868L60.2238 10.8934L68.8598 33H77.2943L64.4406 0Z"/>'
-    '<path d="M28.8517 22.5101C33.8779 21.1825 37.5735 16.7376 37.5735 11.4583C37.5735 5.23989 32.4481 0.178564 26.0589 0.00605301V0H7.64995H0L6.34956 7.63688H7.64995V7.6389H25.7781C27.9333 7.66916 29.671 9.36703 29.671 11.4573C29.671 13.5668 27.902 15.2768 25.7197 15.2768H22.8382H12.7002L27.4355 33H37.5724L28.8517 22.5101Z"/>'
-    '<path d="M8.53644 32.9974C11.4172 32.9974 13.7526 30.7402 13.7526 27.9557C13.7526 25.1713 11.4172 22.9141 8.53644 22.9141C5.65565 22.9141 3.32031 25.1713 3.32031 27.9557C3.32031 30.7402 5.65565 32.9974 8.53644 32.9974Z"/></svg>'
-)
-
 SLIDERS_SVG = (
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" '
     'stroke-width="2" stroke-linecap="round" aria-hidden="true">'
@@ -317,7 +208,7 @@ SLIDERS_SVG = (
 )
 
 CSS = """
-/* Study controls use the current Ravn palette; feedback colors remain semantic. */
+/* Study controls use the adapted upstream palette; feedback colors remain semantic. */
 :root {
   --bg: #0E0E0E; --surface: #141414; --surface-2: #1C1C1C;
   --fg: #FFFFFF; --fg-soft: #D4D4D4; --muted: #A3A3A3; --subtle: #949494;
@@ -343,6 +234,17 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .ravn-brand svg { height: 20px; width: auto; fill: currentColor; flex-shrink: 0; }
 .ravn-brand-tagline { font-size: 12px; color: var(--muted); text-transform: uppercase;
   letter-spacing: 0.167em; font-weight: 600; }
+
+.trainer-mark { display: inline-grid; place-items: center; width: 30px; height: 30px;
+  border: 1px solid var(--border-strong); border-radius: 8px; color: var(--accent);
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.language-toggle { display: inline-flex; margin-left: auto; border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm); overflow: hidden; flex-shrink: 0; }
+.language-toggle a { min-width: 38px; padding: 6px 9px; color: var(--muted); text-decoration: none;
+  text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.language-toggle a + a { border-left: 1px solid var(--border-strong); }
+.language-toggle a:hover { color: var(--fg); }
+.language-toggle a.active { background: var(--fg); color: var(--bg); }
 
 /* Mode toggle in the brand bar */
 .mode-toggle { display: inline-flex; align-items: center; gap: 0; background: transparent;
@@ -833,8 +735,7 @@ body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 }
 
 @media (max-width: 420px) {
-  /* At 320px the Spanish and Portuguese labels ("Finalizar y revisar") are the
-     widest in the thumb bar; tighter tracking keeps them to two lines. */
+  /* Keep long localized labels compact enough for the narrow thumb bar. */
   .topbar-nav .nav-btn { letter-spacing: 0; font-size: 11px; }
   .nav-toggle { min-width: 76px; }
   .wrong-item { display: block; }
@@ -2621,7 +2522,7 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
                 exam_minutes=120,
                 store_key, lang_attr, title, page_title, out_path,
                 view="exam", bank_href=None, exam_href=None, groups_js=None,
-                report_map=None, exam_code="CCAR-F"):
+                report_map=None, exam_code="CCAR-F", language_links=None):
     """Render one quiz page plus the JSON bank it fetches at boot.
 
     Returns the emitted paths; scripts/build-pages.mjs and
@@ -2706,13 +2607,31 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
     length_full_label = ui["length_full"].replace("{n}", str(full_draw))
     length_quick_label = ui["length_quick"].replace("{n}", str(quick_draw))
 
+    language_switch = ""
+    if language_links:
+        links = []
+        for code, href in language_links.items():
+            current = code == lang_attr
+            label = "RU" if code == "ru" else "EN"
+            attrs = ' class="active" aria-current="page"' if current else ""
+            links.append(
+                f'<a{attrs} href="{href}" onclick="this.href += window.location.search + window.location.hash">{label}</a>'
+            )
+        language_switch = (
+            '<nav class="language-toggle" aria-label="Interface language">'
+            + "".join(links)
+            + '</nav>'
+        )
+
     # Phone sheets carry their own close button; desktop never shows it.
     sheet_close = (f'<button type="button" class="sheet-close" aria-label="{ui["close"]}" '
                    'onclick="closeSheet()">&#10005;</button>')
+    home_href = "../ru.html" if lang_attr == "ru" else "../index.html"
     ravn_topbar = (
         '<header class="ravn-topbar">'
-        '<a class="ravn-brand" href="../index.html" aria-label="Ravn — Claude Certified Architect">'
-        f'{RAVN_LOGO_SVG}<span class="ravn-brand-tagline">Claude Certified Architect</span></a>'
+        f'<a class="ravn-brand" href="{home_href}" aria-label="Claude Architect Trainer">'
+        '<span class="trainer-mark" aria-hidden="true">CA</span><span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
+        f'{language_switch}'
         '<div class="mode-controls sheet" id="optionsSheet" aria-labelledby="optionsTitle">'
         f'{sheet_close}'
         f'<h2 class="sheet-title" id="optionsTitle">{ui["options"]}</h2>'
@@ -2740,8 +2659,9 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
     )
     bank_topbar = (
         '<header class="ravn-topbar">'
-        '<a class="ravn-brand" href="../index.html" aria-label="Ravn — Claude Certified Architect">'
-        f'{RAVN_LOGO_SVG}<span class="ravn-brand-tagline">Claude Certified Architect</span></a>'
+        f'<a class="ravn-brand" href="{home_href}" aria-label="Claude Architect Trainer">'
+        '<span class="trainer-mark" aria-hidden="true">CA</span><span class="ravn-brand-tagline">Claude Architect Trainer</span></a>'
+        f'{language_switch}'
         '<div class="mode-controls">'
         + (f'<a class="nav-btn" href="{exam_href}">{ui["exam_link"]}</a>' if exam_href else "")
         + '</div></header>'
@@ -2857,10 +2777,11 @@ def render_page(*, questions, domains_js, ui, per_domain, pass_score, pass_pct,
 
 
 def build(lang):
-    """Foundations track: 5 domains, 12 questions drawn per domain (60 total)."""
-    questions = exam_data.load(lang)
+    """Foundations track: English exam content with EN/RU training chrome."""
+    content_lang = "en" if lang == "ru" else lang
+    questions = exam_data.load(content_lang)
     domains_js = {
-        str(d): {"name": exam_data.DOMAIN_NAMES[lang][d], "weight": w}
+        str(d): {"name": exam_data.DOMAIN_NAMES[content_lang][d], "weight": w}
         for d, (_, w) in exam_data.DOMAINS.items()
     }
     common = dict(
@@ -2869,16 +2790,17 @@ def build(lang):
         per_domain=PER_DOMAIN,
         pass_score=PASS_SCORE,
         pass_pct=PASS_PCT,
-        store_key=f"ccaf-exam-{lang}",
+        store_key=f"ccaf-exam-{content_lang}",
         lang_attr=lang,
         report_map=json.load(open(os.path.join(DATA_DIR, "objectives.json"), encoding="utf-8")).get("objective_subdomains", {}),
     )
     render_page(
         questions=questions,
         title=LANG_TITLES[lang],
-        page_title=f"{LANG_LABELS[lang]} — Practice Exam · Ravn",
+        page_title=f"{LANG_LABELS[lang]} — Practice Exam · Claude Architect Trainer",
         out_path=os.path.join(ROOT_DIR, "ccaf", "dist", f"exam_{lang}.html"),
         bank_href=f"bank-{lang}.html",
+        language_links={"en": "en.html", "ru": "ru.html"} if lang in ("en", "ru") else None,
         **common,
     )
     # The bank groups Foundations by score-report theme (objectives.json),
@@ -2887,19 +2809,43 @@ def build(lang):
     render_page(
         questions=questions,
         title=UI[lang]["browse_title"],
-        page_title=f"{LANG_LABELS[lang]} — {UI[lang]['browse_title']} · Ravn",
+        page_title=f"{LANG_LABELS[lang]} — {UI[lang]['browse_title']} · Claude Architect Trainer",
         out_path=os.path.join(ROOT_DIR, "ccaf", "dist", f"bank_{lang}.html"),
         view="bank",
         exam_href=f"{lang}.html",
+        language_links={"en": "bank-en.html", "ru": "bank-ru.html"} if lang in ("en", "ru") else None,
         groups_js=themes,
         **common,
     )
 
 
 def main():
-    langs = sys.argv[1:] if len(sys.argv) > 1 else list(LANG_TITLES.keys())
+    explicit = len(sys.argv) > 1
+    langs = sys.argv[1:] if explicit else ["en", "ru"]
     for lang in langs:
         build(lang)
+
+    if not explicit:
+        dist = os.path.join(ROOT_DIR, "ccaf", "dist")
+        retired_pages = ["exam_es.html", "exam_pt.html", "bank_es.html", "bank_pt.html"]
+        for name in retired_pages:
+            try:
+                os.remove(os.path.join(dist, name))
+            except FileNotFoundError:
+                pass
+
+        manifest_path = os.path.join(dist, "banks.json")
+        if os.path.exists(manifest_path):
+            manifest = json.load(open(manifest_path, encoding="utf-8"))
+            for name in retired_pages:
+                manifest.pop(name, None)
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=2, sort_keys=True)
+                f.write("\n")
+
+        for prefix in ("ccaf-exam-es-", "ccaf-exam-pt-"):
+            for stale in glob.glob(os.path.join(dist, "data", prefix + "*.json")):
+                os.remove(stale)
 
 
 if __name__ == "__main__":

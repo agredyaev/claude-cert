@@ -240,6 +240,8 @@
   // this view only answers "where was I?" and "what should I open?".
   const trainingDashboard = document.querySelector('[data-training-dashboard]');
   if (trainingDashboard) {
+    const ru = trainingDashboard.dataset.trainingLang === 'ru';
+    const practiceHref = ru ? 'practical/ru.html' : 'practical/en.html';
     const readJson = key => {
       try {
         const raw = localStorage.getItem(key);
@@ -248,6 +250,9 @@
         return null;
       }
     };
+
+    // EN and RU are interface variants over the same English exam content,
+    // so progress and weak spots intentionally share one persistence namespace.
     const attempt = readJson('ccaf-exam-en');
     const missRecord = readJson('ccaf-exam-en:misses');
     const missItems = missRecord && missRecord.v === 1 && missRecord.items && typeof missRecord.items === 'object'
@@ -263,8 +268,21 @@
       missesLink.classList.toggle('disabled', missCount === 0);
       if (missCount === 0) missesLink.addEventListener('click', e => e.preventDefault());
     }
-    if (missesCopy && missCount) {
-      missesCopy.textContent = `Review ${missCount} question${missCount === 1 ? '' : 's'} you have missed before, most-missed first.`;
+    if (missesCopy) {
+      missesCopy.textContent = missCount
+        ? (ru
+          ? `Повторить ${missCount} ранее ошибочных вопрос(ов), начиная с самых частых ошибок.`
+          : `Review ${missCount} question${missCount === 1 ? '' : 's'} you have missed before, most-missed first.`)
+        : (ru ? 'Станет доступно после первых ошибок.' : 'Becomes useful after your first misses.');
+    }
+
+    const preflight = readJson('ccaf-preflight:state');
+    const checked = Array.isArray(preflight && preflight.checked) ? new Set(preflight.checked).size : 0;
+    const readinessCopy = document.getElementById('training-readiness-copy');
+    if (readinessCopy) {
+      readinessCopy.textContent = ru
+        ? `Preflight: ${checked} / 10 · ${checked === 10 ? 'готов к записи' : 'завершите перед CCAR-F'}`
+        : `Preflight: ${checked} / 10 · ${checked === 10 ? 'ready to book' : 'complete before CCAR-F'}`;
     }
 
     const order = Array.isArray(attempt && attempt.order) ? attempt.order : [];
@@ -275,24 +293,34 @@
         return Array.isArray(answer) ? answer.length > 0 : (typeof answer === 'string' && answer.length > 0);
       }).length;
       const pct = Math.round(answered / order.length * 100);
-      const mode = attempt.mode === 'exam' ? 'Exam' : 'Study';
+      const mode = attempt.mode === 'exam'
+        ? (ru ? 'Экзамен' : 'Exam')
+        : (ru ? 'Обучение' : 'Study');
       const scope = attempt.focus && attempt.focus !== 'all'
-        ? (attempt.focus === 'misses' ? 'Weak-spot drill' : attempt.focus === 'report' ? 'Targeted drill' : `Domain ${attempt.focus} drill`)
-        : (attempt.length === 'quick' ? 'Quick set' : 'Full set');
+        ? (attempt.focus === 'misses'
+          ? (ru ? 'Работа над ошибками' : 'Weak-spot drill')
+          : attempt.focus === 'report'
+            ? (ru ? 'Целевая тренировка' : 'Targeted drill')
+            : (ru ? `Домен ${attempt.focus}` : `Domain ${attempt.focus} drill`))
+        : (attempt.length === 'quick'
+          ? (ru ? 'Быстрый сет' : 'Quick set')
+          : (ru ? 'Полный сет' : 'Full set'));
       const value = document.getElementById('training-progress-value');
       const detail = document.getElementById('training-progress-detail');
       const answeredEl = document.getElementById('training-answered');
       const modeEl = document.getElementById('training-mode');
       const fill = document.getElementById('training-progress-fill');
       const primary = document.getElementById('training-primary');
-      if (value) value.textContent = `${pct}% complete`;
-      if (detail) detail.textContent = `${scope} · question ${Math.min(Number(attempt.current) + 1 || 1, order.length)} of ${order.length}`;
+      if (value) value.textContent = ru ? `${pct}% завершено` : `${pct}% complete`;
+      if (detail) detail.textContent = ru
+        ? `${scope} · вопрос ${Math.min(Number(attempt.current) + 1 || 1, order.length)} из ${order.length}`
+        : `${scope} · question ${Math.min(Number(attempt.current) + 1 || 1, order.length)} of ${order.length}`;
       if (answeredEl) answeredEl.textContent = `${answered} / ${order.length}`;
       if (modeEl) modeEl.textContent = mode;
       if (fill) fill.style.width = `${pct}%`;
       if (primary) {
-        primary.href = 'practical/en.html';
-        primary.textContent = 'Resume practice';
+        primary.href = practiceHref;
+        primary.textContent = ru ? 'Продолжить попытку' : 'Resume practice';
       }
     }
   }
